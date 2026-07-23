@@ -33,10 +33,12 @@ Code exists and is complete enough to run. No runtime here exercises it.
   Ollama and an npm build; neither exercised this session.
 - voicebox (`vision/apps/voicebox/server.py`) — TTS/STT HTTP layer.
 - `vision/site/` — the SvelteKit source of teraustralis.com.au. It
-  builds to static output, but nothing deploys it: this repo has no CI
-  at all, and the umbrella's Pages workflow now (correctly) skips
-  because `src/site` is no longer there. The public site currently has
-  no path to production from git.
+  builds to static output, and since Stage 2 (PR #4) this repo carries
+  the Pages deploy itself (`.github/workflows/deploy.yml` builds
+  `vision/site/` and bundles the two demo shells; `CNAME` moved here
+  too). One gap remains between "built" and "running": the one-time
+  repo setting (Settings → Pages → Source: "GitHub Actions") hasn't
+  been confirmed flipped, so no publish has been verified yet.
 
 ## Exists as a document
 - The site content set under `vision/site/src/content/` (VISION,
@@ -58,8 +60,13 @@ and the system ledger.
   `tests/test_core.py` exists.~~ **Resolved 2026-07-24:** overclaim —
   the other three were never written. `vision/README.md` now states the
   one real core suite (16 tests) and marks the rest as not-yet-existing.
-- No CI. Every "passes" above is a manual claim until a workflow runs
-  the suites on push.
+- ~~No CI. Every "passes" above is a manual claim until a workflow runs
+  the suites on push.~~ **Resolved 2026-07-24:** stale when written — CI
+  landed with Stage 2 (PR #4): `.github/workflows/ci.yml` runs
+  compileall, all four Crystal Core self-tests, the mesh stub tests, and
+  Lumina's suite on every push/PR. First green run confirmed on PR #7's
+  own branch ("Python syntax + self-tests" — success). The "passes"
+  above are machine-checked now.
 - What www.teraustralis.com.au serves today — unverifiable from the
   session container (egress blocked). The deploy gap above is fact
   regardless of the answer.
