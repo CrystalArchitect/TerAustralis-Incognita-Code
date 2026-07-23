@@ -13,17 +13,27 @@ registered trading name
 ([`ADR-0007`](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/docs/adr/ADR-0007.md));
 this README's original one-line heading carried the old double-a drift.
 
-## Status: engine landed (Stage 1, PR 1)
+## Status: engine + vision landed, CI and Pages live here (Stage 2)
 
 [`core/`](core/) holds **Crystal Core** — the protocol pack (with
 Clementine), CrystalBridge, profiles, the mesh stub, and the TypeScript
-SDK — imported from the umbrella's canon branch
-`claude/crystalcore-boot-visual-jau1bk` @ `32692fd` under the approved
-Migration-Plan Stage 1 (engine first). All four self-test suites pass in
-this layout (see [`core/README.md`](core/README.md) to run them).
-`vision/` (Lumina, the shells, and the site/terminal placement decisions)
-arrives via PR 2. Nothing else moves without the maintainer's explicit,
-per-stage approval per the umbrella's
+SDK. [`vision/`](vision/) holds **Crystal Vision** — Lumina, voicebox, the
+demo shells, and the public site. Both imported from the umbrella's canon
+branch `claude/crystalcore-boot-visual-jau1bk` @ `32692fd` under the
+approved Migration-Plan Stage 1 (PR 1 engine, PR 3 vision).
+
+CI (`.github/workflows/ci.yml`) runs compileall, all four Crystal Core
+self-tests, the mesh stub tests, and Lumina's test suite on every push —
+mirroring the umbrella's old checks against these real paths, per
+Migration-Plan Stage 2. The public site's Pages deploy
+(`.github/workflows/deploy.yml`) and custom domain (`CNAME`) also moved
+here, since `vision/site/` is where the site's source now lives — Pages
+must live where the site lives. *(One-time manual step outstanding: a
+repo admin needs to set Pages' source to "GitHub Actions" in this repo's
+Settings → Pages; no API access from this session to do it directly.)*
+
+Nothing else moves without the maintainer's explicit, per-stage approval
+per the umbrella's
 [`Migration-Plan.md`](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/docs/governance/Migration-Plan.md).
 
 ## What will live here (pending that approval)
