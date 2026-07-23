@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teraaustralis-lumina"
+version = "1.0.0"
+description = "Local-first sovereign AI companion with consent-driven memory"
+readme = "README.md"
+license = {text = "CC-BY-NC-ND-4.0"}
+authors = [{name = "CrystalArchitect"}]
+requires-python = ">=3.10"
+
+dependencies = [
+    "flask>=2.0",
+    "flask-cors>=4.0",
+    "requests>=2.28",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "flake8>=4.0",
+]
+
+[project.urls]
+repository = "https://github.com/CrystalArchitect/teraaustralis-incognita"
+documentation = "https://teraaustralis.dev/lumina"
+issues = "https://github.com/CrystalArchitect/teraaustralis-incognita/issues"
+
+[project.scripts]
+lumina = "teraaustralis.lumina:main"
+
+[tool.setuptools]
+packages = ["teraaustralis.lumina"]
+
+[tool.setuptools.package-data]
+"teraaustralis.lumina" = ["templates/*", "static/*", "data/*"]

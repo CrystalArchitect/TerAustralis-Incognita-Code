@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teraaustralis-ei"
+version = "1.0.0"
+description = "Emotional Intelligence system with Bayesian uncertainty and active learning"
+readme = "README.md"
+license = {text = "CC-BY-NC-ND-4.0"}
+authors = [{name = "CrystalArchitect"}]
+requires-python = ">=3.10"
+
+dependencies = [
+    "torch>=2.0",
+    "transformers>=4.30",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+dbt = [
+    "dbt-core>=1.5",
+    "dbt-duckdb>=1.5",
+]
+
+[project.urls]
+repository = "https://github.com/CrystalArchitect/teraaustralis-incognita"
+documentation = "https://teraaustralis.dev/ei"
+
+[tool.setuptools]
+packages = ["teraaustralis.crystalcore_ei"]

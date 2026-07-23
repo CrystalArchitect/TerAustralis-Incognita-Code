@@ -1,0 +1,26 @@
+[project]
+name = "crystalcore"
+version = "0.1.0"
+description = "CrystalBridge - local MCP meeting-house for Clementine"
+requires-python = ">=3.11"
+dependencies = [
+  "mcp>=1.2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[project.scripts]
+crystalbridge = "crystalcore.bridge:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["crystalcore*"]

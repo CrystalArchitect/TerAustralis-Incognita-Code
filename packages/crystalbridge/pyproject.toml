@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teraaustralis-bridge"
+version = "1.0.0"
+description = "MCP consent gate for AI safety with verified permission model"
+readme = "README.md"
+license = {text = "CC-BY-NC-ND-4.0"}
+authors = [{name = "CrystalArchitect"}]
+requires-python = ">=3.10"
+
+dependencies = [
+    "pydantic>=2.0",
+    "mcp>=0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.urls]
+repository = "https://github.com/CrystalArchitect/teraaustralis-incognita"
+documentation = "https://teraaustralis.dev/bridge"
+
+[tool.setuptools]
+packages = ["teraaustralis.crystalbridge"]

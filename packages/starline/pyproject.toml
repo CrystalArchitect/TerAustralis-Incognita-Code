@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teraaustralis-starline"
+version = "1.0.0"
+description = "Multi-AI message bus with Belt-Three conduct rules and Clementine hub agent"
+readme = "README.md"
+license = {text = "CC-BY-NC-ND-4.0"}
+authors = [{name = "CrystalArchitect"}]
+requires-python = ">=3.10"
+
+dependencies = [
+    "asyncio-contextmanager>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.20",
+]
+
+[project.urls]
+repository = "https://github.com/CrystalArchitect/teraaustralis-incognita"
+documentation = "https://teraaustralis.dev/starline"
+
+[tool.setuptools]
+packages = ["teraaustralis.starline"]
