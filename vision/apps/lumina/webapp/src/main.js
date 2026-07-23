@@ -1,0 +1,10 @@
+// Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
+// SPDX-License-Identifier: Apache-2.0
+
+import { mount } from 'svelte';
+import './app.css';
+import App from './App.svelte';
+
+const app = mount(App, { target: document.getElementById('app') });
+
+export default app;
