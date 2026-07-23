@@ -13,15 +13,18 @@ registered trading name
 ([`ADR-0007`](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/docs/adr/ADR-0007.md));
 this README's original one-line heading carried the old double-a drift.
 
-## Status: empty by design
+## Status: engine landed (Stage 1, PR 1)
 
-No code lives here yet, deliberately. Code arrives only via an approved
-stage of the umbrella's
-[`Migration-Plan.md`](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/docs/governance/Migration-Plan.md)
-(see its Stage 1) — nothing moves without the maintainer's explicit,
-per-stage approval. Until then, the canonical description of the code tree
-is the umbrella's
-[SystemMap](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/docs/architecture/SystemMap.md#where-the-code-actually-lives).
+[`core/`](core/) holds **Crystal Core** — the protocol pack (with
+Clementine), CrystalBridge, profiles, the mesh stub, and the TypeScript
+SDK — imported from the umbrella's canon branch
+`claude/crystalcore-boot-visual-jau1bk` @ `32692fd` under the approved
+Migration-Plan Stage 1 (engine first). All four self-test suites pass in
+this layout (see [`core/README.md`](core/README.md) to run them).
+`vision/` (Lumina, the shells, and the site/terminal placement decisions)
+arrives via PR 2. Nothing else moves without the maintainer's explicit,
+per-stage approval per the umbrella's
+[`Migration-Plan.md`](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/docs/governance/Migration-Plan.md).
 
 ## What will live here (pending that approval)
 

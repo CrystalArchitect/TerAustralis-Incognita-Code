@@ -1,0 +1,7 @@
+# Consent Transport is the one part of crystal-core that isn't stdlib-only.
+# It needs real, audited crypto primitives (X25519, Ed25519, ChaCha20-
+# Poly1305) that Python's standard library doesn't provide.
+#
+#     pip install -r requirements-consenttransport.txt
+#
+cryptography>=41
