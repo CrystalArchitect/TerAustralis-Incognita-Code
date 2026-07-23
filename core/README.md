@@ -14,6 +14,7 @@ live here.
 | `profiles/` | CrystalBridge profile configs (runtime data such as audit logs is gitignored) |
 | `node/mesh/` | In-process mesh stub (libp2p-shaped; no real networking yet) |
 | `sdk/typescript/` | TypeScript client SDK scaffold (no consumer wired up yet) |
+| `tests/unit/` | Repo-level test suite for components without an embedded `tests/` dir (currently: the mesh stub) |
 
 ## Prove it
 
@@ -23,6 +24,8 @@ python3 -m clementine.bridge.selftest
 python3 -m services.selftest
 python3 -m rdp.selftest
 pip install -r requirements-consenttransport.txt && python3 -m consent_transport.selftest
+
+cd .. && PYTHONPATH=. python3 -m pytest tests -q   # mesh stub
 ```
 
 ## The dependency rule

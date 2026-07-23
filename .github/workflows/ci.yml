@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  python-checks:
+    name: Python syntax + self-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Syntax-check Python sources
+        run: python -m compileall -q core vision
+      - name: Starline Weaver self-test
+        working-directory: core/crystal-core
+        run: python -m clementine.bridge.selftest
+      - name: Pipeline self-test
+        working-directory: core/crystal-core
+        run: python -m services.selftest
+      - name: Install Starline dependencies
+        working-directory: core/crystal-core
+        run: pip install -r requirements-consenttransport.txt
+      - name: Starline self-test
+        working-directory: core/crystal-core
+        run: python -m consent_transport.selftest
+      - name: RDP self-test
+        working-directory: core/crystal-core
+        run: python -m rdp.selftest
+      - name: Mesh stub tests
+        working-directory: core
+        env:
+          PYTHONPATH: .
+        run: |
+          pip install pytest
+          python -m pytest tests -q
+      - name: Lumina dependencies
+        run: pip install -r vision/apps/lumina/requirements.txt pytest
+      - name: Lumina core tests
+        run: python -m pytest vision/apps/lumina/tests -q
