@@ -22,8 +22,23 @@ Companion = Lumina
 
 __version__ = "0.7.0"
 
+# System identity, for anything that introspects this package rather than
+# just importing from it (a boot/status display, a health check). Doesn't
+# claim more than this file does: no runtime dependency on core/crystal-core
+# exists yet, so this makes no Weaver-compatibility claim.
+SYSTEM_VERSION = f"CrystalCore.OS {__version__}"
+MEMORY_SCHEMA_VERSION = "1"
+SYSTEM_MANIFEST = {
+    "system": "CrystalCore.OS",
+    "version": SYSTEM_VERSION,
+    "memory_schema": MEMORY_SCHEMA_VERSION,
+    "runtime": "Lumina",
+    "authority": "companion_only",
+}
+
 __all__ = [
     "Lumina", "Companion", "Personality", "Memory", "BASE_PROMPT",
     "PROFILES_DIR", "profile_dir", "list_profiles", "profile_meta",
     "delete_profile", "__version__",
+    "SYSTEM_VERSION", "MEMORY_SCHEMA_VERSION", "SYSTEM_MANIFEST",
 ]
