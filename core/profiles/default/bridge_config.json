@@ -1,0 +1,23 @@
+{
+  "profile": "default",
+  "human_name": "crystal",
+  "interactive_approval": false,
+  "guests": {
+    "claude": {
+      "approved": true,
+      "tools": ["status", "recall", "teach", "message"]
+    },
+    "grok": {
+      "approved": true,
+      "tools": ["status", "recall", "teach", "message"]
+    },
+    "cursor": {
+      "approved": true,
+      "tools": ["status", "recall", "teach", "message"]
+    },
+    "restricted": {
+      "approved": true,
+      "tools": ["status", "recall"]
+    }
+  }
+}

@@ -1,0 +1,51 @@
+# Secrets — never commit
+.env
+.envrc
+*.pem
+*.key
+credentials*
+auth.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Clementine local memory — personal conversations and profiles never go in git
+clementine_memory.json
+clementine_memory/
+clementine_profiles/
+memory/config.json
+
+# CrystalCore.OS local state
+.crystalcore/
+
+# CrystalBridge audit trail and guest messages — real conversation content,
+# never in git (bridge_config.json itself is fine to commit)
+core/profiles/*/audit.jsonl
+core/profiles/*/messages.jsonl
+
+# Starline identity/peers/consent — this device's private key and address
+# book, never in git, wherever an agent happens to run from
+starline_identity.json
+starline_peers.json
+starline_consent.json
+**/starline_identity.json
+**/starline_peers.json
+**/starline_consent.json
+
+# Node / site build output
+node_modules/
+.svelte-kit/
