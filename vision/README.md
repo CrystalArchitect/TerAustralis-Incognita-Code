@@ -7,7 +7,7 @@ this area holds Crystal Vision: user-facing applications, interfaces, and the co
 
 | Path | Component |
 |---|---|
-| `apps/lumina/` | **Lumina** — sovereign AI companion, Ollama-backed (local-first, memory-aware, configurable LLM provider) · terminal, Flask API, Svelte webapp, browser voice · embedded CrystalCore Framework · test suites (core, integration, performance, end-to-end) |
+| `apps/lumina/` | **Lumina** — sovereign AI companion, Ollama-backed (local-first, memory-aware, configurable LLM provider) · terminal, Flask API, Svelte webapp, browser voice · embedded CrystalCore Framework · a core test suite (16 tests) |
 | `apps/voicebox/` | Voice layer HTTP server (TTS/STT interfaces) |
 | `apps/crystal-interface/` | **Demo shell** — simulated data, Authority held (not production) |
 | `apps/vision-web/` | **Demo shell** — simulated data, Authority held (not production) |
@@ -21,7 +21,10 @@ cd vision/apps/lumina
 python -m pytest tests/
 ```
 
-All four embedded test suites pass in this layout (test_core, test_integration, test_performance, test_end_to_end).
+The embedded core suite (`tests/test_core.py`, 16 tests) passes in this
+layout — memory/recall math, the condense boundary, JSON persistence with
+corrupt-file safety, and profile isolation. It is the only test suite
+present; integration, performance, and end-to-end coverage don't exist yet.
 
 ## The dependency rule
 

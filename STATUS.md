@@ -53,10 +53,11 @@ and the system ledger.
 
 ## Known unknowns
 
-- `vision/README.md` claims four Lumina test suites (test_core,
-  test_integration, test_performance, test_end_to_end). Only
-  `tests/test_core.py` exists anywhere in this repository. Overclaim,
-  or suites that never made the import? Unresolved.
+- ~~`vision/README.md` claims four Lumina test suites (test_core,
+  test_integration, test_performance, test_end_to_end); only
+  `tests/test_core.py` exists.~~ **Resolved 2026-07-24:** overclaim —
+  the other three were never written. `vision/README.md` now states the
+  one real core suite (16 tests) and marks the rest as not-yet-existing.
 - No CI. Every "passes" above is a manual claim until a workflow runs
   the suites on push.
 - What www.teraustralis.com.au serves today — unverifiable from the
