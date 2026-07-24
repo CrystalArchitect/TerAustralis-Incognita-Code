@@ -2,6 +2,9 @@
 
 Last updated: 2026-07-24
 
+Full knowledge-base reconstruction: `knowledge-base/00-INDEX.md` in
+CrystalCore.OS-the-Crystal-Architecture-Archive.
+
 This file describes the state of this repository, not the ambition of
 the system. Same ledger, same categories as the system ledger in
 CrystalCore.OS-the-Crystal-Architecture-Archive.
@@ -33,10 +36,14 @@ Code exists and is complete enough to run. No runtime here exercises it.
   Ollama and an npm build; neither exercised this session.
 - voicebox (`vision/apps/voicebox/server.py`) — TTS/STT HTTP layer.
 - `vision/site/` — the SvelteKit source of teraustralis.com.au. It
-  builds to static output, but nothing deploys it: this repo has no CI
-  at all, and the umbrella's Pages workflow now (correctly) skips
-  because `src/site` is no longer there. The public site currently has
-  no path to production from git.
+  builds to static output. Corrected 2026-07-24: this repo is not
+  CI-less — `.github/workflows/ci.yml` runs the Python suites on every
+  push, and `.github/workflows/deploy.yml` builds and deploys this site
+  (moved here at Stage 2, see the umbrella's
+  `docs/governance/Migration-Plan.md`). What's still missing: GitHub
+  Pages → Settings → Source hasn't been switched to "GitHub Actions"
+  for this repo yet (manual step, no API access to do it from an agent
+  session), so `deploy.yml` has nothing to publish to yet.
 
 ## Exists as a document
 - The site content set under `vision/site/src/content/` (VISION,
@@ -55,10 +62,14 @@ and the system ledger.
 
 - `vision/README.md` claims four Lumina test suites (test_core,
   test_integration, test_performance, test_end_to_end). Only
-  `tests/test_core.py` exists anywhere in this repository. Overclaim,
-  or suites that never made the import? Unresolved.
-- No CI. Every "passes" above is a manual claim until a workflow runs
-  the suites on push.
+  `tests/test_core.py` exists anywhere in this repository. Resolved
+  2026-07-24: confirmed overclaim — the other three suites do not
+  exist anywhere in this repository. `vision/README.md` itself is
+  still wrong and unfixed (out of scope for this STATUS.md-only pass;
+  see the Archive repo's knowledge-base).
+- Corrected 2026-07-24: `ci.yml` exists and runs the suites above on
+  every push (this line previously said "No CI"). Every "passes"
+  above is now a CI-checked claim, not just a manual one.
 - What www.teraustralis.com.au serves today — unverifiable from the
   session container (egress blocked). The deploy gap above is fact
   regardless of the answer.

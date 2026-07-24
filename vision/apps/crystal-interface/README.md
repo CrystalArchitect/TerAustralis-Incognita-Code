@@ -15,7 +15,7 @@ this shell makes **no backend calls**. Authority **HOLD**.
 ## Open
 
 ```bash
-cd src/apps/crystal-interface
+cd vision/apps/crystal-interface
 # any static server, or:
 python -m http.server 8090
 # → http://127.0.0.1:8090
@@ -42,6 +42,6 @@ This shell is static and simulated; it does not call a backend. The actual data
 pipeline is a real, tested package in the monorepo and runs independently:
 
 ```bash
-cd ../../crystal-core
+cd ../../../core/crystal-core
 python -m services.selftest      # the real ingest → decode → twin pipeline, with tests
 ```

@@ -26,7 +26,8 @@ until a fix has shipped.
 - **No real economics** — credits/CORE anywhere in this repo (including
   `interface/`) are simulated and labeled as such. There is no token, wallet, or
   mainnet integration.
-- **Starline** (`starline/`) is consent-gated at every exchange: an unpaired peer
+- **Starline / Consent Transport** (`consent_transport/`; `starline/` is
+  a deprecated alias re-exporting the same code) is consent-gated at every exchange: an unpaired peer
   is rejected before consent is even checked; a paired-but-unconsented peer is
   denied; revoking consent takes effect on the very next request. The Noise
   Protocol handshake authenticates peers by pinned public key — connecting to the
