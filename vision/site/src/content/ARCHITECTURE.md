@@ -12,7 +12,7 @@
 |--------|------|-----------------|
 | **Lumina** (sovereign companion) | `src/apps/lumina/` | Local-first AI companion: Ollama default, xAI opt-in, layered memory, profiles, terminal + web UI (`lumina.py`, `lumina_web.py`) |
 | **CrystalCore framework** (memory/presence) | `src/apps/lumina/crystalcore/` | `companion.py` (brain), `memory.py` (Personality/Memory), `profiles.py` |
-| **CrystalBridge** (guest-AI gate) | `src/crystalcore/` | MCP server: fail-closed ConsentGate (approval · permission · scope · provenance), append-only audit; guests claude / grok / cursor with scoped tools `status, recall, teach, message` |
+| **CrystalBridge** (guest-AI gate) | `src/crystalcore/` | MCP server: fail-closed ConsentGate (approval · permission; scope and provenance documented as intended, not yet implemented), append-only audit; guests claude / grok / cursor with scoped tools `status, recall, teach, message` |
 | **Starline Weaver** (multi-AI conversation) | `src/crystal-core/clementine/bridge/` | In-process + networked HTTP bus; every message labeled science/story/vision; red-button halt; adapters for Claude/GPT/Grok |
 | **Seven Sisters pack** (protocol + ethics) | `research/seven-sisters/` | Seven paths, Belt-Three law, water briefs, landing page (GitHub Pages, live) |
 | **TerAustralis Incognita** (narrative) | `mythos/teraustralis/` | Manifesto, publish threads, strategy, Lattice memory deltas |

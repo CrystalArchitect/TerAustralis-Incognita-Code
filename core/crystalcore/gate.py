@@ -28,7 +28,16 @@ class GateResult:
 
 
 class ConsentGate:
-    """Four checks fail-closed: approval, permission, scope, provenance."""
+    """Two checks, fail-closed: is the guest approved at all, and is it
+    approved for this specific tool.
+
+    Scope and provenance checks were once documented here as intended
+    (and still are in vision/site/src/content/ARCHITECTURE.md), but were
+    never implemented — no spec for what either should concretely mean
+    survives anywhere in this repository, and GuestGrant has no field to
+    hang them on. Implementing them is a separate, deliberate design task
+    with the maintainer, not a correction of this docstring.
+    """
 
     def __init__(self, config: BridgeConfig):
         self.config = config

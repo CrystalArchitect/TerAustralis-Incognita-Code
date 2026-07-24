@@ -24,6 +24,17 @@ Executes, or can be opened and used by someone other than me.
 - Lumina core tests — 16/16 pass (`python -m pytest tests/` from
   `vision/apps/lumina`; needs `pytest`, `requests`, `flask`),
   re-verified 2026-07-24.
+- CrystalBridge self-test — 7/7 pass (`cd core && python -m
+  crystalcore.selftest`; needs `pip install -r
+  core/crystalcore/requirements-bridge.txt` for the `mcp` SDK), added
+  2026-07-24. Two bugs fixed to get here: `bridge.py` resolved Lumina's
+  package to `core/apps/lumina/crystalcore` (which doesn't exist —
+  Lumina lives under `vision/`), so `recall`/`teach`/`message` crashed
+  at runtime; and the `mcp` dependency was undeclared. Honest scope:
+  `ConsentGate` enforces two checks (approval, tool-permission), not
+  the four its docstring once claimed — `scope`/`provenance` were
+  documented as intended but never built (no surviving spec for what
+  either should mean); the docstring now says two.
 - Demo shells render in a headless browser, verified 2026-07-24:
   `vision/apps/crystal-interface/`, `vision/apps/vision-web/`, and the
   engine's own `core/crystal-core/index.html`. Simulated data,
