@@ -42,7 +42,8 @@ python -m http.server 8090
 
 - Operator UI: `vision/apps/crystal-interface/`
 - Mesh stub: `core/node/mesh/`
-- Roadmap: `docs/architecture/Full-Stack-v0.5.md`
+- Roadmap: [`Full-Stack-v0.5.md`](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/docs/architecture/Full-Stack-v0.5.md)
+  (lives in the umbrella repo's `docs/`, not here)
 
 *(Earlier drafts linked `docs/journeys/README.md` and `compliance/GDPR_ROPA.md`;
 those don't exist in the repo, so they've been removed rather than left dead.)*

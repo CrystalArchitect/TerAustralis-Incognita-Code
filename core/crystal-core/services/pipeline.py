@@ -1,5 +1,5 @@
 # Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
 """Run the whole spine on a JSONL file: decode → ingest → twin report.
 
