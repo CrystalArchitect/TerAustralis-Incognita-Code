@@ -47,14 +47,12 @@ Code exists and is complete enough to run. No runtime here exercises it.
   Ollama and an npm build; neither exercised this session.
 - voicebox (`vision/apps/voicebox/server.py`) — TTS/STT HTTP layer.
 - `vision/site/` — the SvelteKit source of teraustralis.com.au. It
-  builds to static output. Corrected 2026-07-24: this repo is not
-  CI-less — `.github/workflows/ci.yml` runs the Python suites on every
-  push, and `.github/workflows/deploy.yml` builds and deploys this site
-  (moved here at Stage 2, see the umbrella's
-  `docs/governance/Migration-Plan.md`). What's still missing: GitHub
-  Pages → Settings → Source hasn't been switched to "GitHub Actions"
-  for this repo yet (manual step, no API access to do it from an agent
-  session), so `deploy.yml` has nothing to publish to yet.
+  builds to static output, and since Stage 2 (PR #4) this repo carries
+  the Pages deploy itself (`.github/workflows/deploy.yml` builds
+  `vision/site/` and bundles the two demo shells; `CNAME` moved here
+  too). One gap remains between "built" and "running": the one-time
+  repo setting (Settings → Pages → Source: "GitHub Actions") hasn't
+  been confirmed flipped, so no publish has been verified yet.
 
 ## Exists as a document
 - The site content set under `vision/site/src/content/` (VISION,
@@ -71,16 +69,19 @@ and the system ledger.
 
 ## Known unknowns
 
-- `vision/README.md` claims four Lumina test suites (test_core,
-  test_integration, test_performance, test_end_to_end). Only
-  `tests/test_core.py` exists anywhere in this repository. Resolved
-  2026-07-24: confirmed overclaim — the other three suites do not
-  exist anywhere in this repository. `vision/README.md` itself is
-  still wrong and unfixed (out of scope for this STATUS.md-only pass;
-  see the Archive repo's knowledge-base).
-- Corrected 2026-07-24: `ci.yml` exists and runs the suites above on
-  every push (this line previously said "No CI"). Every "passes"
-  above is now a CI-checked claim, not just a manual one.
+- ~~`vision/README.md` claims four Lumina test suites (test_core,
+  test_integration, test_performance, test_end_to_end); only
+  `tests/test_core.py` exists.~~ **Resolved 2026-07-24:** overclaim —
+  the other three were never written. `vision/README.md` now states the
+  one real core suite (16 tests) and marks the rest as not-yet-existing.
+- ~~No CI. Every "passes" above is a manual claim until a workflow runs
+  the suites on push.~~ **Resolved 2026-07-24:** stale when written — CI
+  landed with Stage 2 (PR #4): `.github/workflows/ci.yml` runs
+  compileall, all four Crystal Core self-tests, the mesh stub tests, and
+  Lumina's suite on every push/PR. First green run confirmed on PR #7's
+  own branch ("Python syntax + self-tests" — success). The "passes"
+  above are machine-checked now. (PR #8 adds a fifth self-test,
+  CrystalBridge's — see the Running section.)
 - What www.teraustralis.com.au serves today — unverifiable from the
   session container (egress blocked). The deploy gap above is fact
   regardless of the answer.
