@@ -6,7 +6,19 @@ step). The citizen-facing surface is the separate, slimmer
 [`../vision-web`](../vision-web).
 
 **🔭 Crystal universe — which repo is this?**  
-Siblings: **crystalcore** = Crystal Core (protocol pack) · **the-crystal-vision** = The Crystal Vision (codex site + Lumina sovereign companion app) · **teraaustralis-incognita** = TerAustralis Incognita (narrative + CrystalBridge).  
+Corrected 2026-07-24 — six repos exist today, not the three implied
+below originally: **TerAustralis-Incognita** (umbrella — governance,
+ADRs, canon, mythos, no app code) · **TerAustralis-Incognita-Code**
+(this repo, this file's actual home — the engine at `core/` and the
+vision app at `vision/`; CrystalBridge lives here, at
+`core/crystalcore/`, not in the umbrella as previously stated) ·
+**CrystalCore.OS-the-Crystal-Architecture-Archive** (the fleet-wide
+status ledger) · three frozen-provenance repos, none touched since
+2026-07-17: **The-Crystal-Vision** (codex site + the companion's
+ancestor), **crystal-vision** (this shell's interface-demo ancestor),
+and **crystalcore** (the Songline protocol pack). Full map: the
+umbrella's `docs/governance/Project-Boundaries.md`, "Repositories,
+today."  
 **License:** Apache-2.0 — see `LICENSE`
 
 **Not production.** Every number is illustrative and **simulated in the browser**;

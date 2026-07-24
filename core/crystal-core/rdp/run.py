@@ -1,5 +1,5 @@
 # Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
 """Watch the RDP decision kernel work — every precedence tier, recorded.
 

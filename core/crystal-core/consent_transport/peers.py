@@ -1,5 +1,5 @@
 # Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
 """The peer store — every agent Starline has ever been introduced to.
 
