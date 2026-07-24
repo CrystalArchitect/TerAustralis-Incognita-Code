@@ -23,14 +23,16 @@ Companion = Lumina
 __version__ = "0.7.0"
 
 # System identity, for anything that introspects this package rather than
-# just importing from it (a boot/status display, a health check). Doesn't
-# claim more than this file does: no runtime dependency on core/crystal-core
-# exists yet, so this makes no Weaver-compatibility claim.
+# just importing from it (a boot/status display, a health check).
 SYSTEM_VERSION = f"CrystalCore.OS {__version__}"
 MEMORY_SCHEMA_VERSION = "1"
 SYSTEM_MANIFEST = {
     "system": "CrystalCore.OS",
     "version": SYSTEM_VERSION,
+    # Design lineage, not a dependency: this package shares no import with
+    # core/crystal-core (the Starline Weaver) in either direction today.
+    # "Weaver-compatible" names the intent, not a wired connection.
+    "architecture": "Weaver-compatible (intent)",
     "memory_schema": MEMORY_SCHEMA_VERSION,
     "runtime": "Lumina",
     "authority": "companion_only",
