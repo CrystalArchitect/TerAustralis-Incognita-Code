@@ -2,6 +2,9 @@
 
 Last updated: 2026-07-24
 
+Full knowledge-base reconstruction: `knowledge-base/00-INDEX.md` in
+CrystalCore.OS-the-Crystal-Architecture-Archive.
+
 This file describes the state of this repository, not the ambition of
 the system. Same ledger, same categories as the system ledger in
 CrystalCore.OS-the-Crystal-Architecture-Archive.
@@ -21,6 +24,17 @@ Executes, or can be opened and used by someone other than me.
 - Lumina core tests — 16/16 pass (`python -m pytest tests/` from
   `vision/apps/lumina`; needs `pytest`, `requests`, `flask`),
   re-verified 2026-07-24.
+- CrystalBridge self-test — 7/7 pass (`cd core && python -m
+  crystalcore.selftest`; needs `pip install -r
+  core/crystalcore/requirements-bridge.txt` for the `mcp` SDK), added
+  2026-07-24. Two bugs fixed to get here: `bridge.py` resolved Lumina's
+  package to `core/apps/lumina/crystalcore` (which doesn't exist —
+  Lumina lives under `vision/`), so `recall`/`teach`/`message` crashed
+  at runtime; and the `mcp` dependency was undeclared. Honest scope:
+  `ConsentGate` enforces two checks (approval, tool-permission), not
+  the four its docstring once claimed — `scope`/`provenance` were
+  documented as intended but never built (no surviving spec for what
+  either should mean); the docstring now says two.
 - Demo shells render in a headless browser, verified 2026-07-24:
   `vision/apps/crystal-interface/`, `vision/apps/vision-web/`, and the
   engine's own `core/crystal-core/index.html`. Simulated data,
@@ -66,7 +80,8 @@ and the system ledger.
   compileall, all four Crystal Core self-tests, the mesh stub tests, and
   Lumina's suite on every push/PR. First green run confirmed on PR #7's
   own branch ("Python syntax + self-tests" — success). The "passes"
-  above are machine-checked now.
+  above are machine-checked now. (PR #8 adds a fifth self-test,
+  CrystalBridge's — see the Running section.)
 - What www.teraustralis.com.au serves today — unverifiable from the
   session container (egress blocked). The deploy gap above is fact
   regardless of the answer.

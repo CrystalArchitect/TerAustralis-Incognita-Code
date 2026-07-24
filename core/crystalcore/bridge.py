@@ -32,8 +32,13 @@ from mcp.server.fastmcp import FastMCP
 from crystalcore.config import BridgeConfig
 from crystalcore.gate import ConsentGate
 
-SRC_ROOT = Path(__file__).resolve().parent.parent
-LUMINA_PKG_DIR = SRC_ROOT / "apps" / "lumina" / "crystalcore"
+SRC_ROOT = Path(__file__).resolve().parent.parent          # core/
+REPO_ROOT = SRC_ROOT.parent                                 # repo root (parent of core/ and vision/)
+# Lumina lives in the vision/ half of the tree, not core/. The Stage 1/2
+# repo split moved src/apps/ -> vision/apps/ and src/crystalcore/ ->
+# core/crystalcore/, so the two are now siblings under the repo root, not
+# a single shared src/ root.
+LUMINA_PKG_DIR = REPO_ROOT / "vision" / "apps" / "lumina" / "crystalcore"
 
 
 def _load_lumina_framework():
@@ -73,12 +78,12 @@ class Bridge:
         """Lumina, loaded lazily so `status` doesn't need Ollama.
 
         Lumina's own `profiles.profile_dir()` resolves relative to the
-        *calling process's* working directory, not to src/apps/lumina/ — so
-        it can't be used here directly. This bridge is meant to be run from
-        the repo root (`docs/guides/MCP-Guest.md`), which is a different cwd than
-        Lumina's own CLI uses (`cd src/apps/lumina && python3
-        lumina.py`). Build the path explicitly, anchored to
-        src/apps/lumina/, so the bridge always reaches the same memory a
+        *calling process's* working directory, not to vision/apps/lumina/ —
+        so it can't be used here directly. This bridge is meant to be run
+        from the `core/` directory (so `crystalcore` imports), which is a
+        different cwd than Lumina's own CLI uses (`cd vision/apps/lumina &&
+        python3 lumina.py`). Build the path explicitly, anchored to
+        vision/apps/lumina/, so the bridge always reaches the same memory a
         human running Lumina directly would see — not a second, empty
         profile dir wherever the bridge happened to be launched from.
         """

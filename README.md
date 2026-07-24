@@ -23,9 +23,10 @@ branch `claude/crystalcore-boot-visual-jau1bk` @ `32692fd` under the
 approved Migration-Plan Stage 1 (PR 1 engine, PR 3 vision).
 
 CI (`.github/workflows/ci.yml`) runs compileall, all four Crystal Core
-self-tests, the mesh stub tests, and Lumina's test suite on every push —
-mirroring the umbrella's old checks against these real paths, per
-Migration-Plan Stage 2. The public site's Pages deploy
+self-tests, the CrystalBridge self-test, the mesh stub tests, and
+Lumina's test suite on every push — mirroring the umbrella's old checks
+against these real paths, per Migration-Plan Stage 2. The public site's
+Pages deploy
 (`.github/workflows/deploy.yml`) and custom domain (`CNAME`) also moved
 here, since `vision/site/` is where the site's source now lives — Pages
 must live where the site lives. *(One-time manual step outstanding: a

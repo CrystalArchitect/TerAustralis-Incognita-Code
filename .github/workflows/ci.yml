@@ -35,6 +35,12 @@ jobs:
       - name: RDP self-test
         working-directory: core/crystal-core
         run: python -m rdp.selftest
+      - name: Install CrystalBridge dependencies
+        working-directory: core/crystalcore
+        run: pip install -r requirements-bridge.txt
+      - name: CrystalBridge self-test
+        working-directory: core
+        run: python -m crystalcore.selftest
       - name: Mesh stub tests
         working-directory: core
         env:

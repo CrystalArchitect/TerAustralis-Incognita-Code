@@ -4,8 +4,8 @@ User-facing demo surface for the Crystal stack.
 
 | Surface | Audience |
 |---------|----------|
-| **This app** (`src/apps/vision-web`) | Citizens / end users |
-| `src/apps/crystal-interface` | Operators / builders |
+| **This app** (`vision/apps/vision-web`) | Citizens / end users |
+| `vision/apps/crystal-interface` | Operators / builders |
 | TerAustralis + Starline | Investor / pilot narrative |
 
 **Not production.** Credits, capabilities, and receipts are client-side demo only. Authority **HOLD**. Cultural metaphors (Seven Sisters / Songline) are collaborative framing only — not ownership claims.
@@ -22,8 +22,8 @@ surface. The operator shell (`crystal-interface`) is a different codebase.
 ## Open
 
 ```powershell
-cd src/apps/vision-web
-# from monorepo src/apps/ so cross-links work:
+cd vision/apps/vision-web
+# from vision/apps/ so cross-links work:
 cd ..
 python -m http.server 8090
 # → http://127.0.0.1:8090/vision-web/
@@ -40,8 +40,8 @@ python -m http.server 8090
 
 ## Related
 
-- Operator UI: `src/apps/crystal-interface/`
-- Mesh stub: `src/node/mesh/`
+- Operator UI: `vision/apps/crystal-interface/`
+- Mesh stub: `core/node/mesh/`
 - Roadmap: `docs/architecture/Full-Stack-v0.5.md`
 
 *(Earlier drafts linked `docs/journeys/README.md` and `compliance/GDPR_ROPA.md`;
