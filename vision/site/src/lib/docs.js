@@ -48,7 +48,7 @@ function stripInline(text) {
   return text.replace(/[*_`>#]/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim();
 }
 
-const GITHUB_BLOB = 'https://github.com/CrystalArchitect/TeraAustralis-Incognita/blob/main';
+const GITHUB_BLOB = 'https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main';
 
 /**
  * Rewrite in-repo links/images so they work inside the app viewer:

@@ -2,10 +2,41 @@
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
 <script>
+  import Constellation from '$lib/components/Constellation.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import { chronicle } from '$lib/data/chronicle.js';
 
   /** @type {{ data: { docs: { slug: string, title: string, description: string }[] } }} */
   let { data } = $props();
+
+  // The principles, doc-backed: each card opens the Archive where the
+  // full text lives.
+  const principles = [
+    {
+      href: '/docs',
+      title: 'Curiosity',
+      body: 'Curiosity before certainty. The unknown south was found by sailing toward it, not by asserting it was there.',
+      status: 'the spirit of the search',
+      st: 'var(--blue)'
+    },
+    {
+      href: '/docs',
+      title: 'Evidence',
+      body: 'Evidence before conclusion. Dreamed lines are marked as dreamed until they are surveyed — and never pretend to be measured.',
+      status: 'the Incognita Rule',
+      st: 'var(--gold)'
+    },
+    {
+      href: '/docs',
+      title: 'Stewardship',
+      body: 'Stewardship before ownership. Consent before influence. Discovery shared for the benefit of those who follow.',
+      status: 'the Covenant',
+      st: 'var(--green)'
+    }
+  ];
+
+  // The Chronicle entries live in $lib/data/chronicle.js — the single
+  // source of truth, dated from the repositories' own history.
 
   const archiveColors = [
     'var(--purple)',
@@ -156,9 +187,37 @@
     ancient dreams of a Great Southern Land, the deep Songlines of this continent, and humanity's
     reach for the stars.
   </p>
+  <p class="directive">&ldquo;Expand to the stars and thereby understand the Universe.&rdquo;</p>
+  <p class="directive-tag">The Purpose Core directive</p>
   <div class="ctas">
     <a class="btn btn-primary" href="/codex">Read the Codex</a>
     <a class="btn btn-ghost" href="/lumina">Meet Lumina</a>
+  </div>
+</section>
+
+<section class="section node" id="constellation" style="--node:var(--silver)">
+  <h2>The Constellation</h2>
+  <p>
+    The ecosystem, as it looks from a little way out: seven lights, joined. Every node is a door
+    that actually opens — follow any of them inward.
+  </p>
+  <Constellation />
+</section>
+
+<section class="section node" id="purpose" style="--node:var(--gold)">
+  <h2>Purpose</h2>
+  <p>
+    Three commitments hold everything on this site — the story, the software, and the space
+    between them.
+  </p>
+  <div class="cards">
+    {#each principles as p (p.title)}
+      <a class="card" href={p.href} style="--st:{p.st}">
+        <h3>{p.title}</h3>
+        <p>{p.body}</p>
+        <span class="status">{p.status}</span>
+      </a>
+    {/each}
   </div>
 </section>
 
@@ -242,6 +301,24 @@
   <p><a class="btn btn-ghost" href="/docs">Open the full Archive →</a></p>
 </section>
 
+<section class="section node" id="chronicle" style="--node:var(--green)">
+  <h2>The Chronicle</h2>
+  <p>
+    The development record, dated from the repositories' own history — survey, not legend. The
+    full detail behind every entry lives in <a href="/docs">the Archive</a>.
+  </p>
+  <ol class="timeline">
+    {#each chronicle as entry (entry.when + entry.what)}
+      <li style="--tl:{entry.tl}">
+        <span class="when">{entry.when}</span>
+        <span class="what">{entry.what}</span>
+        <span class="note">{entry.note}</span>
+      </li>
+    {/each}
+  </ol>
+  <p class="timeline-coda">The chronicle is never an ending. It is the point from which the next journey begins.</p>
+</section>
+
 <section class="section node" id="music" style="--node:var(--pink)">
   <h2>The Starline Transmissions</h2>
   <p>
@@ -280,7 +357,7 @@
 
   <p class="subhead">Other Ways to Contribute</p>
   <ul class="support-list">
-    <li>Star this <a href="https://github.com/CrystalArchitect/TeraAustralis-Incognita">repository on GitHub</a></li>
+    <li>Star this <a href="https://github.com/CrystalArchitect/TerAustralis-Incognita">repository on GitHub</a></li>
     <li>Listen to and share the soundtrack on <a href="https://suno.com/@m13crystalat">Suno</a></li>
     <li>Share the project with people who might resonate</li>
     <li>Offer your skills as a storyteller, singer, musician, writer, artist, or developer</li>
@@ -301,3 +378,75 @@
 </section>
 
 <Footer showVoices showCode />
+
+<style>
+  .directive {
+    margin-top: 28px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+    color: var(--gold);
+    max-width: 40ch;
+  }
+  .directive-tag {
+    margin-top: 6px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .timeline {
+    list-style: none;
+    margin: 30px 0 0 6px;
+    padding: 0;
+  }
+  .timeline li {
+    position: relative;
+    padding: 0 0 26px 32px;
+    border-left: 1px solid var(--line);
+  }
+  .timeline li:last-child {
+    padding-bottom: 4px;
+    border-left-color: transparent;
+  }
+  .timeline li::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0.45em;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--tl, var(--silver));
+    box-shadow: 0 0 12px 1px var(--tl, var(--silver));
+  }
+  .timeline .when {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .timeline .what {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.08rem;
+    color: var(--tl, var(--ink));
+  }
+  .timeline .note {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 58ch;
+  }
+  .timeline-coda {
+    margin-top: 26px;
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--silver);
+  }
+</style>

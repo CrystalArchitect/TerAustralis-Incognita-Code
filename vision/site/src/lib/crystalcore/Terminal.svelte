@@ -217,7 +217,8 @@
   });
 </script>
 
-<main class="shell" class:flying>
+<!-- section, not main: the page landmark lives in the root layout -->
+<section class="shell" class:flying aria-label="CrystalCore terminal">
   <div class="scroll" bind:this={scrollEl}>
     {#each lines as line}
       <div class="ln {line.cls}">{@html line.html}</div>
@@ -237,7 +238,7 @@
       aria-label="CrystalCore.OS command line"
     />
   </div>
-</main>
+</section>
 
 <style>
   .shell {

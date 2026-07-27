@@ -10,7 +10,7 @@ export function load() {
     {
       title: 'Contribute',
       body: 'Fixes, features, art, mythos — the whole project is open on GitHub. Add something and open a pull request.',
-      href: 'https://github.com/CrystalArchitect/teraaustralis-incognita',
+      href: 'https://github.com/CrystalArchitect/TerAustralis-Incognita',
       cta: '→ Open the repo',
       st: 'var(--green)'
     },
