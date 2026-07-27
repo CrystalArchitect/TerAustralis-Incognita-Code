@@ -4,6 +4,7 @@
 <script>
   import Constellation from '$lib/components/Constellation.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import { chronicle } from '$lib/data/chronicle.js';
 
   /** @type {{ data: { docs: { slug: string, title: string, description: string }[] } }} */
   let { data } = $props();
@@ -34,52 +35,8 @@
     }
   ];
 
-  // The Chronicle: dated from the repositories' own history — survey,
-  // not legend. Every entry is verifiable in the Archive.
-  const chronicle = [
-    {
-      when: '2026-07-14',
-      what: 'First light',
-      note: 'The Crystal Vision repository opens — the oldest commit anywhere in the portfolio.',
-      tl: 'var(--purple)'
-    },
-    {
-      when: '2026-07-15',
-      what: 'The companion is born',
-      note: 'Lumina arrives (first named Clementine): local-first, layered memory, sovereignty by design.',
-      tl: 'var(--green)'
-    },
-    {
-      when: '2026-07-17',
-      what: 'The snapshot is saved',
-      note: 'The last capture from the founding laptop is preserved; the three earliest repositories are sealed as provenance.',
-      tl: 'var(--silver)'
-    },
-    {
-      when: '2026-07-21',
-      what: 'The great renaming',
-      note: 'Lumina and the Starline Weaver take their true names — and "Songline" is honoured as culture, retired as a component name.',
-      tl: 'var(--blue)'
-    },
-    {
-      when: '2026-07-23',
-      what: 'Boundaries adopted',
-      note: 'ADR-0011 splits the work honestly: the umbrella keeps canon and governance; the engine and this site move to the code repository.',
-      tl: 'var(--gold)'
-    },
-    {
-      when: '2026-07-24',
-      what: 'The archaeology',
-      note: 'All six repositories surveyed with an identical battery — every claim tiered by evidence, corrections recorded.',
-      tl: 'var(--pink)'
-    },
-    {
-      when: '2026-07-27',
-      what: 'The terminal flies',
-      note: 'CrystalCore.OS boots from a fresh clone — boot, network, broadcast, priority channel — and the Chronicle itself begins.',
-      tl: 'var(--purple)'
-    }
-  ];
+  // The Chronicle entries live in $lib/data/chronicle.js — the single
+  // source of truth, dated from the repositories' own history.
 
   const archiveColors = [
     'var(--purple)',
@@ -400,7 +357,7 @@
 
   <p class="subhead">Other Ways to Contribute</p>
   <ul class="support-list">
-    <li>Star this <a href="https://github.com/CrystalArchitect/TeraAustralis-Incognita">repository on GitHub</a></li>
+    <li>Star this <a href="https://github.com/CrystalArchitect/TerAustralis-Incognita">repository on GitHub</a></li>
     <li>Listen to and share the soundtrack on <a href="https://suno.com/@m13crystalat">Suno</a></li>
     <li>Share the project with people who might resonate</li>
     <li>Offer your skills as a storyteller, singer, musician, writer, artist, or developer</li>
