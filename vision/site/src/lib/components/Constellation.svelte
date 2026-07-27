@@ -71,10 +71,10 @@
     opacity: 0.9;
   }
   .label {
-    fill: var(--ink);
+    fill: var(--text-primary, var(--ink));
     font-family: var(--font-display);
-    font-size: 17px;
-    font-weight: 600;
+    font-size: var(--text-body, 17px);
+    font-weight: var(--weight-semibold, 600);
   }
   .sublabel {
     fill: var(--muted);

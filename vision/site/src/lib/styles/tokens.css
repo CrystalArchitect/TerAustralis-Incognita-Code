@@ -6,7 +6,13 @@
    already in app.css. Zero visual change by construction: every token
    maps to an existing canon value. New and touched components should
    prefer these role names over raw hues, so that any future palette
-   decision (its own ADR) becomes one file's edit. */
+   decision (its own ADR) becomes one file's edit.
+
+   Two-tier law (the CrystalUI Token Constitution's rules, adopted
+   under ADR-0012 — its rules, not its palette): Tier 1 is the raw
+   canon values in app.css; Tier 2 is these semantic roles. Components
+   consume Tier 2 only — no raw hues, no hard-coded colours. Changing
+   Tier 1 changes the brand: that is an ADR, not an edit. */
 
 :root {
   /* Surfaces */
