@@ -23,6 +23,7 @@
   /* Text */
   --text-primary: var(--ink);
   --text-secondary: var(--muted);
+  --text-muted-accessible: #C5CDE5;
   --text-inverse: #050208;
 
   /* Borders & dividers */

@@ -1,13 +1,13 @@
   :root{
     --bg:#000000;
     --ink:#E9EBF4;
-    --muted:#A6ACC4;
-    --purple:#A78BFA;
-    --blue:#7AA2FF;
-    --green:#6FE7B7;
-    --pink:#F5A0D4;
-    --silver:#C9CEDF;
-    --gold:#E9BB5F;
+    --muted:#C5CDE5;
+    --purple:#B8A1FF;
+    --blue:#8CB3FF;
+    --green:#82F5CC;
+    --pink:#FFAEE0;
+    --silver:#D9DDE8;
+    --gold:#F5C86F;
     --line:rgba(233,235,244,.08);
     --card:#0A0A0A;
     --gutter:56px;
