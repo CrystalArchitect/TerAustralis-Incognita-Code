@@ -12,7 +12,9 @@
 </script>
 
 <div class="constellation">
-  <svg viewBox="0 0 800 400" role="img" aria-labelledby="constellation-title">
+  <!-- No role="img" here: the map contains real links, and an image
+       role would mark them presentational (axe: nested-interactive). -->
+  <svg viewBox="0 0 800 400" aria-labelledby="constellation-title">
     <title id="constellation-title">
       The TerAustralis constellation — seven nodes, each a page of this site
     </title>
