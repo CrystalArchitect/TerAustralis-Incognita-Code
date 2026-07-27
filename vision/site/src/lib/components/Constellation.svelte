@@ -59,7 +59,7 @@
     overflow: visible;
   }
   .thread {
-    stroke: var(--line);
+    stroke: var(--border, var(--line));
     stroke-width: 1;
   }
   .halo {
@@ -97,7 +97,7 @@
     fill: var(--c, var(--gold));
   }
   a:focus-visible {
-    outline: 2px solid var(--blue);
+    outline: var(--focus-ring, 2px solid var(--blue));
     outline-offset: 4px;
     border-radius: 4px;
   }

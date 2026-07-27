@@ -3,6 +3,8 @@
 
 <script>
   import '../app.css';
+  import '$lib/styles/tokens.css';
+  import '$lib/styles/motion.css';
   import Header from '$lib/components/Header.svelte';
   import { onMount } from 'svelte';
   import { afterNavigate } from '$app/navigation';

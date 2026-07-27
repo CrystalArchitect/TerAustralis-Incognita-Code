@@ -1,0 +1,41 @@
+/* Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
+   SPDX-License-Identifier: CC-BY-NC-ND-4.0
+
+   CrystalUI semantic tokens — the structure from the CrystalUI
+   Foundation plan (2026-07-27), the colours from the canon identity
+   already in app.css. Zero visual change by construction: every token
+   maps to an existing canon value. New and touched components should
+   prefer these role names over raw hues, so that any future palette
+   decision (its own ADR) becomes one file's edit. */
+
+:root {
+  /* Surfaces */
+  --background: var(--bg);
+  --surface: var(--card);
+  --surface-elevated: rgba(255, 255, 255, 0.03);
+
+  /* Text */
+  --text-primary: var(--ink);
+  --text-secondary: var(--muted);
+  --text-inverse: #050208;
+
+  /* Borders & dividers */
+  --border: var(--line);
+  --border-strong: rgba(233, 235, 244, 0.18);
+
+  /* Links & focus */
+  --link: var(--blue);
+  --link-hover: var(--ink);
+  --focus-ring: 2px solid var(--blue);
+
+  /* Domains — the Starline spectrum, addressed by role */
+  --domain-codex: var(--gold);
+  --domain-crystalcore: var(--purple);
+  --domain-lumina: var(--green);
+  --domain-starline: var(--blue);
+  --domain-archive: var(--silver);
+  --domain-gallery: var(--pink);
+
+  /* Glow — consumed by the motion utilities */
+  --glow-color: var(--silver);
+}
