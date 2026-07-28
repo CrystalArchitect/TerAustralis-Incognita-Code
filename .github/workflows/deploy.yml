@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Publish site
 
 on:
   push:
@@ -6,11 +6,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  build_site:
+  build_and_publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,26 +25,19 @@ jobs:
       - name: Build
         run: cd vision/site && npm run build
 
-      - name: Add static demo shells to the Pages artifact
+      - name: Add static demo shells to the published site
         run: |
           cp -r vision/apps/crystal-interface vision/site/build/crystal-interface
           cp -r vision/apps/vision-web vision/site/build/vision-web
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      # Pages cannot serve from this repository — it is private, and Pages on a
+      # private repo requires a paid plan. The built site is published to the
+      # public TerAustralis-Incognita repo, which serves it at the custom domain.
+      - name: Publish to the public site repo
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: 'vision/site/build'
-
-  deploy:
-    needs: build_site
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          deploy_key: ${{ secrets.SITE_DEPLOY_KEY }}
+          external_repository: CrystalArchitect/TerAustralis-Incognita
+          publish_branch: gh-pages
+          publish_dir: vision/site/build
+          cname: www.teraustralis.com.au
