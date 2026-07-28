@@ -8,7 +8,7 @@ export const USER = '@m13crystalat';
 export const STACK = [
   { id: 'lumina', state: 'surveyed', gloss: 'local-first companion', note: 'Sovereign AI. Layered memory, terminal and web UI. Installable tonight.' },
   { id: 'consent-transport', state: 'surveyed', gloss: 'p2p memory exchange', note: 'Consent Transport: Noise IK handshake, consent-gated, revocation on the next request.' },
-  { id: 'codex', state: 'dreamed', gloss: 'chapters I–V', note: 'Aristotle’s southern dream, the deep ancient knowledge, and the reach for the stars.' },
+  { id: 'codex', state: 'dreamed', gloss: 'chapters I–V', note: 'Aristotle’s southern dream, the deep Songlines, and the reach for the stars.' },
   { id: 'apocryphon', state: 'dreamed', gloss: 'the companion text', note: 'In the beginning was not the Word, but the Vibration.' },
   { id: 'gallery', state: 'dreamed', gloss: '96 plates · made', note: 'Ninety-six original works from the Crystal universe. The plates exist. The world they describe does not.' },
   { id: 'crystalcore', state: 'dreamed', gloss: 'this terminal', note: 'The mythos rendered as a terminal you can fly through. You are inside it. It is not shipped.' }

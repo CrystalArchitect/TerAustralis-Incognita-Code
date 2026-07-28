@@ -205,7 +205,7 @@ proof-of-SLA research spike.
 **O. Cultural governance (operational):** `MYTHIC_SPINE.md` (core draft) +
 `CULTURAL_PROTOCOL.md` (council approval required); CI check on
 `council_approved: true` before any epoch name ships; block list — no sacred secret
-material, no unapproved ancient knowledge commercial use. **Seven Sisters in software: only as
+material, no unapproved Songline commercial use. **Seven Sisters in software: only as
 epoch codenames inside approved charters.**
 
 **P. Commercial & org:** revenue = credit-sale margin (treasury+ops), burn fees

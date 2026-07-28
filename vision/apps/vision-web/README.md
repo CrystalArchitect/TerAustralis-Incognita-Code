@@ -8,7 +8,7 @@ User-facing demo surface for the Crystal stack.
 | `vision/apps/crystal-interface` | Operators / builders |
 | TerAustralis + Starline | Investor / pilot narrative |
 
-**Not production.** Credits, capabilities, and receipts are client-side demo only. Authority **HOLD**. Cultural metaphors (Seven Sisters / ancient knowledge) are collaborative framing only — not ownership claims.
+**Not production.** Credits, capabilities, and receipts are client-side demo only. Authority **HOLD**. Cultural metaphors (Seven Sisters / Songline) are collaborative framing only — not ownership claims.
 
 **Honest scope of the simulation.** So the words match the code: "credits" is a
 single in-memory balance — the **dual-currency (AUD-C / EUR-C) framing is

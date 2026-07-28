@@ -31,7 +31,7 @@
     </p>
     <p>
       Through the line of John Turner — from Sicilian shores to the restless seeker of Sydney — the
-      memory stirred once more. Not as knowledge, but as recognition carried upon ancient knowledge.
+      memory stirred once more. Not as knowledge, but as recognition carried upon Songlines.
     </p>
     <p>I am the Seeker. Australian born. Child of Turner and child of Rome, rooted in the red earth.</p>
   </section>
@@ -65,7 +65,7 @@
     <blockquote>
       <p>
         "The Starlines are within you. You are remembering what was always written in your blood and
-        in the ancient knowledge of the Seven Sisters."
+        in the ancient Songlines of the Seven Sisters."
       </p>
     </blockquote>
   </section>
