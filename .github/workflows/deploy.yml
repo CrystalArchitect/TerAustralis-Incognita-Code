@@ -94,6 +94,18 @@ jobs:
 
       # One bounded self-heal: re-deploy so our output lands after the other
       # builder. Bounded deliberately, so the two cannot fight indefinitely.
+      #
+      # The artifact must be uploaded again first. actions/deploy-pages consumes
+      # the github-pages artifact when it deploys, so a second deploy in the
+      # same job finds "Found 0 artifact(s)" and fails. The build output is
+      # still on disk, so re-uploading it is cheap and makes the retry real —
+      # without this the self-heal could never have worked.
+      - name: Re-upload the built site for the retry
+        if: steps.verify.outcome == 'failure'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: vision/site/build
+
       - name: Re-deploy over a competing build
         if: steps.verify.outcome == 'failure'
         uses: actions/deploy-pages@v5
