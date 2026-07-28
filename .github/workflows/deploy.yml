@@ -71,3 +71,42 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+      # A successful deploy does not mean the site is being served. If the Pages
+      # Source is set to "Deploy from a branch", GitHub also runs its own
+      # builder on every push; that one renders the repository root with Jekyll
+      # and finishes 20-45s after this job, overwriting the site with a rendered
+      # README. Both jobs report success and the environment URL stays correct,
+      # so the failure is completely silent.
+      #
+      # Wait past the other builder before checking, and assert a path that
+      # exists only in the built site. Never assert the bare domain: it returns
+      # 200 in the failure mode too, because the README renders at root.
+      # continue-on-error so a self-heal below can still finish green; only the
+      # final check decides the job's outcome.
+      - name: Verify the domain is serving this build
+        id: verify
+        continue-on-error: true
+        run: |
+          echo "Waiting 90s for any competing Pages build to finish..."
+          sleep 90
+          "${GITHUB_WORKSPACE}/.github/scripts/probe-site.sh"
+
+      # One bounded self-heal: re-deploy so our output lands after the other
+      # builder. Bounded deliberately, so the two cannot fight indefinitely.
+      - name: Re-deploy over a competing build
+        if: steps.verify.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+
+      - name: Confirm the re-deploy took
+        if: steps.verify.outcome == 'failure'
+        run: |
+          if "${GITHUB_WORKSPACE}/.github/scripts/probe-site.sh"; then
+            echo "Serving this build after one re-deploy."
+            exit 0
+          fi
+          echo "::error::The domain is not serving this build."
+          echo "::error::Set Settings -> Pages -> Source to 'GitHub Actions'."
+          echo "::error::While Source is 'Deploy from a branch', GitHub's own"
+          echo "::error::builder publishes the repo README over this site."
+          exit 1
