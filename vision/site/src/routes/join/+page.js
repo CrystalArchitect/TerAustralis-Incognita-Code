@@ -54,6 +54,12 @@ export function load() {
       st: 'var(--pink)'
     },
     {
+      handle: '@catillaice',
+      href: 'https://suno.com/@catillaice',
+      work: 'Music made in the same universe — written independently of the Starline Transmissions, and kept its own. Credited here by agreement.',
+      st: 'var(--green)'
+    },
+    {
       handle: '@pacartcollect',
       href: 'https://x.com/pacartcollect',
       work: 'Inscribing the mythos art on-chain as Ordinals, under a separate licence grant. Independent work — the project issues no token.',
