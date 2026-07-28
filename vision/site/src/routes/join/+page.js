@@ -52,6 +52,12 @@ export function load() {
       href: 'https://suno.com/@m13crystalat',
       work: 'Original music — the Starline Transmissions soundtrack.',
       st: 'var(--pink)'
+    },
+    {
+      handle: '@pacartcollect',
+      href: 'https://x.com/pacartcollect',
+      work: 'Inscribing the mythos art on-chain as Ordinals, under a separate licence grant. Independent work — the project issues no token.',
+      st: 'var(--gold)'
     }
   ];
 

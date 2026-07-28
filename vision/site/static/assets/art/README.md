@@ -51,7 +51,7 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `crystalcore-os-upgrade-tilt.jpeg` | The upgrade tablet, angled render |
 | `light-bearer-over-the-mesh.jpeg` | The star-woven light-bearer above the world, the mesh of hands reaching up to meet her |
 | `song-of-the-lattice.jpeg` | The lattice singing — staves of light pouring from her voice into the weave |
-| `dawn-of-the-settlement.jpeg` | Dawn over the red-dirt settlement — desks and their workers, solar fields, rockets rising, crystal coins in the sky (Vision-layer imagery; the project holds no token) |
+| `dawn-of-the-settlement.jpeg` | Dawn over the red-dirt settlement — desks and their workers, solar fields, rockets rising, crystal coins in the sky (Vision-layer imagery; the project issues no token — individual artworks have been inscribed and sold by a third party under a separate licence grant) |
 | `starline-network-year-3000.jpeg` | The Starline Network, Year 3000 — Earth Node, Mars Redoubt, Alpha Centauri Outpost, Crystal Revenant Hub, the Purpose quote burning at the Nexus (rendered by the `map` command in `../crystalcore_os.py`) |
 | `fleet-of-the-starlines.jpeg` | The fleet riding the starline rings out from the bright hub, worlds on either side |
 | `network-web.jpeg` | The network as living web — every node named, the three original songs written across the sky (Red Dust Axis · Shooting Star Girl · Fermi's Silent Line) |
