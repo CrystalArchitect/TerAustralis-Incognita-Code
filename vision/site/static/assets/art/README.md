@@ -104,6 +104,8 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `crystalcore-lattice-overlay.jpeg` | *AI-generated (Grok Imagine)* — the CrystalCore lattice laid over the continent — nodes lit teal and gold along the old routes |
 | `sovereign-horizon.jpeg` | *AI-generated (Grok Imagine)* — the red continent under launch traces, the spiral holding the centre: "Sovereign Horizon" |
 | `incognita-lattice-architecture.jpeg` | *AI-generated (Grok Imagine)* — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin |
+| `node-activated-quill.jpeg` | *AI-generated (Grok Imagine)* — the quill drawn in gold and cyan filament, rune-marked along its vane, held in a double helix of light: "Node Activated" |
+| `node-activated-stream-open.jpeg` | *AI-generated (Grok Imagine)* — the gold quill upright at the centre of the glyph-ringed disc, a ring of light around it and the four arrows running out: "Node Activated — Stream Open" |
 
 **Truth label (Vision):** this art is the project's own mythic narrative. Where a
 real person's name or likeness appears — whether as a name, a silhouette, or a
