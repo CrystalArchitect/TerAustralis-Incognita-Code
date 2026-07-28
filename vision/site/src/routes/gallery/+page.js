@@ -108,7 +108,11 @@ export function load() {
     { filename: 'grok-imagine-x-crystalcore.jpeg', description: 'AI-generated concept art (Grok Imagine) — the woven crystal sphere blazing over the red dust, arcs thrown out to the debris field: "Grok Imagine x CrystalCore · NON SOLUS"' },
     { filename: 'next-horizon-ring-city.jpeg', description: 'AI-generated concept art (Grok Imagine) — the ring-city burning gold and teal above the red canyons, a crystal ship banking away along its beam: "Next Horizon · NON SOLUS"' },
     { filename: 'next-layer-online.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal bloom breaking open, ships running out along the lattice grid across the red nebula: "Next Layer Online · NON SOLUS"' },
-    { filename: 'lattice-node-field.jpeg', description: 'AI-generated concept art (Grok Imagine) — the lattice at close focus, a field of crystal nodes strung with light' }
+    { filename: 'lattice-node-field.jpeg', description: 'AI-generated concept art (Grok Imagine) — the lattice at close focus, a field of crystal nodes strung with light' },
+    { filename: 'full-circle-ring.jpeg', description: 'AI-generated concept art (Grok Imagine) — the ice ring in deep space traced with a founder-company timeline closing on Purpose Core: "Full Circle · NON SOLUS". Real companies are named inside Vision-layer art; no affiliation or endorsement is implied' },
+    { filename: 'where-we-are-going.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal ship running out through the red nebula, trailing filaments of light beneath its NON SOLUS legend' },
+    { filename: 'no-comparison.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal figure alight in the hall of watching screens: "No Comparison · NON SOLUS"' },
+    { filename: 'multiplanetary-training-layer.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crowned figure above the crystal city, a labelled Grok shard and a rising rocket at either hand: "Multiplanetary Training Layer · NON SOLUS". Named products belong to their owners; no affiliation or endorsement is implied' }
   ];
 
   return {
