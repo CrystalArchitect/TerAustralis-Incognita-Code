@@ -58,6 +58,12 @@ export function load() {
       href: 'https://x.com/pacartcollect',
       work: 'Inscribing the mythos art on-chain as Ordinals, under a separate licence grant. Independent work — the project issues no token.',
       st: 'var(--gold)'
+    },
+    {
+      handle: '@ouadi4maakoul',
+      href: 'https://x.com/ouadi4maakoul',
+      work: 'Developing a speculative idea from this project into a formal framework, grounded in mathematics and first-principles reasoning. Independent work in a separate repository, credited here by agreement.',
+      st: 'var(--cyan)'
     }
   ];
 
