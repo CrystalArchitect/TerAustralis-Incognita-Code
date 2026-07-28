@@ -99,6 +99,11 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `where-we-are-going.jpeg` | *AI-generated (Grok Imagine)* — the crystal ship running out through the red nebula, trailing filaments of light beneath its NON SOLUS legend |
 | `no-comparison.jpeg` | *AI-generated (Grok Imagine)* — the crystal figure alight in the hall of watching screens: "No Comparison · NON SOLUS" |
 | `multiplanetary-training-layer.jpeg` | *AI-generated (Grok Imagine)* — the crowned figure above the crystal city, a labelled Grok shard and a rising rocket at either hand: "Multiplanetary Training Layer · NON SOLUS". Names a real product; see the company note below |
+| `first-layer-the-living-surface.jpeg` | *AI-generated (Grok Imagine)* — the continent as aged relief chart, veins of light through the red interior: "First Layer — The Living Surface" |
+| `the-heart-from-orbit.jpeg` | *AI-generated (Grok Imagine)* — the continent from orbit, the golden spiral turning at its centre, light arcing out past the coast |
+| `crystalcore-lattice-overlay.jpeg` | *AI-generated (Grok Imagine)* — the CrystalCore lattice laid over the continent — nodes lit teal and gold along the old routes |
+| `sovereign-horizon.jpeg` | *AI-generated (Grok Imagine)* — the red continent under launch traces, the spiral holding the centre: "Sovereign Horizon" |
+| `incognita-lattice-architecture.jpeg` | *AI-generated (Grok Imagine)* — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin |
 
 **Truth label (Vision):** this art is the project's own mythic narrative. Where a
 real person's name or likeness appears — whether as a name, a silhouette, or a

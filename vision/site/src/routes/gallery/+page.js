@@ -112,7 +112,12 @@ export function load() {
     { filename: 'full-circle-ring.jpeg', description: 'AI-generated concept art (Grok Imagine) — the ice ring in deep space traced with a founder-company timeline closing on Purpose Core: "Full Circle · NON SOLUS". Real companies are named inside Vision-layer art; no affiliation or endorsement is implied' },
     { filename: 'where-we-are-going.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal ship running out through the red nebula, trailing filaments of light beneath its NON SOLUS legend' },
     { filename: 'no-comparison.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal figure alight in the hall of watching screens: "No Comparison · NON SOLUS"' },
-    { filename: 'multiplanetary-training-layer.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crowned figure above the crystal city, a labelled Grok shard and a rising rocket at either hand: "Multiplanetary Training Layer · NON SOLUS". Named products belong to their owners; no affiliation or endorsement is implied' }
+    { filename: 'multiplanetary-training-layer.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crowned figure above the crystal city, a labelled Grok shard and a rising rocket at either hand: "Multiplanetary Training Layer · NON SOLUS". Named products belong to their owners; no affiliation or endorsement is implied' },
+    { filename: 'first-layer-the-living-surface.jpeg', description: 'AI-generated concept art (Grok Imagine) — the continent as aged relief chart, veins of light through the red interior: "First Layer — The Living Surface"' },
+    { filename: 'the-heart-from-orbit.jpeg', description: 'AI-generated concept art (Grok Imagine) — the continent from orbit, the golden spiral turning at its centre, light arcing out past the coast' },
+    { filename: 'crystalcore-lattice-overlay.jpeg', description: 'AI-generated concept art (Grok Imagine) — the CrystalCore lattice laid over the continent — nodes lit teal and gold along the old routes' },
+    { filename: 'sovereign-horizon.jpeg', description: 'AI-generated concept art (Grok Imagine) — the red continent under launch traces, the spiral holding the centre: "Sovereign Horizon"' },
+    { filename: 'incognita-lattice-architecture.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin' }
   ];
 
   return {
