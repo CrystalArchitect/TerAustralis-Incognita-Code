@@ -120,6 +120,7 @@ export function load() {
     { filename: 'incognita-lattice-architecture.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin' },
     { filename: 'node-activated-quill.jpeg', description: 'AI-generated concept art (Grok Imagine) — the quill drawn in gold and cyan filament, rune-marked along its vane, held in a double helix of light: "Node Activated"' },
     { filename: 'node-activated-stream-open.jpeg', description: 'AI-generated concept art (Grok Imagine) — the gold quill upright at the centre of the glyph-ringed disc, a ring of light around it and the four arrows running out: "Node Activated — Stream Open"' },
+    { filename: 'crystalcore-os-aeris-plate.jpeg', description: 'AI-generated concept art (Grok Imagine) — a title plate: the golden feather adrift inside a blue orbital ring over a faint star-chart, lettered CRYSTALCORE.OS / AERIS' },
     { filename: 'lattice-motion.mp4', type: 'video', description: 'Motion piece — thirty seconds of the lattice, AI-generated' }
   ];
 
