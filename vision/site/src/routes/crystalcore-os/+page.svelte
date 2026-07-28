@@ -119,14 +119,17 @@
   </section>
 
   <section class="crystalcore-nodes">
-    <h2>The Five Nodes</h2>
-    <p style="opacity: 0.8; margin-bottom: 2rem;">Visit each node to claim its key. When all five keys are held, the First Gate opens.</p>
+    <h2>The {data.nodeCountWord} Nodes</h2>
+    <p style="opacity: 0.8; margin-bottom: 2rem;">Visit each node to claim its key. When all {data.nodeCountWord.toLowerCase()} keys are held, the First Gate opens.</p>
     <div class="nodes-grid">
       {#each data.nodes as node}
         <div class="node-card">
           <div class="node-glyph">🌌</div>
           <h3>{node.name}</h3>
           <p>{node.desc}</p>
+          {#if node.locked}
+            <p class="node-lock">🔒 {node.locked}</p>
+          {/if}
         </div>
       {/each}
     </div>
@@ -134,8 +137,9 @@
 
   <section class="crystalcore-info">
     <h2>Run CrystalCore.OS Locally</h2>
-    <p>The full interactive experience is available on your machine:</p>
-    <pre><code>python3 src/crystalcore-os/crystalcore_os.py</code></pre>
+    <p>The full interactive experience is available on your machine, from the
+      <code>TerAustralis-Incognita</code> repository:</p>
+    <pre><code>python3 mythos/crystalcore-os/crystalcore_os.py</code></pre>
     <p style="margin-top: 1.5rem;">
       <strong>Commands you can try:</strong>
     </p>
@@ -419,6 +423,13 @@
   .node-card p {
     font-size: 0.95rem;
     opacity: 0.8;
+  }
+
+  .node-lock {
+    margin-top: 0.6rem;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.03em;
+    opacity: 0.6 !important;
   }
 
   .crystalcore-info {
