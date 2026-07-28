@@ -1,6 +1,6 @@
 # STATUS
 
-Last updated: 2026-07-24
+Last updated: 2026-07-29
 
 Full knowledge-base reconstruction: `knowledge-base/00-INDEX.md` in
 CrystalCore.OS-the-Crystal-Architecture-Archive.
@@ -39,6 +39,14 @@ Executes, or can be opened and used by someone other than me.
   `vision/apps/crystal-interface/`, `vision/apps/vision-web/`, and the
   engine's own `core/crystal-core/index.html`. Simulated data,
   Authority held — demos, not production, per their READMEs.
+- The published site — `https://www.teraustralis.com.au` serves the
+  SvelteKit build from this repo's Pages deploy, verified from outside
+  2026-07-29: the build-only probe path `/crystalcore-os` returns 200
+  (per `.github/scripts/probe-site.sh`) and the homepage carries the
+  build's `_app/immutable/*` assets — not the rendered-README failure
+  mode `deploy.yml` guards against. Verified by external probe, not by
+  reading the repo setting (the checking token could not read
+  Settings → Pages); content evidence only.
 
 ## Built, not currently running
 Code exists and is complete enough to run. No runtime here exercises it.
@@ -50,9 +58,17 @@ Code exists and is complete enough to run. No runtime here exercises it.
   builds to static output, and since Stage 2 (PR #4) this repo carries
   the Pages deploy itself (`.github/workflows/deploy.yml` builds
   `vision/site/` and bundles the two demo shells; `CNAME` moved here
-  too). One gap remains between "built" and "running": the one-time
+  too). ~~One gap remains between "built" and "running": the one-time
   repo setting (Settings → Pages → Source: "GitHub Actions") hasn't
-  been confirmed flipped, so no publish has been verified yet.
+  been confirmed flipped, so no publish has been verified yet.~~
+  **Resolved 2026-07-29:** the publish is verified live from outside.
+  `https://www.teraustralis.com.au/crystalcore-os` — a path that exists
+  only in the SvelteKit build, per `.github/scripts/probe-site.sh` —
+  returned 200 on the first attempt, and the homepage serves the real
+  build (`_app/immutable/*` assets, site title), not a rendered README,
+  with a fresh `last-modified` (2026-07-28 20:13 GMT). Either the
+  Settings flip was done, or the workflow's own `build_type=workflow`
+  PUT took effect on a prior run. The entry below moves to Running.
 
 ## Exists as a document
 - The site content set under `vision/site/src/content/` (VISION,
