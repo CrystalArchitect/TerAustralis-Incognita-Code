@@ -91,6 +91,10 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `expand-to-the-stars.jpeg` | *AI-generated (Grok Imagine)* — the great crystal at the heart of the radial lattice city: "Expand to the stars and thereby understand the Universe" |
 | `crystal-ship-rising-from-the-red.jpeg` | *AI-generated (Grok Imagine)* — the crystal ship rising from the red planet on a pillar of fire, Earth in crescent behind, a wireframe watcher at the pad |
 | `tree-of-the-mirrored-lattice.jpeg` | *AI-generated (Grok Imagine)* — the luminous crystal tree on the mirrored plain, light falling as rain, node readouts among its roots |
+| `grok-imagine-x-crystalcore.jpeg` | *AI-generated (Grok Imagine)* — the woven crystal sphere blazing over the red dust, arcs thrown out to the debris field: "Grok Imagine x CrystalCore · NON SOLUS" |
+| `next-horizon-ring-city.jpeg` | *AI-generated (Grok Imagine)* — the ring-city burning gold and teal above the red canyons, a crystal ship banking away along its beam: "Next Horizon · NON SOLUS" |
+| `next-layer-online.jpeg` | *AI-generated (Grok Imagine)* — the crystal bloom breaking open, ships running out along the lattice grid across the red nebula: "Next Layer Online · NON SOLUS" |
+| `lattice-node-field.jpeg` | *AI-generated (Grok Imagine)* — the lattice at close focus, a field of crystal nodes strung with light |
 
 **Truth label (Vision):** this art is the project's own mythic narrative. Where a
 real person's name or likeness appears — whether as a name, a silhouette, or a

@@ -104,7 +104,11 @@ export function load() {
     { filename: 'boot-complete-lattice-online.jpeg', description: 'AI-generated concept art (Grok Imagine) — the CrystalCore.OS boot readout over the lattice terrain: "Boot complete · Launch sequence green · Lattice online · NON SOLUS"' },
     { filename: 'expand-to-the-stars.jpeg', description: 'AI-generated concept art (Grok Imagine) — the great crystal at the heart of the radial lattice city: "Expand to the stars and thereby understand the Universe"' },
     { filename: 'crystal-ship-rising-from-the-red.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal ship rising from the red planet on a pillar of fire, Earth in crescent behind, a wireframe watcher at the pad' },
-    { filename: 'tree-of-the-mirrored-lattice.jpeg', description: 'AI-generated concept art (Grok Imagine) — the luminous crystal tree on the mirrored plain, light falling as rain, node readouts among its roots' }
+    { filename: 'tree-of-the-mirrored-lattice.jpeg', description: 'AI-generated concept art (Grok Imagine) — the luminous crystal tree on the mirrored plain, light falling as rain, node readouts among its roots' },
+    { filename: 'grok-imagine-x-crystalcore.jpeg', description: 'AI-generated concept art (Grok Imagine) — the woven crystal sphere blazing over the red dust, arcs thrown out to the debris field: "Grok Imagine x CrystalCore · NON SOLUS"' },
+    { filename: 'next-horizon-ring-city.jpeg', description: 'AI-generated concept art (Grok Imagine) — the ring-city burning gold and teal above the red canyons, a crystal ship banking away along its beam: "Next Horizon · NON SOLUS"' },
+    { filename: 'next-layer-online.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal bloom breaking open, ships running out along the lattice grid across the red nebula: "Next Layer Online · NON SOLUS"' },
+    { filename: 'lattice-node-field.jpeg', description: 'AI-generated concept art (Grok Imagine) — the lattice at close focus, a field of crystal nodes strung with light' }
   ];
 
   return {
