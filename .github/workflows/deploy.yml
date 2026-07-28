@@ -1,14 +1,37 @@
+# Builds the SvelteKit site and publishes it to this repository's GitHub Pages
+# site, which serves www.teraustralis.com.au.
+#
+# This repository is private and the published site is public. That is a
+# supported combination: only a *private* Pages site requires an Enterprise
+# plan, and this one is public.
+#
+# Pages must serve the build output, not the repository root. Branch-based
+# publishing cannot express that — it offers only / or /docs, and neither is
+# vision/site/build — so the deployment is owned here instead. The first run of
+# this workflow switches the Pages source to "GitHub Actions"; the custom
+# domain setting is independent of the source and carries across unchanged.
+
 name: Publish site
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build_and_publish:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,14 +53,21 @@ jobs:
           cp -r vision/apps/crystal-interface vision/site/build/crystal-interface
           cp -r vision/apps/vision-web vision/site/build/vision-web
 
-      # Pages cannot serve from this repository — it is private, and Pages on a
-      # private repo requires a paid plan. The built site is published to the
-      # public TerAustralis-Incognita repo, which serves it at the custom domain.
-      - name: Publish to the public site repo
-        uses: peaceiris/actions-gh-pages@v4
+      # vision/site/static/CNAME is copied into the build by SvelteKit, so the
+      # custom domain travels with the artifact as well as living in settings.
+      - name: Confirm the custom domain travelled with the build
+        run: |
+          test -f vision/site/build/CNAME
+          echo "CNAME: $(cat vision/site/build/CNAME)"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload the built site
+        uses: actions/upload-pages-artifact@v3
         with:
-          deploy_key: ${{ secrets.SITE_DEPLOY_KEY }}
-          external_repository: CrystalArchitect/TerAustralis-Incognita
-          publish_branch: gh-pages
-          publish_dir: vision/site/build
-          cname: www.teraustralis.com.au
+          path: vision/site/build
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
