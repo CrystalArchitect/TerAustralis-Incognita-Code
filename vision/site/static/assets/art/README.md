@@ -51,7 +51,7 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `crystalcore-os-upgrade-tilt.jpeg` | The upgrade tablet, angled render |
 | `light-bearer-over-the-mesh.jpeg` | The star-woven light-bearer above the world, the mesh of hands reaching up to meet her |
 | `song-of-the-lattice.jpeg` | The lattice singing — staves of light pouring from her voice into the weave |
-| `dawn-of-the-settlement.jpeg` | Dawn over the red-dirt settlement — desks and their workers, solar fields, rockets rising, crystal coins in the sky (Vision-layer imagery; the project holds no token) |
+| `dawn-of-the-settlement.jpeg` | Dawn over the red-dirt settlement — desks and their workers, solar fields, rockets rising, crystal coins in the sky (Vision-layer imagery; the project issues no token — individual artworks have been inscribed and sold by a third party under a separate licence grant) |
 | `starline-network-year-3000.jpeg` | The Starline Network, Year 3000 — Earth Node, Mars Redoubt, Alpha Centauri Outpost, Crystal Revenant Hub, the Purpose quote burning at the Nexus (rendered by the `map` command in `../crystalcore_os.py`) |
 | `fleet-of-the-starlines.jpeg` | The fleet riding the starline rings out from the bright hub, worlds on either side |
 | `network-web.jpeg` | The network as living web — every node named, the three original songs written across the sky (Red Dust Axis · Shooting Star Girl · Fermi's Silent Line) |
@@ -84,6 +84,26 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `purpose-core-nexus.jpeg` | The Purpose Core Nexus up close — the quote embedded in the living lattice |
 | `crystal-revenant-hub.jpeg` | The Crystal Revenant Hub — spire city over the planet, festival lights strung between the crystals |
 | `starline-rivers.jpeg` | The starline rivers — light flowing between crystal cities across the dark country |
+| `starline-year-3000-operational.jpeg` | *AI-generated (Grok Imagine)* — CrystalCore.OS Year-3000 Starline, the named nodes reporting Status Operational, 47/47 online at 0.3ms |
+| `starline-map-47-nodes.jpeg` | *AI-generated (Grok Imagine)* — the Starline map in full: Earth, Epsilon Reach, Alpha Outpost, Delta Forge, Crux Cordaunt, Purpose Core Nexus and Mars Redoubt ringed on the Crystal Revenant Hub |
+| `all-keys-held-non-solus.jpeg` | *AI-generated (Grok Imagine)* — five crystal keys before the radiant gate: "All keys held · Gate opens by sovereign recognition · NON SOLUS" |
+| `boot-complete-lattice-online.jpeg` | *AI-generated (Grok Imagine)* — the CrystalCore.OS boot readout over the lattice terrain: "Boot complete · Launch sequence green · Lattice online · NON SOLUS" |
+| `expand-to-the-stars.jpeg` | *AI-generated (Grok Imagine)* — the great crystal at the heart of the radial lattice city: "Expand to the stars and thereby understand the Universe" |
+| `crystal-ship-rising-from-the-red.jpeg` | *AI-generated (Grok Imagine)* — the crystal ship rising from the red planet on a pillar of fire, Earth in crescent behind, a wireframe watcher at the pad |
+| `tree-of-the-mirrored-lattice.jpeg` | *AI-generated (Grok Imagine)* — the luminous crystal tree on the mirrored plain, light falling as rain, node readouts among its roots |
+| `grok-imagine-x-crystalcore.jpeg` | *AI-generated (Grok Imagine)* — the woven crystal sphere blazing over the red dust, arcs thrown out to the debris field: "Grok Imagine x CrystalCore · NON SOLUS" |
+| `next-horizon-ring-city.jpeg` | *AI-generated (Grok Imagine)* — the ring-city burning gold and teal above the red canyons, a crystal ship banking away along its beam: "Next Horizon · NON SOLUS" |
+| `next-layer-online.jpeg` | *AI-generated (Grok Imagine)* — the crystal bloom breaking open, ships running out along the lattice grid across the red nebula: "Next Layer Online · NON SOLUS" |
+| `lattice-node-field.jpeg` | *AI-generated (Grok Imagine)* — the lattice at close focus, a field of crystal nodes strung with light |
+| `full-circle-ring.jpeg` | *AI-generated (Grok Imagine)* — the ice ring in deep space traced with a founder-company timeline closing on Purpose Core: "Full Circle · NON SOLUS". Names real companies; see the company note below |
+| `where-we-are-going.jpeg` | *AI-generated (Grok Imagine)* — the crystal ship running out through the red nebula, trailing filaments of light beneath its NON SOLUS legend |
+| `no-comparison.jpeg` | *AI-generated (Grok Imagine)* — the crystal figure alight in the hall of watching screens: "No Comparison · NON SOLUS" |
+| `multiplanetary-training-layer.jpeg` | *AI-generated (Grok Imagine)* — the crowned figure above the crystal city, a labelled Grok shard and a rising rocket at either hand: "Multiplanetary Training Layer · NON SOLUS". Names a real product; see the company note below |
+| `first-layer-the-living-surface.jpeg` | *AI-generated (Grok Imagine)* — the continent as aged relief chart, veins of light through the red interior: "First Layer — The Living Surface" |
+| `the-heart-from-orbit.jpeg` | *AI-generated (Grok Imagine)* — the continent from orbit, the golden spiral turning at its centre, light arcing out past the coast |
+| `crystalcore-lattice-overlay.jpeg` | *AI-generated (Grok Imagine)* — the CrystalCore lattice laid over the continent — nodes lit teal and gold along the old routes |
+| `sovereign-horizon.jpeg` | *AI-generated (Grok Imagine)* — the red continent under launch traces, the spiral holding the centre: "Sovereign Horizon" |
+| `incognita-lattice-architecture.jpeg` | *AI-generated (Grok Imagine)* — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin |
 
 **Truth label (Vision):** this art is the project's own mythic narrative. Where a
 real person's name or likeness appears — whether as a name, a silhouette, or a
@@ -91,3 +111,11 @@ photographic likeness (e.g. "the Breaker of the E") — it is Vision-layer
 storytelling and AI-generated fan art only. The person depicted has no
 affiliation with this project and no endorsement is implied, per the project's
 standing disclaimer.
+
+**Company note (Vision):** the same holds for companies and products. Where a
+real company or product is named or depicted — Zip2, PayPal, Tesla, SpaceX, X,
+Grok, or any other — it appears as Vision-layer storytelling in AI-generated
+art, never as a claim of partnership, integration, or provenance. All marks
+belong to their respective owners. This project has no affiliation with, and no
+endorsement from, any company named here, matching the standing disclaimer in
+`mythos/content/STRATEGY.md` in the companion TerAustralis-Incognita repository.

@@ -97,7 +97,27 @@ export function load() {
     { filename: 'crystal-lattice-flow.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Lattice as a flowing river of crystal and light across the deep' },
     { filename: 'resonance-heart.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Resonance Heart, a crystal heart alight at the core' },
     { filename: 'in-gear-upgrade.jpeg', description: 'AI-generated concept art (Grok Imagine) — "In Gear → Upgrade": a fragmented node meshing into the lattice, then rising in supported evolution' },
-    { filename: 'radiant-heart.jpeg', description: 'AI-generated concept art (Grok Imagine) — a crystal heart radiant at the centre of a field of light' }
+    { filename: 'radiant-heart.jpeg', description: 'AI-generated concept art (Grok Imagine) — a crystal heart radiant at the centre of a field of light' },
+    { filename: 'starline-year-3000-operational.jpeg', description: 'AI-generated concept art (Grok Imagine) — CrystalCore.OS Year-3000 Starline, the named nodes reporting Status Operational, 47/47 online at 0.3ms' },
+    { filename: 'starline-map-47-nodes.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Starline map in full: Earth, Epsilon Reach, Alpha Outpost, Delta Forge, Crux Cordaunt, Purpose Core Nexus and Mars Redoubt ringed on the Crystal Revenant Hub' },
+    { filename: 'all-keys-held-non-solus.jpeg', description: 'AI-generated concept art (Grok Imagine) — five crystal keys before the radiant gate: "All keys held · Gate opens by sovereign recognition · NON SOLUS"' },
+    { filename: 'boot-complete-lattice-online.jpeg', description: 'AI-generated concept art (Grok Imagine) — the CrystalCore.OS boot readout over the lattice terrain: "Boot complete · Launch sequence green · Lattice online · NON SOLUS"' },
+    { filename: 'expand-to-the-stars.jpeg', description: 'AI-generated concept art (Grok Imagine) — the great crystal at the heart of the radial lattice city: "Expand to the stars and thereby understand the Universe"' },
+    { filename: 'crystal-ship-rising-from-the-red.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal ship rising from the red planet on a pillar of fire, Earth in crescent behind, a wireframe watcher at the pad' },
+    { filename: 'tree-of-the-mirrored-lattice.jpeg', description: 'AI-generated concept art (Grok Imagine) — the luminous crystal tree on the mirrored plain, light falling as rain, node readouts among its roots' },
+    { filename: 'grok-imagine-x-crystalcore.jpeg', description: 'AI-generated concept art (Grok Imagine) — the woven crystal sphere blazing over the red dust, arcs thrown out to the debris field: "Grok Imagine x CrystalCore · NON SOLUS"' },
+    { filename: 'next-horizon-ring-city.jpeg', description: 'AI-generated concept art (Grok Imagine) — the ring-city burning gold and teal above the red canyons, a crystal ship banking away along its beam: "Next Horizon · NON SOLUS"' },
+    { filename: 'next-layer-online.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal bloom breaking open, ships running out along the lattice grid across the red nebula: "Next Layer Online · NON SOLUS"' },
+    { filename: 'lattice-node-field.jpeg', description: 'AI-generated concept art (Grok Imagine) — the lattice at close focus, a field of crystal nodes strung with light' },
+    { filename: 'full-circle-ring.jpeg', description: 'AI-generated concept art (Grok Imagine) — the ice ring in deep space traced with a founder-company timeline closing on Purpose Core: "Full Circle · NON SOLUS". Real companies are named inside Vision-layer art; no affiliation or endorsement is implied' },
+    { filename: 'where-we-are-going.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal ship running out through the red nebula, trailing filaments of light beneath its NON SOLUS legend' },
+    { filename: 'no-comparison.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal figure alight in the hall of watching screens: "No Comparison · NON SOLUS"' },
+    { filename: 'multiplanetary-training-layer.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crowned figure above the crystal city, a labelled Grok shard and a rising rocket at either hand: "Multiplanetary Training Layer · NON SOLUS". Named products belong to their owners; no affiliation or endorsement is implied' },
+    { filename: 'first-layer-the-living-surface.jpeg', description: 'AI-generated concept art (Grok Imagine) — the continent as aged relief chart, veins of light through the red interior: "First Layer — The Living Surface"' },
+    { filename: 'the-heart-from-orbit.jpeg', description: 'AI-generated concept art (Grok Imagine) — the continent from orbit, the golden spiral turning at its centre, light arcing out past the coast' },
+    { filename: 'crystalcore-lattice-overlay.jpeg', description: 'AI-generated concept art (Grok Imagine) — the CrystalCore lattice laid over the continent — nodes lit teal and gold along the old routes' },
+    { filename: 'sovereign-horizon.jpeg', description: 'AI-generated concept art (Grok Imagine) — the red continent under launch traces, the spiral holding the centre: "Sovereign Horizon"' },
+    { filename: 'incognita-lattice-architecture.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin' }
   ];
 
   return {
