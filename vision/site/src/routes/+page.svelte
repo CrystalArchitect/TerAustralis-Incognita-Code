@@ -329,6 +329,28 @@
   <p><a class="btn btn-ghost" href="https://suno.com/@m13crystalat">Listen on Suno →</a></p>
 </section>
 
+<section class="section node" id="mythos-art" style="--node:var(--gold)">
+  <h2>Mythos Art — Ordinals Collection</h2>
+  <p>
+    Visual canon of the TerAustralis Incognita universe, inscribed on-chain as Ordinals on BSV
+    and listed on 3dordi. The art is credited to Crystal Arena-Turner — TerAustralis Incognita;
+    the inscribing is independent work by <a href="https://x.com/pacartcollect">@pacartcollect</a>
+    under a written licence grant.
+  </p>
+  <p>
+    <strong>The project issues no token</strong>, runs no sale, and holds no coin. An inscription
+    buys a copy of an artwork and nothing else — no membership, no stake, no financial product.
+  </p>
+  <p>
+    <a
+      class="btn btn-ghost"
+      href="https://3dordi.io/collection/cc35f9a95773d2f97328ccb33c582d1f853e7856c47397751a06a0e910da8086_0"
+      >View on 3dordi →</a
+    >
+    <a class="btn btn-ghost" href="/ordinals">What this is, and isn't →</a>
+  </p>
+</section>
+
 <section class="section node" id="support" style="--node:var(--gold)">
   <h2>Support the Vision</h2>
   <p>
