@@ -534,7 +534,26 @@ function init() {
     renderPipeline();
   });
 
+  startSolClock();
+
   logEvent("system", "Crystal interface ready · mainnet HOLD");
+}
+
+// Sols elapsed since the Perseverance landing (18 Feb 2021). A sol is
+// 24h 39m 35s. This is arithmetic on a fixed epoch — an approximation for
+// atmosphere, not mission telemetry, and it is labelled as such in the UI.
+const SOL_EPOCH = Date.UTC(2021, 1, 18);
+const SOL_MS = 88775244;
+
+function startSolClock() {
+  const pill = document.getElementById("pill-sol");
+  if (!pill) return;
+  const tick = () => {
+    const sols = Math.floor((Date.now() - SOL_EPOCH) / SOL_MS);
+    pill.textContent = "sol " + sols.toLocaleString();
+  };
+  tick();
+  setInterval(tick, 60000);
 }
 
 document.addEventListener("DOMContentLoaded", init);
