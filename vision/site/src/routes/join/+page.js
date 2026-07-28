@@ -79,5 +79,19 @@ export function load() {
     }
   ];
 
-  return { ways, vectors };
+  // Influences are not contributors, and the distinction is deliberate.
+  // Nobody here has been asked, nobody here is involved, and nothing they made
+  // is part of this project. Naming an influence is ordinary acknowledgement —
+  // the sort of thing a sleeve note does — but it must not be able to read as
+  // collaboration or endorsement, so it is kept out of the Vectors list.
+  const influences = [
+    {
+      handle: '@renmakesmusic',
+      href: 'https://suno.com/@renmakesmusic',
+      work: 'An influence on the music of this project — heard, admired, and worked away from. No involvement here, and none implied.',
+      st: 'var(--silver)'
+    }
+  ];
+
+  return { ways, vectors, influences };
 }

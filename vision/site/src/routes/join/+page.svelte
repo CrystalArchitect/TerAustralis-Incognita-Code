@@ -59,4 +59,21 @@
   </p>
 </section>
 
+<section class="section node" style="--node:var(--silver)">
+  <h2>Influences</h2>
+  <p>
+    Work that shaped this one from a distance. Named in acknowledgement, not association — nobody
+    listed here has been asked, none of them is involved in this project, and nothing they made is
+    part of it. A sleeve note, not a credit.
+  </p>
+  <div class="cards">
+    {#each data.influences as inf (inf.handle)}
+      <a class="card" href={inf.href} style="--st:{inf.st}" target="_blank" rel="noopener noreferrer">
+        <h3>{inf.handle}</h3>
+        <p>{inf.work}</p>
+      </a>
+    {/each}
+  </div>
+</section>
+
 <Footer />
