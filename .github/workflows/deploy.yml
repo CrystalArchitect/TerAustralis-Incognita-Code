@@ -60,6 +60,45 @@ jobs:
           test -f vision/site/build/CNAME
           echo "CNAME: $(cat vision/site/build/CNAME)"
 
+      # End the race at its source rather than surviving it.
+      #
+      # While Pages "Source" is set to "Deploy from a branch", GitHub runs its
+      # own builder on every push to main. That builder renders the repository
+      # root with Jekyll and finishes within a minute of this job, so which
+      # version of the site survives is decided by scheduling luck. The
+      # verification below has caught and repaired that twice, but repairing a
+      # race every deploy is not the same as not having one.
+      #
+      # build_type: workflow is precisely what the Settings dropdown sets. Doing
+      # it here makes the setting a property of the repository rather than
+      # something that has to be remembered, and it is idempotent — once it
+      # reads "workflow", this step does nothing.
+      #
+      # Deliberately non-fatal: if the token cannot change it, the deploy still
+      # proceeds and the self-heal still covers us. It warns instead.
+      - name: Ensure Pages is served by this workflow, not the branch builder
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          before=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.build_type' 2>/dev/null || echo unknown)
+          echo "Pages build_type before: $before"
+
+          if [ "$before" = "workflow" ]; then
+            echo "Already served by this workflow — nothing to change."
+            exit 0
+          fi
+
+          if gh api -X PUT "repos/${GITHUB_REPOSITORY}/pages" -f build_type=workflow >/dev/null 2>&1; then
+            after=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.build_type' 2>/dev/null || echo unknown)
+            echo "Pages build_type after: $after"
+            [ "$after" = "workflow" ] && echo "Race eliminated: the branch builder will no longer be triggered."
+          else
+            echo "::warning::Could not change the Pages source with this token."
+            echo "::warning::Set Settings -> Pages -> Source to 'GitHub Actions' by hand."
+            echo "::warning::Until then every push is a race, repaired by the retry below."
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
