@@ -36,7 +36,7 @@ export const chronicle = [
   {
     when: '2026-07-21',
     what: 'The great renaming',
-    note: 'Lumina and the Starline Weaver take their true names — and "Songline" is honoured as culture, retired as a component name.',
+    note: 'Lumina and the Starline Weaver take their true names.',
     tl: 'var(--blue)'
   },
   {

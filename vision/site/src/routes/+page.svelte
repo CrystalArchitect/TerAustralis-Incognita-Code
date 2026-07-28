@@ -184,7 +184,7 @@
   <p class="lede">
     TerAustralis Incognita is a living mythos and speculative futures project born in Australia. At
     its heart is The Codex of TerAustralis Incognita — a five-chapter story that weaves together
-    ancient dreams of a Great Southern Land, the deep Songlines of this continent, and humanity's
+    ancient dreams of a Great Southern Land, the deep knowledge of this continent, and humanity's
     reach for the stars.
   </p>
   <p class="directive">&ldquo;Expand to the stars and thereby understand the Universe.&rdquo;</p>

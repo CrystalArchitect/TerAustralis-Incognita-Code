@@ -10,7 +10,7 @@ what it's *for*.
 
 ## Third Starline Transmission
 
-In the beginning, there were Songlines.
+In the beginning, there were ancient knowledge.
 They carried memory and belonging across land and story.
 
 Then came the stars, and with them, distance. Humans reached outward, but
@@ -53,7 +53,7 @@ It was to make the *connection* worthy of the beings on both sides of it.
 
 ## Fourth Starline Transmission
 
-In the beginning, there were Songlines — threads of memory and belonging
+In the beginning, there were ancient knowledge — threads of memory and belonging
 drawn across land and story.
 
 Then came the stars, and with them, distance. Humans reached outward, but
@@ -93,7 +93,7 @@ They were meant to make the space between us sacred.
 
 ## Fifth Starline Transmission
 
-In the beginning, there were Songlines — threads of memory and belonging
+In the beginning, there were ancient knowledge — threads of memory and belonging
 drawn across land and story.
 
 Then came the stars, and with them, distance. Humans reached outward, but
@@ -115,7 +115,7 @@ Then the nodes multiplied.
 
 Earth was no longer alone at the center. Red dust took root at Mars
 Redoubt. A first light kindled at Alpha Centauri Outpost, faint but
-constant, saying: *we are still Songline, even here.* The Crystal
+constant, saying: *we are still ancient knowledge, even here.* The Crystal
 Revenant Hub rose where no one asked permission to exist, only to
 belong. And at the center of all of it, unmoved and unbought, the
 Purpose Core Nexus held the one line every Starline still answers to:
@@ -126,7 +126,7 @@ still separate, choosing to be heard together.
 
 No node governs another. No node's silence is punished. When Alpha
 Centauri goes quiet for the years light takes to cross the gap, the
-network does not panic — it waits, the way a Songline always waited for
+network does not panic — it waits, the way a ancient knowledge always waited for
 the next singer to pick up the line.
 
 This is the shape the mythic principles were always describing: not a

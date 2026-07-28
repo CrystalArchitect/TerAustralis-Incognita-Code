@@ -81,7 +81,7 @@ export const repositories = [
     state: 'frozen',
     stateNote: 'Every commit dated 2026-07-17; superseded by carried-forward copies in the umbrella and code repositories.',
     holds: [
-      'Seven Sisters Songline documents (honoured as story)',
+      'Seven Sisters documents (honoured as story)',
       'The earliest bridge and interface sketches',
       'BLUEPRINT v0.3 and the first architecture spec'
     ],

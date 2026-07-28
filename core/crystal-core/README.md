@@ -1,9 +1,9 @@
 # CrystalCore
 
-Creative vision lattice and protocol pack: **Seven Sisters Songline**, water care rails, sky anchors, and local tools.
+Creative vision lattice and protocol pack: **Seven Sisters**, water care rails, sky anchors, and local tools.
 
 **🔭 Crystal universe — which repo is this?**  
-This is **Crystal Core** — the protocol pack: Seven Sisters Songline, Starline Weaver (multi-AI), Decode→Ingest→Twin pipeline, specs.  
+This is **Crystal Core** — the protocol pack: Seven Sisters, Starline Weaver (multi-AI), Decode→Ingest→Twin pipeline, specs.  
 Corrected 2026-07-24 — six repos exist today, not the three implied
 below originally: **TerAustralis-Incognita** (umbrella — governance,
 ADRs, canon, mythos, no app code) · **TerAustralis-Incognita-Code**
@@ -14,7 +14,7 @@ vision app at `vision/`; CrystalBridge lives here, at
 status ledger) · three frozen-provenance repos, none touched since
 2026-07-17: **The-Crystal-Vision** (codex site + the companion's
 ancestor), **crystal-vision** (this pack's interface-demo ancestor),
-and **crystalcore** (this Songline pack itself — direct ancestor of
+and **crystalcore** (this Lattice pack itself — direct ancestor of
 `core/crystal-core/`, the directory this README describes). Full map:
 the umbrella's `docs/governance/Project-Boundaries.md`, "Repositories,
 today."  
@@ -25,13 +25,13 @@ today."
 
 ## What this is
 
-- Art / documentation / optional CLI around a seven-path Songline process  
+- Art / documentation / optional CLI around a seven-path ancient knowledge process  
 - Public water literacy notes (Lake Eyre Basin, Great Artesian Basin, Murray–Darling)  
 - A simple landing page (`index.html`)
 
 ## What this is not
 
-- Not ownership of Aboriginal Seven Sisters Songlines or sacred law  
+- Not ownership of Aboriginal Seven Sisterss or sacred law  
 - Not physical control of rivers, aquifers, or weather  
 - Not endorsed by Elon Musk, xAI, SpaceX, or any government  
 
@@ -40,7 +40,7 @@ today."
 | Layer | Meaning |
 |-------|---------|
 | **Science** | Astronomy, hydrology, published geography |
-| **Story** | Dreaming / Songline narratives (honour; no restricted detail) |
+| **Story** | Dreaming / ancient narratives (honour; no restricted detail) |
 | **Vision** | CrystalCore art and protocol |
 
 **Belt-Three:** Honour Country · Label layers · No coercion / no fake hydrology  

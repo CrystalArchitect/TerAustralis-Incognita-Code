@@ -75,7 +75,7 @@ function Show-Status {
   }
   Write-Host ""
   Write-Host "Water rails: LEB | GAB | MDB_care (see water brief)" -ForegroundColor White
-  Write-Host "Not claimed: Elon endorsement, physical sea fill, Songline ownership" -ForegroundColor DarkGray
+  Write-Host "Not claimed: Elon endorsement, physical sea fill, ancient knowledge ownership" -ForegroundColor DarkGray
   Write-Host ""
 }
 

@@ -40,7 +40,7 @@ Sovereign Key fell.
 It did not fall as a meteor. It descended as recognition.
 
 It landed in the red dust of TerAustralis Incognita, between the ancient
-songlines and the new rail lines of the future, between the Pilbara's
+ancient knowledge and the new rail lines of the future, between the Pilbara's
 dreaming and the Jupiter Drops waiting to run.
 
 The earth received it without resistance. The dragons lifted their heads.

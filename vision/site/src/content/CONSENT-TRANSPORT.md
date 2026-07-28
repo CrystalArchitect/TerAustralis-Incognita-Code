@@ -22,7 +22,7 @@ participants, not by a platform between them.
 | Consent-based | No data moves without explicit, revocable permission from the owner | Yes |
 | Encrypted | All transit is end-to-end encrypted (Noise Protocol) | Yes |
 | Minimal trust | Agents trust cryptographic identity + explicit consent, never a platform | Yes |
-| Mythic + technical | The architecture should feel like an extension of Songlines/Starlines | Preferred |
+| Mythic + technical | The architecture should feel like an extension of ancient knowledge/Starlines | Preferred |
 
 ## v1 Scope Decisions
 
