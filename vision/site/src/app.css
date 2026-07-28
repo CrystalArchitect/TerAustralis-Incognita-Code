@@ -424,3 +424,153 @@ a.wordmark{color:var(--purple)}
 @media (prefers-reduced-motion: reduce){
   .reveal-init{opacity:1 !important;transform:none !important}
 }
+
+/* ============================================================
+   Cinematic layer
+   ------------------------------------------------------------
+   Takes the visual language of the CrystalCore.OS concept art —
+   nebula depth, gold-framed glass, chamfered HUD panels, light
+   that glows rather than sits flat — and applies it site-wide.
+   Purely additive: it restyles surfaces, frames and atmosphere
+   and never touches text colours, so the AA contrast work holds.
+   ============================================================ */
+
+:root{
+  --cyan:#7FE4F5;
+  --gold-hi:#FFD98A;
+  --edge:rgba(245,200,111,.30);
+  --edge-soft:rgba(245,200,111,.16);
+  --panel-top:rgba(28,32,44,.72);
+  --panel-bot:rgba(8,10,16,.88);
+  --chamfer:18px;
+}
+
+/* ---- Atmosphere: the void gains depth behind the stars ---- */
+body::before{
+  content:"";
+  position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(20,58,66,.55), transparent 60%),
+    radial-gradient(90% 60% at 12% 8%, rgba(96,72,26,.30), transparent 62%),
+    radial-gradient(80% 55% at 88% 26%, rgba(28,52,96,.30), transparent 60%),
+    radial-gradient(120% 70% at 50% 108%, rgba(58,44,16,.34), transparent 62%),
+    var(--bg);
+}
+/* a horizon of light under the fold, as in the concept plates */
+body::after{
+  content:"";
+  position:fixed;left:50%;bottom:-42vh;z-index:-2;pointer-events:none;
+  width:150vw;height:80vh;transform:translateX(-50%);
+  background:radial-gradient(50% 50% at 50% 50%, rgba(245,200,111,.13), transparent 70%);
+}
+
+/* ---- Header becomes an instrument bar ---- */
+header.site{
+  border-bottom:1px solid var(--edge-soft);
+  padding-bottom:18px;
+  box-shadow:0 1px 0 rgba(255,255,255,.03);
+}
+.wordmark{
+  letter-spacing:.06em;
+  text-shadow:0 0 22px rgba(184,161,255,.45);
+}
+nav a{
+  font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;
+  transition:color .18s ease, text-shadow .18s ease;
+}
+nav a:hover{color:var(--gold-hi);text-shadow:0 0 14px rgba(245,200,111,.5)}
+
+/* ---- Display type carries light ---- */
+.hero h1{text-shadow:0 0 42px rgba(184,161,255,.28)}
+.hero h1 .early{text-shadow:0 0 38px rgba(245,200,111,.45)}
+.section h2,.page h1,.chapter h2{text-shadow:0 0 30px rgba(245,200,111,.20)}
+.eyebrow{color:var(--cyan);text-shadow:0 0 18px rgba(127,228,245,.35)}
+
+/* the hero sits in its own pool of light */
+.hero{position:relative}
+.hero::before{
+  content:"";position:absolute;z-index:-1;
+  left:-10%;top:-40px;width:80%;height:560px;
+  background:radial-gradient(closest-side, rgba(127,228,245,.10), transparent 72%);
+  pointer-events:none;
+}
+
+/* ---- Section rules become light, not grey ---- */
+.section,footer.site,.pagenav{
+  border-top:1px solid transparent;
+  border-image:linear-gradient(90deg, transparent, var(--edge), transparent) 1;
+}
+
+/* ---- Panels: chamfered glass in a gold frame ---- */
+.card,.tier,.codexlink,pre{
+  position:relative;
+  border:0;
+  border-radius:0;
+  /* the element's own background is the frame; ::before inlays the glass */
+  background:linear-gradient(150deg, var(--edge), rgba(245,200,111,.06) 45%, var(--edge-soft));
+  clip-path:polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)),
+                    calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer));
+  box-shadow:0 18px 44px rgba(0,0,0,.55);
+}
+.card::before,.tier::before,.codexlink::before,pre::before{
+  content:"";position:absolute;inset:1.5px;z-index:0;
+  background:
+    radial-gradient(130% 100% at 0% 0%, color-mix(in srgb, var(--ac,var(--gold)) 14%, transparent), transparent 62%),
+    linear-gradient(165deg, var(--panel-top), var(--panel-bot));
+  clip-path:polygon(calc(var(--chamfer) - 1px) 0, 100% 0, 100% calc(100% - var(--chamfer) + 1px),
+                    calc(100% - var(--chamfer) + 1px) 100%, 0 100%, 0 calc(var(--chamfer) - 1px));
+}
+/* content rides above the inlay */
+.card > *,.tier > *,.codexlink > *{position:relative;z-index:1}
+pre{color:var(--ink)}
+pre code{position:relative;z-index:1}
+
+.card:hover,.tier:hover,.codexlink:hover{
+  background:linear-gradient(150deg,
+    color-mix(in srgb, var(--ac,var(--gold)) 70%, transparent),
+    rgba(245,200,111,.10) 45%, var(--edge));
+  box-shadow:0 22px 54px rgba(0,0,0,.6),
+             0 0 34px color-mix(in srgb, var(--ac,var(--gold)) 26%, transparent);
+}
+
+/* the cover plates and gallery art get the same frame treatment */
+.cover{
+  border:1px solid var(--edge);
+  border-radius:0;
+  clip-path:polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)),
+                    calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer));
+  box-shadow:0 20px 50px rgba(0,0,0,.55), 0 0 30px rgba(245,200,111,.12);
+}
+
+/* ---- Buttons: struck metal ---- */
+.btn{border-radius:0;
+  clip-path:polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  letter-spacing:.04em;
+}
+.btn-primary{
+  background:linear-gradient(140deg, var(--gold-hi), var(--gold) 55%, #C79A45);
+  color:#140E02;font-weight:600;
+  box-shadow:0 0 26px rgba(245,200,111,.35), inset 0 1px 0 rgba(255,255,255,.45);
+}
+.btn-primary:hover{box-shadow:0 0 40px rgba(245,200,111,.5), inset 0 1px 0 rgba(255,255,255,.55)}
+.btn-ghost{
+  border:1px solid var(--edge);color:var(--ink);
+  background:linear-gradient(165deg, rgba(28,32,44,.6), rgba(8,10,16,.75));
+}
+.btn-ghost:hover{border-color:var(--cyan);box-shadow:0 0 24px rgba(127,228,245,.22)}
+
+/* ---- Small parts ---- */
+.chip{
+  border-color:var(--edge);
+  background:linear-gradient(165deg, rgba(28,32,44,.55), rgba(8,10,16,.7));
+  color:var(--gold-hi);
+}
+.card .status{text-shadow:0 0 14px color-mix(in srgb, var(--st,var(--gold)) 45%, transparent)}
+.starline{opacity:.85;filter:drop-shadow(0 0 6px rgba(184,161,255,.5))}
+.node::before{box-shadow:0 0 22px 3px var(--node,var(--purple))}
+.nonsolus{text-shadow:0 0 26px rgba(245,200,111,.4);opacity:1}
+
+@media (max-width:720px){
+  :root{--chamfer:12px}
+  nav a{margin-left:0;margin-right:16px}
+}
