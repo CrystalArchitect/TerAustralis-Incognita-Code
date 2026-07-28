@@ -117,7 +117,8 @@ export function load() {
     { filename: 'the-heart-from-orbit.jpeg', description: 'AI-generated concept art (Grok Imagine) — the continent from orbit, the golden spiral turning at its centre, light arcing out past the coast' },
     { filename: 'crystalcore-lattice-overlay.jpeg', description: 'AI-generated concept art (Grok Imagine) — the CrystalCore lattice laid over the continent — nodes lit teal and gold along the old routes' },
     { filename: 'sovereign-horizon.jpeg', description: 'AI-generated concept art (Grok Imagine) — the red continent under launch traces, the spiral holding the centre: "Sovereign Horizon"' },
-    { filename: 'incognita-lattice-architecture.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin' }
+    { filename: 'incognita-lattice-architecture.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Incognita Lattice architecture in exploded layers — Surface, Knowledge Lattice, Red Dust & Songlines, Multiplanetary Interface, with the Sovereign Edge at the margin' },
+    { filename: 'lattice-motion.mp4', type: 'video', description: 'Motion piece — thirty seconds of the lattice, AI-generated' }
   ];
 
   return {

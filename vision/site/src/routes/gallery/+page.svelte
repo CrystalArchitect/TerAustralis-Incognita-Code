@@ -49,11 +49,17 @@
   <div class="gallery-grid">
     {#each data.images as image}
       <button class="gallery-item" onclick={() => (selectedImage = image)} type="button">
-        <img
-          src={image.url}
-          alt={image.description}
-          loading="lazy"
-        />
+        {#if image.type === 'video'}
+          <!-- preload="metadata" renders the first frame, so no poster file is needed -->
+          <video src={image.url} muted playsinline preload="metadata"></video>
+          <span class="media-badge" aria-hidden="true">▶</span>
+        {:else}
+          <img
+            src={image.url}
+            alt={image.description}
+            loading="lazy"
+          />
+        {/if}
         <div class="gallery-overlay">
           <p>{image.description}</p>
         </div>
@@ -69,7 +75,12 @@
     <div class="lightbox-content" onclick={e => e.stopPropagation()} role="none">
       <button class="lightbox-close" onclick={() => (selectedImage = null)}>×</button>
       <button class="lightbox-prev" onclick={prevImage}>←</button>
-      <img src={selectedImage.url} alt={selectedImage.description} />
+      {#if selectedImage.type === 'video'}
+        <!-- svelte-ignore a11y_media_has_caption -->
+        <video src={selectedImage.url} controls autoplay loop muted playsinline></video>
+      {:else}
+        <img src={selectedImage.url} alt={selectedImage.description} />
+      {/if}
       <button class="lightbox-next" onclick={nextImage}>→</button>
       <p class="lightbox-description">{selectedImage.description}</p>
     </div>
@@ -131,14 +142,34 @@
     box-shadow: 0 0 20px rgba(233, 187, 95, 0.3);
   }
 
-  .gallery-item img {
+  .gallery-item img,
+  .gallery-item video {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: opacity 0.3s ease;
   }
 
-  .gallery-item:hover img {
+  .media-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding-left: 2px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--ink);
+    font-size: 0.7rem;
+    pointer-events: none;
+  }
+
+  .gallery-item:hover img,
+  .gallery-item:hover video {
     opacity: 0.7;
   }
 
@@ -187,7 +218,8 @@
     max-height: 90vh;
   }
 
-  .lightbox-content img {
+  .lightbox-content img,
+  .lightbox-content video {
     max-width: 100%;
     max-height: 70vh;
     object-fit: contain;
