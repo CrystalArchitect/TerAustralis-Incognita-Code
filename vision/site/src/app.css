@@ -336,6 +336,9 @@ a.wordmark:hover{color:var(--ink);text-decoration:none}
   color:var(--gold)}
 .chapter p{color:var(--muted);max-width:62ch;margin-top:14px}
 .chapter p strong{color:var(--ink);font-weight:500}
+.chapter h3{font-family:var(--font-display);font-weight:600;
+  font-size:clamp(1.05rem,1.8vw,1.22rem);margin-top:32px;
+  color:var(--node,var(--gold))}
 .chapter blockquote{border-left:2px solid var(--purple);padding-left:20px;
   margin-top:18px;max-width:60ch}
 .chapter blockquote p{color:var(--ink);font-style:italic}
