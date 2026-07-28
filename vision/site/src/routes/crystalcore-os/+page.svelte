@@ -165,6 +165,57 @@
     </p>
   </section>
 
+  <section class="crystalcore-elsewhere">
+    <h2>Elsewhere</h2>
+    <p>
+      Separate deployments in the CrystalCore line, each hosted independently of this site. They
+      are the same author's work, not the same codebase — this site remains the canonical one.
+    </p>
+    <div class="cards">
+      <a
+        class="card"
+        style="--st:var(--gold)"
+        href="https://crystalcore-aeris.vercel.app"
+        rel="noopener noreferrer"
+      >
+        <h3>AERIS Desktop</h3>
+        <p>
+          A single-page desktop shell — draggable windows, a Mars clock, the golden feather and
+          helix. A concept interface rather than a running system.
+        </p>
+        <span class="status">External · demo</span>
+      </a>
+      <a
+        class="card"
+        style="--st:var(--cyan)"
+        href="https://aeris-protocol.vercel.app"
+        rel="noopener noreferrer"
+      >
+        <h3>The Alignment Protocol</h3>
+        <p>
+          A charter of five principles — truth-seeking, beneficence, transparency, respect for
+          agency, wisdom across contexts — for how this project works with language models. It is
+          the project's own statement of intent, not an agreement entered into by any model or the
+          organisation behind one.
+        </p>
+        <span class="status">External · charter</span>
+      </a>
+      <a
+        class="card"
+        style="--st:var(--purple)"
+        href="https://crystalcore-os.vercel.app"
+        rel="noopener noreferrer"
+      >
+        <h3>CrystalCore.OS — marketing site</h3>
+        <p>
+          An earlier standalone presentation of CrystalCore.OS, kept live alongside the terminal
+          above.
+        </p>
+        <span class="status">External · site</span>
+      </a>
+    </div>
+  </section>
+
   <Motifs />
 </div>
 
@@ -414,6 +465,25 @@
     margin: 3rem 0 0 0;
     padding: 2rem;
     text-align: center;
+  }
+
+  .crystalcore-elsewhere {
+    margin: 3rem 0 0 0;
+    padding: 2rem 0 0 0;
+  }
+
+  .crystalcore-elsewhere h2 {
+    margin-bottom: 1rem;
+    background: var(--title-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--gold);
+  }
+
+  .crystalcore-elsewhere > p {
+    color: var(--muted);
+    max-width: 62ch;
   }
 
   .crystalcore-vision h2 {
