@@ -4,4 +4,10 @@
 #
 #     pip install -r requirements-bridge.txt
 #
-mcp>=1.2
+# Upper bound is load-bearing. mcp 2.0 removed mcp.server.fastmcp entirely —
+# the module bridge.py imports FastMCP from. Because this was written as an
+# open range, the first 2.x release broke CI on every commit without anything
+# in this repository changing. The equivalent module in 2.x appears to be
+# mcp.server.mcpserver; migrating to it is real work with a real API change,
+# and should be done deliberately rather than by a resolver at install time.
+mcp>=1.2,<2
