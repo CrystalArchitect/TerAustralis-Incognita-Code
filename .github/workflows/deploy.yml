@@ -60,22 +60,24 @@ jobs:
           test -f vision/site/build/CNAME
           echo "CNAME: $(cat vision/site/build/CNAME)"
 
-      # End the race at its source rather than surviving it.
+      # Guards against Pages "Source" being on "Deploy from a branch".
       #
-      # While Pages "Source" is set to "Deploy from a branch", GitHub runs its
-      # own builder on every push to main. That builder renders the repository
-      # root with Jekyll and finishes within a minute of this job, so which
-      # version of the site survives is decided by scheduling luck. The
-      # verification below has caught and repaired that twice, but repairing a
-      # race every deploy is not the same as not having one.
+      # In that mode GitHub runs its own builder on every push to main. It
+      # renders the repository root with Jekyll and finishes within a minute of
+      # this job, so which version of the site survives is decided by scheduling
+      # luck. On 2026-07-28 it won five pushes out of eight; twice the domain
+      # served a rendered README until this workflow noticed and repaired it.
       #
-      # build_type: workflow is precisely what the Settings dropdown sets. Doing
-      # it here makes the setting a property of the repository rather than
-      # something that has to be remembered, and it is idempotent — once it
-      # reads "workflow", this step does nothing.
+      # The Source has since been set to "GitHub Actions", which stops that
+      # builder being triggered at all. This step and the verification below are
+      # therefore a safety net now rather than load-bearing — but they stay,
+      # because the setting is a click that can be undone by accident and the
+      # failure it causes is silent. Cheap insurance against a repeat.
       #
-      # Deliberately non-fatal: if the token cannot change it, the deploy still
-      # proceeds and the self-heal still covers us. It warns instead.
+      # Note the step cannot actually change the setting: GITHUB_TOKEN with
+      # pages: write is not sufficient, confirmed by the branch builder still
+      # firing on the two pushes after this was added. It reads the value and
+      # reports it, which is the useful half. Kept non-fatal for that reason.
       - name: Ensure Pages is served by this workflow, not the branch builder
         continue-on-error: true
         env:
