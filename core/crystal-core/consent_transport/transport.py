@@ -24,6 +24,21 @@ from .peers import Peer, PeerStore
 
 DEFAULT_PORT = 8890
 
+# An IK handshake message is tiny and fixed-shape: 96 bytes for the
+# initiator's (e, encrypted s, encrypted payload), 48 for the responder's.
+# Anything claiming more than this is not a handshake. This is the one
+# read that happens before we know who the peer is, so it gets the
+# tightest bound in the module — an unauthenticated stranger must never
+# be able to size our allocations.
+MAX_HANDSHAKE_LEN = 4096
+
+# How long an unauthenticated connection may keep a worker thread before
+# we hang up, and how many such connections may be in flight at once.
+# Without these a peer that opens a socket and then says nothing holds a
+# thread forever, and enough of them exhaust the server.
+HANDSHAKE_TIMEOUT = 10.0
+MAX_CONCURRENT_CONNECTIONS = 32
+
 
 def _recv_exact(sock: socket.socket, n: int) -> bytes:
     buf = bytearray()
@@ -39,8 +54,10 @@ def _send_raw(sock: socket.socket, data: bytes) -> None:
     sock.sendall(struct.pack(">I", len(data)) + data)
 
 
-def _recv_raw(sock: socket.socket) -> bytes:
+def _recv_raw(sock: socket.socket, max_len: int = MAX_HANDSHAKE_LEN) -> bytes:
     (length,) = struct.unpack(">I", _recv_exact(sock, 4))
+    if length > max_len:
+        raise protocol.ProtocolError("peer announced an oversized handshake frame")
     return _recv_exact(sock, length)
 
 
@@ -80,6 +97,7 @@ class StarlineServer:
         self._sock: socket.socket | None = None
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
+        self._slots = threading.BoundedSemaphore(MAX_CONCURRENT_CONNECTIONS)
 
     def start(self) -> int:
         """Bind and begin serving in a background thread. Returns the
@@ -109,6 +127,13 @@ class StarlineServer:
                 conn, _addr = self._sock.accept()
             except OSError:
                 return
+            # Refuse rather than queue when every slot is busy: a caller
+            # that is turned away retries, a caller parked on a semaphore
+            # is indistinguishable from the flood that parked it.
+            if not self._slots.acquire(blocking=False):
+                conn.close()
+                continue
+            conn.settimeout(HANDSHAKE_TIMEOUT)
             threading.Thread(target=self._handle, args=(conn,), daemon=True).start()
 
     def _handle(self, conn: socket.socket) -> None:
@@ -143,6 +168,7 @@ class StarlineServer:
             pass  # a failed/hostile connection just gets dropped, no diagnostic leak
         finally:
             conn.close()
+            self._slots.release()
 
 
 class StarlineClient:

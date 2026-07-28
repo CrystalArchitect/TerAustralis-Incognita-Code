@@ -51,6 +51,35 @@ def create_app(companion: Lumina) -> Flask:
     def preflight(_any):
         return ("", 204)
 
+    @app.before_request
+    def require_json_for_writes():
+        """Every state-changing route must be asked in JSON.
+
+        Binding to 127.0.0.1 keeps other machines out; it does not keep
+        out the browser already running on this one. Any page the human
+        visits can POST to a localhost port cross-origin — CORS decides
+        whether the attacker may *read* the reply, never whether the
+        request runs.
+
+        A form POST from another origin can only carry the three
+        'simple' content types, so demanding application/json forces a
+        preflight, and the origin check above answers it. Most routes
+        here already got that protection by accident, because
+        get_json(silent=True) returns None for a form body and they
+        400 on the empty result. /api/reflect did not: it reads no body
+        at all, so a bodyless cross-site form POST reached it and made
+        Lumina reflect and write to her own memory. Stating the rule
+        once, here, is better than depending on each route to trip over
+        the same accident.
+        """
+        if request.method in ("GET", "HEAD", "OPTIONS"):
+            return None
+        if not request.is_json:
+            return jsonify({"ok": False,
+                            "error": "this endpoint requires "
+                                     "Content-Type: application/json"}), 415
+        return None
+
     @app.get("/api/status")
     def status():
         c = holder["c"]
