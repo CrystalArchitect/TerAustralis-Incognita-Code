@@ -9,19 +9,33 @@ export function load() {
     { cmd: 'launch', desc: 'Launch Starline — begin the journey', output: '🚀 Main engines spooling...\nStarline Status .......... IN_ORBIT' },
     { cmd: 'burn', desc: 'Execute escape burn — leave planetary orbit', output: '🔥 ESCAPE BURN INITIATED\nWe have left planetary orbit.' },
     { cmd: 'network', desc: 'Enter full Starline network — reach 47+ star systems', output: '🌐 ENTERING FULL STARLINE NETWORK\nConnected to 47+ star systems.' },
-    { cmd: 'explore', desc: 'List explorable nodes across the network', output: '🔭 EXPLORATION MODE ACTIVE\nAvailable nodes:\n  1. Earth Node\n  2. Mars Redoubt\n  3. Alpha Centauri Outpost\n  4. Crystal Revenant Hub\n  5. Purpose Core Nexus' },
+    { cmd: 'explore', desc: 'List explorable nodes across the network', output: '🔭 EXPLORATION MODE ACTIVE\nAvailable nodes:\n  1. Earth Node\n  2. Sunwash Atolls [LOCKED — Magenta Key]\n  3. Mars Redoubt\n  4. Alpha Centauri Outpost\n  5. Cinderwake Chain [LOCKED — Ember Key]\n  6. Crystal Revenant Hub [LOCKED — Festival Key]\n  7. Purpose Core Nexus [LOCKED — Crystal Key]' },
     { cmd: 'visit [node]', desc: 'Travel to a node and claim its key', output: '🌌 Arriving at: Purpose Core Nexus\n🗝️  A key rises from the node.' },
-    { cmd: 'map', desc: 'Display the Starline network as a chart', output: '╔════════ STARLINE NETWORK - YEAR 3000 ════════╗\n║          [EARTH NODE]\n║               │\n║               ▼\n║          [MARS REDOUBT] → [ALPHA CENTAURI]' },
+    { cmd: 'map', desc: 'Display the Starline network as a chart', output: '╔════════ STARLINE NETWORK - YEAR 3000 ════════╗\n║          [EARTH NODE]\n║               │\n║               ▼\n║          [SUNWASH ATOLLS]\n║               │\n║               ▼\n║          [MARS REDOUBT] → [ALPHA CENTAURI]' },
     { cmd: 'song [track]', desc: 'Change the Starline soundtrack', output: '🎵 Now playing: Shooting Star Girl! - m13crystalat' }
   ];
 
+  // Ordered as the Starline Expansion chart runs them, outward from Earth,
+  // mirroring self.nodes in crystalcore_os.py. Sunwash Atolls and Cinderwake
+  // Chain joined the canon 2026-07-28.
   const nodes = [
     { name: 'Earth Node', desc: 'Primary terrestrial hub, the beginning' },
+    // Flavour text for the two 2026-07-28 nodes is deliberately factual rather
+    // than invented — the chart names them, but nothing in canon says yet what
+    // they are. Replace with authored copy when it exists.
+    { name: 'Sunwash Atolls', desc: 'Named on the Starline Expansion chart', locked: 'Magenta Key' },
     { name: 'Mars Redoubt', desc: 'First planetary outpost, red dust origins' },
     { name: 'Alpha Centauri Outpost', desc: 'Gateway to the stars, distant dreams' },
-    { name: 'Crystal Revenant Hub', desc: 'Zero-g festival platforms and celebrations' },
-    { name: 'Purpose Core Nexus', desc: '"Expand to the stars and thereby understand the Universe"' }
+    { name: 'Cinderwake Chain', desc: 'Named on the Starline Expansion chart', locked: 'Ember Key' },
+    { name: 'Crystal Revenant Hub', desc: 'Zero-g festival platforms and celebrations', locked: 'Festival Key' },
+    { name: 'Purpose Core Nexus', desc: '"Expand to the stars and thereby understand the Universe"', locked: 'Crystal Key' }
   ];
 
-  return { commands, nodes };
+  // Spelled from the list rather than written into the copy. The terminal
+  // carried four hardcoded "five"s that all became false the moment the node
+  // list grew; this page carried two more. Derived, they cannot go stale.
+  const countWords = { 5: 'Five', 6: 'Six', 7: 'Seven', 8: 'Eight', 9: 'Nine', 10: 'Ten' };
+  const nodeCountWord = countWords[nodes.length] ?? String(nodes.length);
+
+  return { commands, nodes, nodeCountWord };
 }
