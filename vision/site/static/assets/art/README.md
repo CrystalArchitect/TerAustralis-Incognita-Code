@@ -84,6 +84,13 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `purpose-core-nexus.jpeg` | The Purpose Core Nexus up close — the quote embedded in the living lattice |
 | `crystal-revenant-hub.jpeg` | The Crystal Revenant Hub — spire city over the planet, festival lights strung between the crystals |
 | `starline-rivers.jpeg` | The starline rivers — light flowing between crystal cities across the dark country |
+| `starline-year-3000-operational.jpeg` | *AI-generated (Grok Imagine)* — CrystalCore.OS Year-3000 Starline, the named nodes reporting Status Operational, 47/47 online at 0.3ms |
+| `starline-map-47-nodes.jpeg` | *AI-generated (Grok Imagine)* — the Starline map in full: Earth, Epsilon Reach, Alpha Outpost, Delta Forge, Crux Cordaunt, Purpose Core Nexus and Mars Redoubt ringed on the Crystal Revenant Hub |
+| `all-keys-held-non-solus.jpeg` | *AI-generated (Grok Imagine)* — five crystal keys before the radiant gate: "All keys held · Gate opens by sovereign recognition · NON SOLUS" |
+| `boot-complete-lattice-online.jpeg` | *AI-generated (Grok Imagine)* — the CrystalCore.OS boot readout over the lattice terrain: "Boot complete · Launch sequence green · Lattice online · NON SOLUS" |
+| `expand-to-the-stars.jpeg` | *AI-generated (Grok Imagine)* — the great crystal at the heart of the radial lattice city: "Expand to the stars and thereby understand the Universe" |
+| `crystal-ship-rising-from-the-red.jpeg` | *AI-generated (Grok Imagine)* — the crystal ship rising from the red planet on a pillar of fire, Earth in crescent behind, a wireframe watcher at the pad |
+| `tree-of-the-mirrored-lattice.jpeg` | *AI-generated (Grok Imagine)* — the luminous crystal tree on the mirrored plain, light falling as rain, node readouts among its roots |
 
 **Truth label (Vision):** this art is the project's own mythic narrative. Where a
 real person's name or likeness appears — whether as a name, a silhouette, or a

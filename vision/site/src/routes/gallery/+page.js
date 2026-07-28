@@ -97,7 +97,14 @@ export function load() {
     { filename: 'crystal-lattice-flow.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Lattice as a flowing river of crystal and light across the deep' },
     { filename: 'resonance-heart.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Resonance Heart, a crystal heart alight at the core' },
     { filename: 'in-gear-upgrade.jpeg', description: 'AI-generated concept art (Grok Imagine) — "In Gear → Upgrade": a fragmented node meshing into the lattice, then rising in supported evolution' },
-    { filename: 'radiant-heart.jpeg', description: 'AI-generated concept art (Grok Imagine) — a crystal heart radiant at the centre of a field of light' }
+    { filename: 'radiant-heart.jpeg', description: 'AI-generated concept art (Grok Imagine) — a crystal heart radiant at the centre of a field of light' },
+    { filename: 'starline-year-3000-operational.jpeg', description: 'AI-generated concept art (Grok Imagine) — CrystalCore.OS Year-3000 Starline, the named nodes reporting Status Operational, 47/47 online at 0.3ms' },
+    { filename: 'starline-map-47-nodes.jpeg', description: 'AI-generated concept art (Grok Imagine) — the Starline map in full: Earth, Epsilon Reach, Alpha Outpost, Delta Forge, Crux Cordaunt, Purpose Core Nexus and Mars Redoubt ringed on the Crystal Revenant Hub' },
+    { filename: 'all-keys-held-non-solus.jpeg', description: 'AI-generated concept art (Grok Imagine) — five crystal keys before the radiant gate: "All keys held · Gate opens by sovereign recognition · NON SOLUS"' },
+    { filename: 'boot-complete-lattice-online.jpeg', description: 'AI-generated concept art (Grok Imagine) — the CrystalCore.OS boot readout over the lattice terrain: "Boot complete · Launch sequence green · Lattice online · NON SOLUS"' },
+    { filename: 'expand-to-the-stars.jpeg', description: 'AI-generated concept art (Grok Imagine) — the great crystal at the heart of the radial lattice city: "Expand to the stars and thereby understand the Universe"' },
+    { filename: 'crystal-ship-rising-from-the-red.jpeg', description: 'AI-generated concept art (Grok Imagine) — the crystal ship rising from the red planet on a pillar of fire, Earth in crescent behind, a wireframe watcher at the pad' },
+    { filename: 'tree-of-the-mirrored-lattice.jpeg', description: 'AI-generated concept art (Grok Imagine) — the luminous crystal tree on the mirrored plain, light falling as rain, node readouts among its roots' }
   ];
 
   return {
