@@ -70,7 +70,21 @@ class Identity:
     def save(self, path: Path = DEFAULT_IDENTITY_PATH) -> None:
         """Write the private identity to disk, owner-read-only where the
         platform supports it. This file must never be committed to git —
-        see .gitignore."""
+        see .gitignore.
+
+        Two properties this write has to hold, both of which a plain
+        write_text() gives up:
+
+        * The file is never, at any instant, readable by anyone else.
+          Creating it and *then* chmod'ing leaves it world-readable under
+          the usual 0022 umask for as long as the write takes, which is
+          long enough for another local user to open it and keep the
+          descriptor. So it is created with 0600 already set.
+        * A failed write never destroys the existing identity. Losing
+          this file means losing the identity outright — there is no
+          recovery, by design — so the new copy is written beside the old
+          one and moved into place only once it is complete on disk.
+        """
         payload = {
             "signing_key": self.signing_key.private_bytes(
                 Encoding.Raw, PrivateFormat.Raw, NoEncryption()
@@ -79,11 +93,25 @@ class Identity:
                 Encoding.Raw, PrivateFormat.Raw, NoEncryption()
             ).hex(),
         }
-        path.write_text(json.dumps(payload))
+        path = Path(path)
+        tmp = path.with_name(path.name + ".tmp")
+        mode = stat.S_IRUSR | stat.S_IWUSR
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
         try:
-            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
+            with os.fdopen(fd, "w") as fh:
+                json.dump(payload, fh)
+                fh.flush()
+                os.fsync(fh.fileno())
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            raise
+        # os.open honours `mode` only when it creates the file; an
+        # existing .tmp from an interrupted save keeps its old bits.
+        try:
+            os.chmod(tmp, mode)
         except OSError:
             pass  # best-effort; not all platforms support POSIX perms
+        os.replace(tmp, path)
 
     @classmethod
     def load(cls, path: Path = DEFAULT_IDENTITY_PATH) -> "Identity":

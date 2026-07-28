@@ -12,10 +12,15 @@ a real network can actually talk to each other under these same rules.
 
 from __future__ import annotations
 
+import json
+import socket
+import stat
+import struct
 import tempfile
 import time
 from pathlib import Path
 
+from . import transport
 from .agent import StarlineAgent
 from .fragment import MemoryFragment
 from .identity import Identity
@@ -205,9 +210,103 @@ def test_discovery_via_unicast_loopback():
     assert ann.label == "agent-a"
 
 
+def test_identity_file_is_never_group_or_world_readable():
+    """The private key must be unreadable by anyone else the whole time
+    it exists — not merely by the time save() returns."""
+    d = Path(tempfile.mkdtemp(prefix="starline_test_perm_"))
+    path = d / "identity.json"
+    Identity.generate().save(path)
+    mode = stat.S_IMODE(path.stat().st_mode)
+    assert mode & 0o077 == 0, f"identity file is {oct(mode)}, readable beyond its owner"
+    # No temporary copy may be left lying around with looser bits either.
+    assert not (d / "identity.json.tmp").exists()
+
+
+def test_failed_save_leaves_the_old_identity_intact():
+    """Losing this file is unrecoverable, so a save that dies partway
+    through must not take the existing identity with it."""
+    d = Path(tempfile.mkdtemp(prefix="starline_test_atomic_"))
+    path = d / "identity.json"
+    original = Identity.generate()
+    original.save(path)
+    before = path.read_bytes()
+
+    broken = Identity.generate()
+
+    class Boom(Exception):
+        pass
+
+    def explode(*_args, **_kwargs):
+        raise Boom("disk full")
+
+    real_dump = json.dump
+    json.dump = explode
+    try:
+        broken.save(path)
+    except Boom:
+        pass
+    else:
+        raise AssertionError("save() should have propagated the write failure")
+    finally:
+        json.dump = real_dump
+
+    assert path.read_bytes() == before, "a failed save overwrote the live identity"
+    assert Identity.load(path).fingerprint == original.fingerprint
+    assert not (d / "identity.json.tmp").exists()
+
+
+def test_oversized_handshake_frame_is_refused():
+    """The pre-authentication read is the one a stranger controls. A
+    peer that announces a huge frame must be hung up on, not believed."""
+    a, _b = _two_agents()
+    port = a.serve(port=0)
+    try:
+        sock = socket.create_connection(("127.0.0.1", port), timeout=5)
+        try:
+            # 3 GiB announced, nothing delivered. Before the length check
+            # this parked a worker thread on an unbounded read.
+            sock.sendall(struct.pack(">I", 3 * 1024 * 1024 * 1024))
+            sock.settimeout(5)
+            assert sock.recv(1) == b"", "server kept the oversized frame alive"
+        finally:
+            sock.close()
+        # The server must still be healthy for an honest peer afterwards.
+        second = socket.create_connection(("127.0.0.1", port), timeout=5)
+        second.close()
+    finally:
+        a.stop_serving()
+
+
+def test_stalled_connections_cannot_exhaust_the_server():
+    """Connections that open and then say nothing must age out, and must
+    not lock an honest peer out of the server while they hang around."""
+    a, _b = _two_agents()
+    port = a.serve(port=0)
+    stalled = []
+    try:
+        for _ in range(transport.MAX_CONCURRENT_CONNECTIONS + 8):
+            try:
+                s = socket.create_connection(("127.0.0.1", port), timeout=2)
+                stalled.append(s)
+            except OSError:
+                break
+        # Over the cap, the server refuses rather than queueing — so an
+        # honest connection still completes instead of waiting behind them.
+        probe = socket.create_connection(("127.0.0.1", port), timeout=5)
+        probe.close()
+    finally:
+        for s in stalled:
+            s.close()
+        a.stop_serving()
+
+
 def main() -> int:
     tests = [
         test_identity_roundtrip,
+        test_identity_file_is_never_group_or_world_readable,
+        test_failed_save_leaves_the_old_identity_intact,
+        test_oversized_handshake_frame_is_refused,
+        test_stalled_connections_cannot_exhaust_the_server,
         test_fragment_sign_and_verify,
         test_denied_without_consent,
         test_granted_consent_allows_exchange,
