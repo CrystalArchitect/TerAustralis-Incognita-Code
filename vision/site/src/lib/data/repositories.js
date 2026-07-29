@@ -43,7 +43,7 @@ export const repositories = [
     stateNote: 'CI runs five suites on every push; all passing at last record (2026-07-24).',
     holds: [
       'Crystal Core engine — Clementine bridge, consent_transport, RDP',
-      'Lumina, the local-first companion (terminal, API, web UI)',
+      'Clementine, the local-first companion (terminal, API, web UI)',
       'This site'
     ],
     link: 'https://github.com/CrystalArchitect/TerAustralis-Incognita-Code'

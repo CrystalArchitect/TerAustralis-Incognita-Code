@@ -187,7 +187,7 @@
   <nav class="pagenav" aria-label="Related reading">
     <a href="/codex">The Codex</a>
     <a href="/apocryphon">The Apocryphon</a>
-    <a href="/lumina">Lumina</a>
+    <a href="/clementine">Clementine</a>
   </nav>
 </article>
 

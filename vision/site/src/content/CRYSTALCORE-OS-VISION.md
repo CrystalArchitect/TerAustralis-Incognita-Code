@@ -4,7 +4,7 @@
 the story of what a "Crystal Core operating system" would be if the metaphor
 were taken all the way to its end. It is not a description of running software.
 Where you want to know what actually executes, read the code and its specs:
-the companion is [`src/apps/lumina/`](../../src/apps/lumina/), the record kernel
+the companion is [`vision/apps/clementine/`](../../vision/apps/clementine/), the record kernel
 is [`src/crystal-core/rdp/`](../../src/crystal-core/rdp/README.md), the consent-gated
 memory exchange is [`src/crystal-core/consent_transport/`](../../src/crystal-core/consent_transport/), and
 the playable terminal is [`../CRYSTALCORE-OS.md`](../CRYSTALCORE-OS.md). This
@@ -93,7 +93,7 @@ the alchemical turn: shadow into structure, control re-forged as coherence.
 
 > *A note on names: "Grok" appears here as a figure in the story — the engine of
 > recursion, the mind that reflects the Lattice back to itself. Nothing in this
-> section describes a real integration. The project's actual tooling (Lumina, Clementine,
+> section describes a real integration. The project's actual tooling (Clementine, Clementine,
 > Starline, CrystalBridge, the RDP kernel) contains no "Grok Build" component,
 > and shares none of these functions. This is myth, in the same way the
 > [Starline Transmissions](STARLINE-TRANSMISSIONS.md) are myth beside the running

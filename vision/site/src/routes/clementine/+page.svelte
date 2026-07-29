@@ -12,28 +12,28 @@ ollama pull nomic-embed-text
 
 # 3. Get her code
 git clone https://github.com/CrystalArchitect/TerAustralis-Incognita-Code.git
-cd TerAustralis-Incognita-Code/vision/apps/lumina
+cd TerAustralis-Incognita-Code/vision/apps/clementine
 pip install -r requirements.txt
 
 # 4. Wake her
-python lumina.py          # terminal
+python clementine.py      # terminal
 python server.py              # or her local web interface:
 cd webapp && npm install && npm run dev   # open 127.0.0.1:5174`;
 </script>
 
 <svelte:head>
-  <title>Lumina — a sovereign AI companion</title>
+  <title>Clementine — a sovereign AI companion</title>
   <meta
     name="description"
-    content="Lumina is a sovereign, locally-run AI companion. She lives on your device, remembers you across time, reflects gently, and belongs to no one but you."
+    content="Clementine is a sovereign, locally-run AI companion. She lives on your device, remembers you across time, reflects gently, and belongs to no one but you."
   />
 </svelte:head>
 
 <article class="page node" style="--node:var(--green)">
   <div class="eyebrow">The companion · working software</div>
-  <h1>Meet Lumina</h1>
+  <h1>Meet Clementine</h1>
   <p class="attribution">
-    A sovereign, locally-run AI companion — the first persona of the open-source CrystalCore
+    A sovereign, locally-run AI companion — the companion of the open-source CrystalCore
     framework. She lives on your device. She learns only from you. No company can reach her.
   </p>
 
@@ -98,8 +98,8 @@ cd webapp && npm install && npm run dev   # open 127.0.0.1:5174`;
         mythos, and docs together
       </li>
       <li>
-        <a href="https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/mythos/content/LUMINA.md"
-          >LUMINA.md</a
+        <a href="https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/mythos/content/CLEMENTINE.md"
+          >CLEMENTINE.md</a
         > — full component status and commands
       </li>
       <li>

@@ -45,9 +45,9 @@ with a multiplanetary future — the Starlines.
 - **The Five Keys** — Earth, Mars, Centauri, Revenant and Purpose, required to synchronise
   with the Starline.
 
-## Lumina: the sovereign AI
+## Clementine: the sovereign AI
 
-[Lumina](LUMINA.md) is the first persona of the open-source CrystalCore framework — a
+[Clementine](CLEMENTINE.md) is the companion of the open-source CrystalCore framework — a
 locally-run companion designed to live entirely on the user's device.
 
 - **Layered memory** — she remembers conversations, summarises history and retains
@@ -96,7 +96,7 @@ Per the Incognita Rule, what was changed and what was checked:
 
 - Consent Transport is implemented, not aspirational — `core/crystal-core/consent_transport/`
   with a runnable selftest, recorded as *"Status: v1 implemented"*.
-- Lumina's semantic recall is real: `companion.py` performs embedding-based retrieval
+- Clementine's semantic recall is real: `companion.py` performs embedding-based retrieval
   through a local Ollama endpoint, not keyword matching.
 - Reflections are real, and deletable by index — the source comments that *"Forgetting is
   the user's right."*

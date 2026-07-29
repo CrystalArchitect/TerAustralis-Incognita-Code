@@ -1,6 +1,6 @@
 # Patreon Tiers — The Crystal Vision
 
-The tiers below support the ongoing work of TerAustralis Incognita — the Codex, the Apocryphon, and the development of Lumina. Thank you for helping the vision move forward.
+The tiers below support the ongoing work of TerAustralis Incognita — the Codex, the Apocryphon, and the development of Clementine. Thank you for helping the vision move forward.
 
 ---
 
@@ -14,7 +14,7 @@ For those who feel connected to the story. You'll get early access to new chapte
 
 ## 🕸️ Weaver — $25 / month
 
-For those who want to go deeper. You'll receive early access to Lumina development updates, priority feedback opportunities, and insight into both the mythic and technical layers as they unfold.
+For those who want to go deeper. You'll receive early access to Clementine development updates, priority feedback opportunities, and insight into both the mythic and technical layers as they unfold.
 
 ## 🏛️ Architect — $50 / month
 
