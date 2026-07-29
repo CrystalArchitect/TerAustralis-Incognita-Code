@@ -107,6 +107,6 @@
 
 ---
 
-*See also: [LUMINA.md](LUMINA.md) (the companion today) · [CRYSTALMATRIX.md](CRYSTALMATRIX.md) (protocol design) · [STRATEGY.md](STRATEGY.md) (accelerated path) · [README](README.md)*
+*See also: [LUMINA.md](LUMINA.md) (the companion today) · [CRYSTALMATRIX.md](CRYSTALMATRIX.md) (protocol design) · [STRATEGY.md](STRATEGY.md) (accelerated path) · [README](../README.md)*
 
 *Part of The Crystal Vision · TerAustralis Incognita · Non Solus — Not Alone*

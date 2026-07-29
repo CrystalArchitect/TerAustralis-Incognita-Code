@@ -26,7 +26,7 @@ A capability moves up the ladder only when the code moves first. Documentation i
 
 This project does not claim, and its documents must never imply:
 
-- Production-readiness or fitness guarantees — the code ships under Apache 2.0, as-is
+- Production-readiness or fitness guarantees — the code ships under CC BY-NC-ND 4.0, as-is
 - Safety or security guarantees against all adversaries
 - Clinical, therapeutic, or diagnostic authority of any kind
 - AGI, or that the companion's warmth is more than an architecture faithfully run
@@ -42,6 +42,6 @@ This project does not claim, and its documents must never imply:
 
 *This page distills one idea from the project's wider explorations of evidence-governed engineering: claims gated by evidence, non-claims stated as plainly as claims. Everything above was practiced before it was written down.*
 
-*See also: [ARCHITECTURE.md](ARCHITECTURE.md) · [LUMINA.md](LUMINA.md) · [MILESTONES.md](MILESTONES.md) · [README](README.md)*
+*See also: [ARCHITECTURE.md](ARCHITECTURE.md) · [LUMINA.md](LUMINA.md) · [MILESTONES.md](MILESTONES.md) · [README](../README.md)*
 
 *Part of The Crystal Vision · TerAustralis Incognita · Non Solus — Not Alone*

@@ -18,4 +18,4 @@ Full legal text: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
 
 ---
 
-**Note**: The code itself remains under Apache 2.0.
+**Note**: The code itself is licensed separately under CC BY-NC-ND 4.0 — see `LICENSE`.

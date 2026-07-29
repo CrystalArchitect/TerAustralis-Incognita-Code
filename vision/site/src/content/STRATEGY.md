@@ -104,6 +104,6 @@ Getting something integrated into systems like Grok or Optimus is extremely diff
 
 ---
 
-*See also: [CRYSTALMATRIX.md](CRYSTALMATRIX.md) (full protocol design) · [LUMINA.md](LUMINA.md) (the companion today) · [README](README.md)*
+*See also: [CRYSTALMATRIX.md](CRYSTALMATRIX.md) (full protocol design) · [LUMINA.md](LUMINA.md) (the companion today) · [README](../README.md)*
 
 *Part of The Crystal Vision · TerAustralis Incognita · Non Solus — Not Alone*

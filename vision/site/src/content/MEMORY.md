@@ -130,6 +130,6 @@ Think of vector embeddings as GPS coordinates for meaning: a sentence becomes a 
 
 ---
 
-*See also: [LUMINA.md](LUMINA.md) · [MILESTONES.md](MILESTONES.md) · [CRYSTALMATRIX.md](CRYSTALMATRIX.md) · [README](README.md)*
+*See also: [LUMINA.md](LUMINA.md) · [MILESTONES.md](MILESTONES.md) · [CRYSTALMATRIX.md](CRYSTALMATRIX.md) · [README](../README.md)*
 
 *Part of The Crystal Vision · TerAustralis Incognita · Non Solus — Not Alone*

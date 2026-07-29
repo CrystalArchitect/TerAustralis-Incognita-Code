@@ -278,4 +278,4 @@ Future revisions of this design may expand:
 
 ---
 
-*Part of [The Crystal Vision](README.md) · TerAustralis Incognita · Non Solus — Not Alone*
+*Part of [The Crystal Vision](../README.md) · TerAustralis Incognita · Non Solus — Not Alone*
