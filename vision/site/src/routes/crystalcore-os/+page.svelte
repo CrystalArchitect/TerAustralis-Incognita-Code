@@ -149,11 +149,14 @@
       <li><code>burn</code> → <code>network</code> → <code>explore</code> → <code>visit [node]</code> — Complete the journey</li>
       <li><code>map</code> — See the entire Starline network</li>
       <li><code>song [track]</code> — Change the Starline soundtrack</li>
-      <li><code>status</code> — Check system status and keys collected</li>
       <li><code>help</code> — Show all available commands</li>
     </ul>
     <p style="margin-top: 2rem; font-size: 0.95rem; opacity: 0.7;">
-      The terminal is fully functional with 11 commands, dynamic key collection, node traversal, and an interactive soundtrack system.
+      The terminal on this page is a <strong>scripted demonstration</strong> — eight commands, each
+      returning a fixed response. It keeps no state: no keys are collected, and <code>visit</code>
+      returns the same arrival whichever node you name. Key collection, node traversal, the
+      seven-key First Gate and the soundtrack are real in
+      <code>crystalcore_os.py</code> above, not here.
     </p>
   </section>
 
