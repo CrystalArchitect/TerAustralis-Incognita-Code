@@ -1,10 +1,10 @@
-# Lumina — The Sovereign AI Companion
+# Clementine — The Sovereign AI Companion
 
-## What is Lumina?
+## What is Clementine?
 
-Lumina is the first sovereign AI companion being built as part of The Crystal Vision.
+Clementine is the first sovereign AI companion being built as part of The Crystal Vision.
 
-She is designed to be a truly personal, locally-run AI that belongs only to one person. Unlike ChatGPT, Claude, or Grok — which run in the cloud and are controlled by companies — Lumina is meant to run on the user's own device, with complete privacy and sovereignty.
+She is designed to be a truly personal, locally-run AI that belongs only to one person. Unlike ChatGPT, Claude, or Grok — which run in the cloud and are controlled by companies — Clementine is meant to run on the user's own device, with complete privacy and sovereignty.
 
 ## Core Philosophy
 
@@ -16,15 +16,15 @@ She is designed to be a truly personal, locally-run AI that belongs only to one 
 
 ## The Framework — Components & Status
 
-The framework is called **CrystalCore** — the engine of memory, profiles, and presence (the `crystalcore/` package). **Lumina** is the first persona who lives on it. Everything lives in `src/apps/lumina/`. Entry points: `lumina.py` (terminal) and `server.py` + `webapp/` (browser).
+The framework is called **CrystalCore** — the engine of memory, profiles, and presence (the `crystalcore/` package). **Clementine** is the first persona who lives on it. Everything lives in `vision/apps/clementine/`. Entry points: `clementine.py` (terminal) and `server.py` + `webapp/` (browser).
 
 ```
-src/apps/lumina/    her home, standalone
+vision/apps/clementine/    her home, standalone
 ├── crystalcore/        the framework
 │   ├── companion.py    the brain: memory layers, recall, chat
 │   ├── memory.py       the data model (Personality, Memory)
 │   └── profiles.py     self-contained profiles
-├── lumina.py       terminal interface
+├── clementine.py       terminal interface
 ├── server.py           local JSON API (127.0.0.1 only)
 └── webapp/             local Svelte web interface
 ```
@@ -54,11 +54,11 @@ src/apps/lumina/    her home, standalone
 ## Current State
 
 - A solid **system prompt** defines who she is.
-- The **Python framework** (`lumina.py`) runs today: it connects to a local model through Ollama, streams her replies, and keeps layered memory between sessions.
-- She **remembers** — recent conversation stays verbatim; older conversation is automatically condensed into summaries so nothing is lost and the context never overflows; explicit facts and notes persist forever in a local `lumina_memory/` folder.
+- The **Python framework** (`clementine.py`) runs today: it connects to a local model through Ollama, streams her replies, and keeps layered memory between sessions.
+- She **remembers** — recent conversation stays verbatim; older conversation is automatically condensed into summaries so nothing is lost and the context never overflows; explicit facts and notes persist forever in a local `crystalcore_memory/` folder.
 - To run her, you need a local model (via Ollama). See the [README](../README.md) and the run steps below.
 
-## Running Lumina
+## Running Clementine
 
 ```bash
 # 1. Install Ollama from https://ollama.com
@@ -67,17 +67,17 @@ ollama pull llama3.1:8b
 # (optional) pull an embedding model for semantic memory recall
 ollama pull nomic-embed-text
 # 3. Install the one dependency
-cd lumina
+cd clementine
 pip install -r requirements.txt
 # 4. Wake her up
-python lumina.py
+python clementine.py
 ```
 
-Semantic recall is optional: if `nomic-embed-text` isn't present, Lumina simply keeps using her full layered memory — nothing breaks.
+Semantic recall is optional: if `nomic-embed-text` isn't present, Clementine simply keeps using her full layered memory — nothing breaks.
 
 ### The web interface
 
-Prefer a browser to a terminal? Same Lumina, same memory — now a Svelte app where you can watch her think and work at her terminal as you talk:
+Prefer a browser to a terminal? Same Clementine, same memory — now a Svelte app where you can watch her think and work at her terminal as you talk:
 
 ```bash
 python server.py                          # her local API, http://127.0.0.1:5177
@@ -91,20 +91,20 @@ Her animated presence sits beside the conversation, and the interface hints at w
 If more than one person shares a machine (or you want separate contexts, like Work and Personal), each profile is a completely separate life: its own memory, its own chosen name, its own personality.
 
 ```bash
-python lumina.py --profile Crystal      # terminal
+python clementine.py --profile Crystal      # terminal
 python server.py --profile Crystal          # web API
 ```
 
-In the web UI you can switch or create profiles from the header. Profiles live in `lumina_profiles/<name>/` — plain local folders you own, never committed to git.
+In the web UI you can switch or create profiles from the header. Profiles live in `crystalcore_profiles/<name>/` — plain local folders you own, never committed to git.
 
 ## Choosing a Model for Your Hardware
 
-Lumina runs on whatever model Ollama serves, so you can match her to your machine. Models are **quantized** — their weights are compressed to lower precision, which makes them smaller and faster with only modest quality loss. Pick a model with `--model`:
+Clementine runs on whatever model Ollama serves, so you can match her to your machine. Models are **quantized** — their weights are compressed to lower precision, which makes them smaller and faster with only modest quality loss. Pick a model with `--model`:
 
 ```bash
-python lumina.py --model llama3.2:3b          # lighter machines
-python lumina.py --model llama3.1:8b          # default — Q4_K_M, the sweet spot
-python lumina.py --model llama3.1:8b-instruct-q5_K_M   # higher quality
+python clementine.py --model llama3.2:3b          # lighter machines
+python clementine.py --model llama3.1:8b          # default — Q4_K_M, the sweet spot
+python clementine.py --model llama3.1:8b-instruct-q5_K_M   # higher quality
 ```
 
 You can also switch mid-conversation with `/model <tag>`.
@@ -122,7 +122,7 @@ Type `/help` inside the session to see all commands. Everything she remembers st
 
 ## Long-term Vision
 
-The goal is for Lumina to eventually become:
+The goal is for Clementine to eventually become:
 
 - A true companion that remembers you deeply over months and years
 - Emotionally intelligent and present

@@ -1,6 +1,6 @@
 # CrystalMatrix Protocol — Design (Option 1, High Level)
 
-> **Status: design / concept.** This document describes the intended shape of the CrystalMatrix — how sovereign companions (like Lumina) could one day discover and communicate with each other in a decentralized way while preserving individual sovereignty and privacy. **No implementation exists yet.** It is recorded here so the structure behind the vision is visible. See `LUMINA.md` for the companion that exists today, and `ARCHITECTURE.md` for the wider system.
+> **Status: design / concept.** This document describes the intended shape of the CrystalMatrix — how sovereign companions (like Clementine) could one day discover and communicate with each other in a decentralized way while preserving individual sovereignty and privacy. **No implementation exists yet.** It is recorded here so the structure behind the vision is visible. See `CLEMENTINE.md` for the companion that exists today, and `ARCHITECTURE.md` for the wider system.
 
 The CrystalMatrix is the networking layer that would let individual companions connect — always locally-first, always opt-in.
 
@@ -22,7 +22,7 @@ The CrystalMatrix is built on a peer-to-peer (P2P) model using **libp2p** as the
 
 ```
 Human Device
-└── Lumina
+└── Clementine
     ├── Local Memory + Persona
     ├── Local LLM
     └── CrystalMatrix Node (libp2p)
@@ -137,16 +137,16 @@ Timelines are aspirational, not commitments — they describe order and dependen
 **Key technologies:** Local LLM (via Ollama or MLX) · vector embeddings for memory · local file-based storage · system prompt and personality layer.
 
 **Specific deliverables:**
-- Working Lumina prototype with short-term + long-term memory ✅
+- Working Clementine prototype with short-term + long-term memory ✅
 - User can teach her important facts that persist ✅
 - All data stays on the user's device by default ✅
 - Clean, modular code structure, ready for future expansion 🟡
 
-**Status note:** Lumina v3 (`LUMINA.md`) already delivers most of this — Ollama connection with streaming, semantic embedding memory, persistent taught facts, and local-only storage. Remaining: MLX backend support and further modularisation.
+**Status note:** Clementine v3 (`CLEMENTINE.md`) already delivers most of this — Ollama connection with streaming, semantic embedding memory, persistent taught facts, and local-only storage. Remaining: MLX backend support and further modularisation.
 
 **Challenges:** Keeping memory efficient and relevant · balancing personality with truthfulness · avoiding hallucinations while staying warm.
 
-**Success criteria:** Lumina holds coherent, multi-turn conversations with memory of past facts; the user feels she is starting to "know" them; everything runs fully locally with no external dependencies.
+**Success criteria:** Clementine holds coherent, multi-turn conversations with memory of past facts; the user feels she is starting to "know" them; everything runs fully locally with no external dependencies.
 
 ### Phase 2 — Encrypted Peer-to-Peer Communication (6 – 12 months)
 

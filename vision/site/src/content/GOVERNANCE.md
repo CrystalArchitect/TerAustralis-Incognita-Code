@@ -12,7 +12,7 @@ Every capability described in these documents carries a status marker, and the m
 |--------|---------|--------------|
 | ⬜ **Design** | An idea on paper. No implementation exists, and the docs say so plainly. | The CrystalMatrix protocol (`CRYSTALMATRIX.md`) |
 | 🟡 **Partial** | Some of it runs; the docs state exactly which part. | Episodic memory (`MEMORY.md` — summaries exist, time-anchored recall doesn't) |
-| ✅ **Built** | Implemented, covered by the offline test suite, and merged to `main` through a reviewed pull request. | Semantic recall with recency fading (`src/apps/lumina/crystalcore/companion.py`) |
+| ✅ **Built** | Implemented, covered by the offline test suite, and merged to `main` through a reviewed pull request. | Semantic recall with recency fading (`core/crystalcore/mind/companion.py`) |
 
 A capability moves up the ladder only when the code moves first. Documentation is corrected *downward* immediately if it is found ahead of reality.
 
@@ -42,6 +42,6 @@ This project does not claim, and its documents must never imply:
 
 *This page distills one idea from the project's wider explorations of evidence-governed engineering: claims gated by evidence, non-claims stated as plainly as claims. Everything above was practiced before it was written down.*
 
-*See also: [ARCHITECTURE.md](ARCHITECTURE.md) · [LUMINA.md](LUMINA.md) · [MILESTONES.md](MILESTONES.md) · [README](../README.md)*
+*See also: [ARCHITECTURE.md](ARCHITECTURE.md) · [CLEMENTINE.md](CLEMENTINE.md) · [MILESTONES.md](MILESTONES.md) · [README](../README.md)*
 
 *Part of The Crystal Vision · TerAustralis Incognita · Non Solus — Not Alone*

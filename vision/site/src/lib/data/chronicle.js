@@ -24,7 +24,7 @@ export const chronicle = [
   {
     when: '2026-07-15',
     what: 'The companion is born',
-    note: 'Lumina arrives (first named Clementine): local-first, layered memory, sovereignty by design.',
+    note: 'Clementine arrives — the name she carried first, and carries again: local-first, layered memory, sovereignty by design.',
     tl: 'var(--green)'
   },
   {
@@ -36,7 +36,7 @@ export const chronicle = [
   {
     when: '2026-07-21',
     what: 'The great renaming',
-    note: 'Lumina and the Starline Weaver take their true names — and "Songline" is honoured as culture, retired as a component name.',
+    note: 'The companion and the Starline Weaver are renamed — and "Songline" is honoured as culture, retired as a component name.',
     tl: 'var(--blue)'
   },
   {
@@ -56,5 +56,11 @@ export const chronicle = [
     what: 'The terminal flies',
     note: 'CrystalCore.OS boots from a fresh clone — boot, network, broadcast, priority channel — and the Chronicle itself begins.',
     tl: 'var(--purple)'
+  },
+  {
+    when: '2026-07-29',
+    what: 'The name comes home',
+    note: 'A retired name is removed across every repository, and the companion is Clementine again. The architecture is set right with it: CrystalMemory for what she remembers, CrystalBus for what carries speech between models, CrystalBridge for the gate a guest comes through.',
+    tl: 'var(--green)'
   }
 ];

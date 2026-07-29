@@ -22,7 +22,7 @@
 export const constellationNodes = [
   { x: 130, y: 300, r: 9,  color: 'var(--gold)',   label: 'The Codex',      sub: 'the story',      href: '/codex' },
   { x: 255, y: 180, r: 10, color: 'var(--purple)', label: 'CrystalCore.OS', sub: 'fly the mythos', href: '/crystalcore-os' },
-  { x: 400, y: 250, r: 12, color: 'var(--green)',  label: 'Lumina',         sub: 'the companion',  href: '/lumina' },
+  { x: 400, y: 250, r: 12, color: 'var(--green)',  label: 'Clementine',     sub: 'the companion',  href: '/clementine' },
   { x: 395, y: 95,  r: 8,  color: 'var(--blue)',   label: 'Starline',       sub: 'the protocol',   href: '/starline' },
   { x: 545, y: 165, r: 9,  color: 'var(--silver)', label: 'The Archive',    sub: 'every document', href: '/docs' },
   { x: 585, y: 320, r: 8,  color: 'var(--pink)',   label: 'The Gallery',    sub: 'the art',        href: '/gallery' },

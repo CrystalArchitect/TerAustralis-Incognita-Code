@@ -72,7 +72,7 @@
 
   <nav class="pagenav" aria-label="Continue">
     <a href="/codex">← The Codex</a>
-    <a href="/lumina">Meet Lumina →</a>
+    <a href="/clementine">Meet Clementine →</a>
     <a href="/">Home</a>
   </nav>
 </article>

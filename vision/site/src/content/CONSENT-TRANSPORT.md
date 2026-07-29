@@ -5,7 +5,7 @@
 ## Purpose
 
 Consent Transport is the sovereign communication layer between individually
-locally-running Lumina agents. It lets two companions exchange
+locally-running Clementine agents. It lets two companions exchange
 consented memory fragments directly, peer to peer, without routing
 through a central server or surrendering data ownership.
 
@@ -52,7 +52,7 @@ than the answer for whoever revisits this later:
 ┌─────────────────────────────────────────────────────────────┐
 │              Consent Transport Layer (crystal-core)           │
 ├─────────────────────────────────────────────────────────────┤
-│  Lumina (local)  ◄── Noise IK, TCP ──►  Other sovereign agent │
+│ Clementine (local) ◄── Noise IK, TCP ──► Other sovereign agent│
 │         │                                          │          │
 │         ▼                                          ▼          │
 │  ┌────────────────────────────────────────────────────────┐  │

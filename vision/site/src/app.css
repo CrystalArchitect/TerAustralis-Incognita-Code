@@ -314,7 +314,7 @@
     font-size:1.05rem;color:var(--gold);opacity:.85;
   }
 
-/* ---- Shared content pages (codex, apocryphon, lumina) ---- */
+/* ---- Shared content pages (codex, apocryphon, clementine) ---- */
 a.wordmark{color:var(--silver)}
 a.wordmark:hover{color:var(--ink);text-decoration:none}
 .page{padding:64px 0 30px}

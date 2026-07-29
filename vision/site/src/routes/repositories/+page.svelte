@@ -6,7 +6,7 @@
   import { repositories, stateLabels } from '$lib/data/repositories.js';
 
   const stateAccent = {
-    active: 'var(--domain-lumina)',
+    active: 'var(--domain-clementine)',
     dormant: 'var(--domain-archive)',
     frozen: 'var(--domain-codex)'
   };

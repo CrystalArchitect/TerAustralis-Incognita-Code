@@ -10,15 +10,15 @@
 
 | Thread | Repo | Reality (Built) |
 |--------|------|-----------------|
-| **Lumina** (sovereign companion) | `src/apps/lumina/` | Local-first AI companion: Ollama default, xAI opt-in, layered memory, profiles, terminal + web UI (`lumina.py`, `lumina_web.py`) |
-| **CrystalCore framework** (memory/presence) | `src/apps/lumina/crystalcore/` | `companion.py` (brain), `memory.py` (Personality/Memory), `profiles.py` |
-| **CrystalBridge** (guest-AI gate) | `src/crystalcore/` | MCP server: fail-closed ConsentGate (approval · permission; scope and provenance documented as intended, not yet implemented), append-only audit; guests claude / grok / cursor with scoped tools `status, recall, teach, message` |
-| **Starline Weaver** (multi-AI conversation) | `src/crystal-core/clementine/bridge/` | In-process + networked HTTP bus; every message labeled science/story/vision; red-button halt; adapters for Claude/GPT/Grok |
+| **Clementine** (sovereign companion) | `vision/apps/clementine/` | Local-first AI companion: Ollama default, xAI opt-in, layered memory, profiles, terminal + web UI (`clementine.py`, `server.py` + `webapp/`) |
+| **CrystalCore framework** (memory/presence) | `core/crystalcore/mind/` | `companion.py` (brain), `memory.py` (Personality/Memory), `profiles.py` |
+| **CrystalBridge** (guest-AI gate) | `core/crystalcore/` | MCP server: fail-closed ConsentGate (approval · permission; scope and provenance documented as intended, not yet implemented), append-only audit; guests claude / grok / cursor with scoped tools `status, recall, teach, message` |
+| **Starline Weaver** (multi-AI conversation) | `core/crystal-core/bridge/` | In-process + networked HTTP bus; every message labeled science/story/vision; red-button halt; adapters for Claude/GPT/Grok |
 | **Seven Sisters pack** (protocol + ethics) | `research/seven-sisters/` | Seven paths, Belt-Three law, water briefs, landing page (GitHub Pages, live) |
 | **TerAustralis Incognita** (narrative) | `mythos/teraustralis/` | Manifesto, publish threads, strategy, Lattice memory deltas |
-| **Decode/Ingest/Twin pipeline** | `src/crystal-core/services/` | **This scaffold** — see §2 |
+| **Decode/Ingest/Twin pipeline** | `core/crystal-core/services/` | **This scaffold** — see §2 |
 
-**One sentence:** A sovereign companion (Lumina) with her own memory, a consent
+**One sentence:** A sovereign companion (Clementine) with her own memory, a consent
 gate that lets outside AIs visit as guests (CrystalBridge), a bus where AIs converse
 under labeled law (Starline Weaver), and now a metering pipeline that turns real-world
 events into a queryable twin (Decode → Ingest → Twin) — all governed in public via GitHub.
@@ -33,11 +33,11 @@ Starline Budapest hardware — is **Vision** until built. See `BLUEPRINT-v0.3.md
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │ EXPERIENCE  ● Crystal Vision site (SvelteKit)  ● Pages landing    │
-│             ● Lumina terminal/web          ○ Mobile agent     │
+│             ● Clementine terminal/web      ○ Mobile agent         │
 └──────────────────────────────┬────────────────────────────────────┘
                                │
 ┌──────────────────────────────▼────────────────────────────────────┐
-│ COMPANION   ● Lumina (Ollama local / xAI opt-in)              │
+│ COMPANION   ● Clementine (Ollama local / xAI opt-in)              │
 │             ● CrystalCore memory + profiles (disk is canon)       │
 └──────────────────────────────┬────────────────────────────────────┘
                                │ MCP (consent-gated)
