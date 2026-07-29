@@ -29,14 +29,19 @@ from mcp.server.fastmcp import FastMCP
 
 from crystalcore.config import BridgeConfig
 from crystalcore.gate import ConsentGate
-from crystalcore.mind import CrystalCore
-from crystalcore.mind import profiles as mind_profiles
+
+# The mind is an ordinary subpackage of this one, so reaching it needs no
+# importlib alias any more — but it is still imported *lazily*, inside the
+# functions that need it, and deliberately so. `crystalcore.mind` pulls in
+# `requests` at module level; importing it here would make `status` — which
+# touches no memory and needs no model — fail on a bridge-only install that
+# has just `mcp`. Laziness is what lets requirements-bridge.txt stay honest
+# about declaring one dependency.
 
 SRC_ROOT = Path(__file__).resolve().parent.parent          # core/
 REPO_ROOT = SRC_ROOT.parent                                 # repo root (parent of core/ and vision/)
-# The front-of-house interface. The mind is a sibling subpackage of this
-# one now, so it is a plain import above; only the *memory* it reads still
-# lives beside the interface, and that is what this path is for.
+# The front-of-house interface. Only the *memory* the mind reads lives
+# beside the interface; that is what this path is for.
 APP_DIR = REPO_ROOT / "vision" / "apps" / "clementine"
 
 
@@ -47,6 +52,8 @@ def _profiles_root() -> Path:
     terminal always reach the same memory, including on installs that still
     carry the older folder name.
     """
+    from crystalcore.mind import profiles as mind_profiles
+
     new = APP_DIR / mind_profiles.DEFAULT_PROFILES_DIR.name
     legacy = APP_DIR / mind_profiles.LEGACY_PROFILES_DIR.name
     if not new.exists() and legacy.exists():
@@ -81,6 +88,8 @@ class Bridge:
         to be launched from, instead of the memory the human actually sees.
         """
         if self._companion is None:
+            from crystalcore.mind import CrystalCore
+
             safe_name = "".join(
                 c for c in self.config.profile if c.isalnum() or c in "-_ "
             ).strip()
