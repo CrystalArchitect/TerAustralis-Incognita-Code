@@ -123,20 +123,17 @@ class CrystalCore:
         return "openai" if self.llm_provider in self.OPENAI_COMPATIBLE else "ollama"
 
     def _detect_provider(self) -> str:
-        """Auto-detect an available model provider — local first, always.
+        """The default provider when none is configured: local. Full stop.
 
-        Order is load-bearing, not incidental. This once probed the remote
-        endpoint first, which meant that on any machine with a network the
-        cloud won by default and a local-first companion quietly wasn't one.
-        Local is the floor: remote is reached only when Ollama isn't there,
-        or when the human has explicitly configured it via --llm-provider,
-        LLM_PROVIDER, or the profile.
+        This used to be a probe — remote first originally, then local-first
+        with a remote fallback. Both were wrong in the same way: a network
+        hop the human never chose. Detection now never selects a remote.
+        If Ollama isn't running, the first reply fails with a kind message
+        that names both fixes — start Ollama, or *choose* a remote with
+        --llm-provider / LLM_PROVIDER / the profile. Remote inference is
+        purely by choice, never by fallback.
         """
-        if self._check_endpoint_available(OLLAMA_URL):
-            return "ollama"
-        if self._check_endpoint_available(DO_INFERENCE_URL):
-            return "grok"
-        return "ollama"  # nothing reachable: fail toward local, not the cloud
+        return "ollama"
 
     def _default_endpoint(self) -> str:
         """Get default endpoint for the provider.
@@ -162,18 +159,6 @@ class CrystalCore:
             return os.getenv("DO_INFERENCE_MODEL", "gpt-5-5")
         return "llama3.1:8b"
 
-    @staticmethod
-    def _check_endpoint_available(url: str) -> bool:
-        """Check if an endpoint is reachable."""
-        try:
-            if url.startswith("https"):
-                return True  # Assume remote endpoints are available
-            r = requests.head(url, timeout=2)
-            return r.status_code < 500
-        except requests.exceptions.RequestException:
-            return False
-
-    # ---------- identity & memory ----------
 
     def system_prompt(self, query: str = "") -> str:
         parts = [BASE_PROMPT]
@@ -645,7 +630,8 @@ class CrystalCore:
             return f"[Error talking to the remote model: {e}]"
         if isinstance(e, requests.exceptions.ConnectionError):
             return ("[I can't reach my local model — is Ollama running? "
-                    f"Try: ollama serve, then ollama pull {self.model}]")
+                    f"Try: ollama serve, then ollama pull {self.model} — "
+                    "or choose a remote model with --llm-provider.]")
         if isinstance(e, requests.exceptions.Timeout):
             return ("[That took too long — the model may still be loading. "
                     "Give it a moment and try again.]")
