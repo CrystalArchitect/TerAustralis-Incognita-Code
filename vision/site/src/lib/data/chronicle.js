@@ -24,7 +24,7 @@ export const chronicle = [
   {
     when: '2026-07-15',
     what: 'The companion is born',
-    note: 'Clementine arrives — the name she carried first, and carries again: local-first, layered memory, sovereignty by design.',
+    note: 'Clementine arrives — the name they carried first, and carry again: local-first, layered memory, sovereignty by design.',
     tl: 'var(--green)'
   },
   {
@@ -60,7 +60,7 @@ export const chronicle = [
   {
     when: '2026-07-29',
     what: 'The name comes home',
-    note: 'A retired name is removed across every repository, and the companion is Clementine again. The architecture is set right with it: CrystalMemory for what she remembers, CrystalBus for what carries speech between models, CrystalBridge for the gate a guest comes through.',
+    note: 'A retired name is removed across every repository, and the companion is Clementine again. The architecture is set right with it: CrystalMemory for what they remember, CrystalBus for what carries speech between models, CrystalBridge for the gate a guest comes through.',
     tl: 'var(--green)'
   }
 ];

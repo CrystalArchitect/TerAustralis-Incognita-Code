@@ -4,8 +4,8 @@
 """Built-in agents — no API keys needed.
 
 BridgeHub is the communicator: as the
-Starline Weaver she routes; as the Truthline Narrator she validates every
-message's truth-layer label; she never impersonates; she holds the red button
+Starline Weaver it routes; as the Truthline Narrator it validates every
+message's truth-layer label; it never impersonates; it holds the red button
 for everyone.
 """
 
@@ -24,7 +24,7 @@ class Agent:
 class BridgeHub(Agent):
     """The communicator/hub. As the Truthline Narrator it validates
     every message against Belt-Three law (science/story/vision) before it is
-    heard; as the Starline Weaver she routes what passes."""
+    heard; as the Starline Weaver it routes what passes."""
 
     name = "hub"
 

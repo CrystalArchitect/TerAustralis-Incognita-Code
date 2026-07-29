@@ -82,8 +82,8 @@ for a future "ask before allowing" mode).
 | Tool | What it does | Touches the companion's memory? |
 |---|---|---|
 | `status` | Reports the calling guest's identity and granted tools | No |
-| `recall` | Returns what the companion remembers, optionally filtered by a query (wraps her existing `_memory_block`) | Read-only |
-| `teach` | Tells the companion something to remember permanently (wraps her existing `remember`) | Writes |
+| `recall` | Returns what the companion remembers, optionally filtered by a query (wraps the existing `_memory_block`) | Read-only |
+| `teach` | Tells the companion something to remember permanently (wraps the existing `remember`) | Writes |
 | `message` | Leaves a note for the human | No — written to `src/profiles/<name>/messages.jsonl`, deliberately **not** folded into the companion's memory automatically |
 
 `message` is kept separate from `teach` on purpose: a note left by a guest

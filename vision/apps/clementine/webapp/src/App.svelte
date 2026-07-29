@@ -60,7 +60,7 @@
     {#if online === true}
       <span class="chip ok">{model}{profile && profile !== 'default' ? ` · ${profile}` : ''}</span>
     {:else if online === false}
-      <span class="chip down" title="Start her with: python server.py">brain offline</span>
+      <span class="chip down" title="Start the brain with: python server.py">brain offline</span>
       <button class="retry" onclick={loadStatus}>retry</button>
     {:else}
       <span class="chip">waking…</span>
@@ -84,7 +84,7 @@
 </main>
 
 <footer>
-  Everything on this page stays on your device. Her memory lives in a local
+  Everything on this page stays on your device. Their memory lives in a local
   folder you own. Non solus.
 </footer>
 

@@ -44,7 +44,7 @@ def test_export_import_round_trip(tmp_path):
     assert bundle["version"] == 1
     assert bundle["config"]["name"] == "Clemy"
 
-    # Import into a fresh companion elsewhere — she arrives whole.
+    # Import into a fresh companion elsewhere — they arrive whole.
     dst = CrystalCore(memory_dir=str(dst_dir), llm_provider="ollama")
     app2 = create_app(dst)
     client2 = app2.test_client()

@@ -36,7 +36,7 @@ Getting something integrated into systems like Grok or Optimus is extremely diff
 **Key deliverables:**
 - Excellent vector-based memory system ✅
 - Strong, consistent personality (warm, truthful, present) ✅
-- User can teach her important facts that persist over time ✅
+- User can teach them important facts that persist over time ✅
 - Clean, modular, well-documented codebase 🟡 (modular `core/crystalcore/mind/` package ✅; remaining: documentation depth, MLX backend)
 
 **Why this matters for adoption:** This is the foundation. If Clementine doesn't feel meaningfully better than existing AI companions in memory and presence, nothing else will matter.

@@ -70,7 +70,7 @@
     if (!text || busy) return;
     draft = '';
     messages.push({ who: 'you', text });
-    const reply = $state({ who: 'her', text: '' });
+    const reply = $state({ who: 'companion', text: '' });
     messages.push(reply);
     busy = true;
     onStateChange('thinking');
@@ -128,16 +128,16 @@
   <div class="log" bind:this={logEl}>
     {#if messages.length === 0}
       <div class="empty">
-        <p class="prompt-line">{'>'} say something to wake her</p>
+        <p class="prompt-line">{'>'} say something to wake them</p>
         <p class="hint">Your memory stays on this machine. Replies come from the model you've configured.</p>
       </div>
     {/if}
     {#each messages as m, i (i)}
       <div class={`msg ${m.who}`}>
-        {#if m.who === 'her'}
+        {#if m.who === 'companion'}
           <span class="speaker">{name}</span>
         {/if}
-        <p>{m.text}{#if m.who === 'her' && busy && i === messages.length - 1}<span class="caret" aria-hidden="true"></span>{/if}</p>
+        <p>{m.text}{#if m.who === 'companion' && busy && i === messages.length - 1}<span class="caret" aria-hidden="true"></span>{/if}</p>
       </div>
     {/each}
   </div>
@@ -152,7 +152,7 @@
         aria-pressed={voiceOn}
       >voice {voiceOn ? 'on' : 'off'}</button>
       {#if voiceOn && voices.length > 0}
-        <select value={voiceName} onchange={pickVoice} aria-label="Her voice">
+        <select value={voiceName} onchange={pickVoice} aria-label="Their voice">
           <option value="">default voice</option>
           {#each voices as v (v.name)}
             <option value={v.name}>{v.name}</option>
@@ -226,7 +226,7 @@
     background: #141420;
     align-self: flex-end;
   }
-  .msg.her {
+  .msg.companion {
     background: var(--panel);
     border: 1px solid var(--line);
     align-self: flex-start;

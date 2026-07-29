@@ -138,7 +138,7 @@ Timelines are aspirational, not commitments — they describe order and dependen
 
 **Specific deliverables:**
 - Working Clementine prototype with short-term + long-term memory ✅
-- User can teach her important facts that persist ✅
+- User can teach them important facts that persist ✅
 - All data stays on the user's device by default ✅
 - Clean, modular code structure, ready for future expansion 🟡
 
@@ -146,7 +146,7 @@ Timelines are aspirational, not commitments — they describe order and dependen
 
 **Challenges:** Keeping memory efficient and relevant · balancing personality with truthfulness · avoiding hallucinations while staying warm.
 
-**Success criteria:** Clementine holds coherent, multi-turn conversations with memory of past facts; the user feels she is starting to "know" them; everything runs fully locally with no external dependencies.
+**Success criteria:** Clementine holds coherent, multi-turn conversations with memory of past facts; the user feels the companion is starting to "know" them; everything runs fully locally with no external dependencies.
 
 ### Phase 2 — Encrypted Peer-to-Peer Communication (6 – 12 months)
 

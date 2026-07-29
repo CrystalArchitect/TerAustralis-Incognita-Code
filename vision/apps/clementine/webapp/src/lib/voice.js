@@ -5,7 +5,7 @@
  * Local voice via the browser's speech synthesis. Only on-device voices are
  * used (localService === true), so speaking never hands text to a network TTS
  * server — nothing leaves the machine. If the device has no on-device voice,
- * she stays silent rather than fall back to a cloud voice and break that promise.
+ * they stay silent rather than fall back to a cloud voice and break that promise.
  */
 
 const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;

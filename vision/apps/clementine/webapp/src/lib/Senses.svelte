@@ -3,15 +3,15 @@
 
 <script>
   /**
-   * Her future senses. Note: her *speaking* voice already works today — toggle
+   * Their future senses. Note: their *speaking* voice already works today — toggle
    * "voice" in the chat (on-device speech synthesis). What's still on the roadmap
-   * is the other direction: her *hearing* you (microphone) and *seeing* you
+   * is the other direction: their *hearing* you (microphone) and *seeing* you
    * (webcam). These controls hint at what's coming without pretending it works.
    */
 </script>
 
 <div class="senses" aria-label="Upcoming senses">
-  <button type="button" disabled title="Soon: speak to her and she'll hear you — microphone stays on this device. (She can already speak back today: turn on 'voice' in the chat.)">
+  <button type="button" disabled title="Soon: speak and they'll hear you — microphone stays on this device. (They can already speak back today: turn on 'voice' in the chat.)">
     <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
       <rect x="7" y="2.5" width="6" height="10" rx="3" />
       <path d="M4 10 a6 6 0 0 0 12 0" />
@@ -20,7 +20,7 @@
     <span>Hearing</span>
     <em>soon</em>
   </button>
-  <button type="button" disabled title="Soon: she'll see you through your webcam — sight that never leaves this machine">
+  <button type="button" disabled title="Soon: they'll see you through your webcam — sight that never leaves this machine">
     <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
       <rect x="2" y="5" width="11" height="10" rx="2" />
       <path d="M13 9 l5 -3 v8 l-5 -3" />
@@ -29,7 +29,7 @@
     <em>soon</em>
   </button>
   <p class="whisper">
-    She can already speak to you — turn on <strong>voice</strong> in the chat. Still
+    They can already speak to you — turn on <strong>voice</strong> in the chat. Still
     to come: hearing your voice and seeing your face, both living on this machine alone.
   </p>
 </div>

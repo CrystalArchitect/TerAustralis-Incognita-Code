@@ -77,7 +77,7 @@ def create_app(companion: CrystalCore) -> Flask:
         get_json(silent=True) returns None for a form body and they
         400 on the empty result. /api/reflect did not: it reads no body
         at all, so a bodyless cross-site form POST reached it and made
-        the companion reflect and write to her own memory. Stating the rule
+        the companion reflect and write to their own memory. Stating the rule
         once, here, is better than depending on each route to trip over
         the same accident.
         """
@@ -231,7 +231,7 @@ def create_app(companion: CrystalCore) -> Flask:
             chosen = c.choose_own_name()
             if not chosen:
                 return jsonify({"ok": False,
-                                "error": "she couldn't settle on a name — try again"})
+                                "error": "they couldn't settle on a name — try again"})
             c.save()
             return jsonify({"ok": True, "name": chosen})
         c.save()
@@ -268,7 +268,7 @@ def main():
     parser.add_argument("--model", default="llama3.1:8b",
                         help="Ollama model tag (same choices as the CLI).")
     parser.add_argument("--memory-dir", default="",
-                        help="Her memory folder (shared with the CLI).")
+                        help="Their memory folder (shared with the CLI).")
     parser.add_argument("--profile", default="",
                         help="Named profile (separate person, separate memory).")
     parser.add_argument("--port", type=int, default=5000)

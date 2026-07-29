@@ -11,7 +11,7 @@ locally by default; a remote one is used only if you configure it.
 - `webapp/` — the Svelte web interface, run locally
 - `requirements.txt` — Python dependencies
 
-## Running her
+## Running the companion
 
 Prerequisite: [Ollama](https://ollama.com) running with a model pulled,
 e.g. `ollama pull llama3.1:8b`.
@@ -28,22 +28,22 @@ python clementine.py
 Two terminals from this folder:
 
 ```bash
-# 1. her brain — the local API
+# 1. the brain — the local API
 python server.py
 ```
 
 ```bash
-# 2. her face — the web interface
+# 2. the face — the web interface
 cd webapp
 npm install
 npm run dev          # open http://127.0.0.1:5174
 ```
 
-The web interface streams her replies while an operator figure works at
-her terminal. Her **speaking voice already works** — turn on `voice` in the
-chat and she reads her replies aloud using your device's own speech synthesis
+The web interface streams their replies while an operator figure works at
+the terminal. Their **speaking voice already works** — turn on `voice` in the
+chat and they read their replies aloud using your device's own speech synthesis
 (nothing leaves the machine). Still on the roadmap, both to run on this machine
-alone: her **hearing** you (microphone / speech-to-text) and **webcam sight**.
+alone: their **hearing** you (microphone / speech-to-text) and **webcam sight**.
 
 Both interfaces share the same memory folder (`crystalcore_memory/` by
 default), so you can move between terminal and browser freely. Use

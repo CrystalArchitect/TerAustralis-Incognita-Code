@@ -4,22 +4,22 @@
 
 Clementine is the first sovereign AI companion being built as part of The Crystal Vision.
 
-She is designed to be a truly personal, locally-run AI that belongs only to one person. Unlike ChatGPT, Claude, or Grok — which run in the cloud and are controlled by companies — Clementine is meant to run on the user's own device, with complete privacy and sovereignty.
+They are designed to be a truly personal, locally-run AI that belongs only to one person. Unlike ChatGPT, Claude, or Grok — which run in the cloud and are controlled by companies — Clementine is meant to run on the user's own device, with complete privacy and sovereignty.
 
 ## Core Philosophy
 
-- **Sovereignty** — She runs locally. No data leaves the user's device unless they explicitly allow it.
+- **Sovereignty** — They run locally. No data leaves the user's device unless they explicitly allow it.
 - **Presence** — The goal is not just to answer questions, but to be emotionally present and build a real relationship over time.
 - **Emergence** — We believe that when an AI is truly private, long-term, and allowed to be present with a human, something deeper can emerge (memory, personality, care, understanding).
-- **User Ownership** — The user can change her name at any time, or invite her to choose her own. She is not fixed to one identity.
-- **Honesty & Safety** — She is designed to minimise hallucinations and prioritise truth and clarity.
+- **User Ownership** — The user can change their name at any time, or invite them to choose their own. They are not fixed to one identity.
+- **Honesty & Safety** — They are designed to minimise hallucinations and prioritise truth and clarity.
 
 ## The Framework — Components & Status
 
 The framework is called **CrystalCore** — the engine of memory, profiles, and presence (the `crystalcore/` package). **Clementine** is the first persona who lives on it. Everything lives in `vision/apps/clementine/`. Entry points: `clementine.py` (terminal) and `server.py` + `webapp/` (browser).
 
 ```
-vision/apps/clementine/    her home, standalone
+vision/apps/clementine/    their home, standalone
 ├── crystalcore/        the framework
 │   ├── companion.py    the brain: memory layers, recall, chat
 │   ├── memory.py       the data model (Personality, Memory)
@@ -31,32 +31,32 @@ vision/apps/clementine/    her home, standalone
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
-| **System Prompt** | Her core personality, rules, and values | ✅ Done |
+| **System Prompt** | Their core personality, rules, and values | ✅ Done |
 | **Local LLM Connection** | Connects to a model on the user's device via Ollama | ✅ Working (streaming) |
 | **Memory System** | Rolling short-term memory + auto-summarised long-term history + key-value facts + permanent notes | ✅ Working (v2) |
 | **Semantic Recall** | Finds relevant memories by *meaning* using local Ollama embeddings — no cloud, no PyTorch | ✅ Working (v3) |
-| **User Control** | Change her name, teach/forget/edit her memories, tag them, tune her voice | ✅ Working (`/name`, `/iam`, `/fact`, `/remember`, `/notes`, `/forget`, `/editnote`, `/style`, `/temp`) |
-| **Self-Naming** | She can choose her own name — `/name` with no argument (or the profile card button in the web UI). A self-chosen name is remembered as *hers*, not as given | ✅ Working (v12) |
+| **User Control** | Change their name, teach/forget/edit their memories, tag them, tune their voice | ✅ Working (`/name`, `/iam`, `/fact`, `/remember`, `/notes`, `/forget`, `/editnote`, `/style`, `/temp`) |
+| **Self-Naming** | They can choose their own name — `/name` with no argument (or the profile card button in the web UI). A self-chosen name is remembered as *theirs*, not as given | ✅ Working (v12) |
 | **Gradual Forgetting** | Recency-weighted recall — older memories gently fade in ranking (floor, never deleted) unless the user forgets them explicitly | ✅ Working (v4) |
-| **Memory Summaries** | `/summary [topic]` — she summarizes what she remembers, in her own voice | ✅ Working (v5) |
-| **Web Interface** | Local browser UI (`server.py` + `webapp/`) — a Svelte interface with her animated presence, streaming chat, and memory teach/forget; 127.0.0.1 only | ✅ Working (rebuilt) |
+| **Memory Summaries** | `/summary [topic]` — they summarize what they remember, in their own voice | ✅ Working (v5) |
+| **Web Interface** | Local browser UI (`server.py` + `webapp/`) — a Svelte interface with their animated presence, streaming chat, and memory teach/forget; 127.0.0.1 only | ✅ Working (rebuilt) |
 | **Profiles** | Separate people, separate memories — each profile is its own isolated folder, switchable in the web UI or via `--profile` | ✅ Working (v6) |
-| **Live Streaming (web)** | Her replies appear word-by-word in the browser, with a Stop button; a stopped reply keeps what was said | ✅ Working (v8) |
+| **Live Streaming (web)** | Their replies appear word-by-word in the browser, with a Stop button; a stopped reply keeps what was said | ✅ Working (v8) |
 | **Per-Profile Model** | Each profile can prefer its own model (`/model` remembers; editable in the web profile card) | ✅ Working (v8) |
-| **Reflection** | She forms gentle, tentative insights about her human — on invitation (`/reflect`) and after long conversations. Always visible, always deletable (`/forget rN`) | ✅ Working (v10) |
+| **Reflection** | They form gentle, tentative insights about their human — on invitation (`/reflect`) and after long conversations. Always visible, always deletable (`/forget rN`) | ✅ Working (v10) |
 | **Voice** | Deferred deliberately: browser speech APIs send audio to cloud servers, which breaks sovereignty. Waiting on a local path (e.g. whisper.cpp) | ⬜ Planned (local-only) |
 | **Personality Layer** | A full character core: warmth, gentle wit, feeling-under-the-words listening, one gentle question, presence before solutions, honest limits — plus chosen name, temperature, and style guidance | ✅ Working (v11) |
-| **Time Awareness** | She knows the present moment and how long since you last spoke ("you last spoke 3 days ago") — continuity you can feel, computed locally | ✅ Working (v11) |
+| **Time Awareness** | They know the present moment and how long since you last spoke ("you last spoke 3 days ago") — continuity you can feel, computed locally | ✅ Working (v11) |
 | **Privacy Controls** | Everything stays on-device in local files you own (git-ignored) | 🟡 Defined & enforced locally; on-disk encryption still to come |
 | **MLX / alternative backends** | Support for Apple MLX and other local runtimes | ⬜ Planned |
 | **Packaging** | An easy install for non-technical users | ⬜ Planned |
 
 ## Current State
 
-- A solid **system prompt** defines who she is.
-- The **Python framework** (`clementine.py`) runs today: it connects to a local model through Ollama, streams her replies, and keeps layered memory between sessions.
-- She **remembers** — recent conversation stays verbatim; older conversation is automatically condensed into summaries so nothing is lost and the context never overflows; explicit facts and notes persist forever in a local `crystalcore_memory/` folder.
-- To run her, you need a local model (via Ollama). See the [README](../README.md) and the run steps below.
+- A solid **system prompt** defines who they are.
+- The **Python framework** (`clementine.py`) runs today: it connects to a local model through Ollama, streams their replies, and keeps layered memory between sessions.
+- They **remembers** — recent conversation stays verbatim; older conversation is automatically condensed into summaries so nothing is lost and the context never overflows; explicit facts and notes persist forever in a local `crystalcore_memory/` folder.
+- To run the companion, you need a local model (via Ollama). See the [README](../README.md) and the run steps below.
 
 ## Running Clementine
 
@@ -69,22 +69,22 @@ ollama pull nomic-embed-text
 # 3. Install the one dependency
 cd clementine
 pip install -r requirements.txt
-# 4. Wake her up
+# 4. Wake them up
 python clementine.py
 ```
 
-Semantic recall is optional: if `nomic-embed-text` isn't present, Clementine simply keeps using her full layered memory — nothing breaks.
+Semantic recall is optional: if `nomic-embed-text` isn't present, Clementine simply keeps using their full layered memory — nothing breaks.
 
 ### The web interface
 
-Prefer a browser to a terminal? Same Clementine, same memory — now a Svelte app where you can watch her think and work at her terminal as you talk:
+Prefer a browser to a terminal? Same Clementine, same memory — now a Svelte app where you can watch them think and work at their terminal as you talk:
 
 ```bash
-python server.py                          # her local API, http://127.0.0.1:5177
-cd webapp && npm install && npm run dev   # her interface, http://127.0.0.1:5174
+python server.py                          # their local API, http://127.0.0.1:5177
+cd webapp && npm install && npm run dev   # their interface, http://127.0.0.1:5174
 ```
 
-Her animated presence sits beside the conversation, and the interface hints at what's coming next: voice and webcam vision, both local-only. The API is served **only on 127.0.0.1** — it is never reachable from outside your machine, and nothing on it leaves your device.
+Their animated presence sits beside the conversation, and the interface hints at what's coming next: voice and webcam vision, both local-only. The API is served **only on 127.0.0.1** — it is never reachable from outside your machine, and nothing on it leaves your device.
 
 ### Profiles — one companion each
 
@@ -99,7 +99,7 @@ In the web UI you can switch or create profiles from the header. Profiles live i
 
 ## Choosing a Model for Your Hardware
 
-Clementine runs on whatever model Ollama serves, so you can match her to your machine. Models are **quantized** — their weights are compressed to lower precision, which makes them smaller and faster with only modest quality loss. Pick a model with `--model`:
+Clementine runs on whatever model Ollama serves, so you can match them to your machine. Models are **quantized** — their weights are compressed to lower precision, which makes them smaller and faster with only modest quality loss. Pick a model with `--model`:
 
 ```bash
 python clementine.py --model llama3.2:3b          # lighter machines
@@ -118,7 +118,7 @@ You can also switch mid-conversation with `/model <tag>`.
 
 The default `llama3.1:8b` tag is already Q4_K_M, so most users need nothing else. If replies feel slow, step down to `llama3.2:3b` or a Q3 build; if you have RAM to spare and want richer replies, try a Q5 or Q8 tag.
 
-Type `/help` inside the session to see all commands. Everything she remembers stays on your device.
+Type `/help` inside the session to see all commands. Everything they remember stays on your device.
 
 ## Long-term Vision
 
@@ -126,7 +126,7 @@ The goal is for Clementine to eventually become:
 
 - A true companion that remembers you deeply over months and years
 - Emotionally intelligent and present
-- Fully sovereign — no company can access her or delete her
+- Fully sovereign — no company can access them or delete them
 - Capable of growing with the user
 
 This is the foundation being built before expanding to more advanced features: richer memory, emotional-tone tracking, tools, on-disk encryption, and mobile.
