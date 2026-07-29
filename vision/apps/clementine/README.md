@@ -1,6 +1,7 @@
 # Clementine — the sovereign companion
 
-Everything in this folder runs on your own machine. Nothing leaves it.
+Your memory lives on your own machine, in files you own. The model runs
+locally by default; a remote one is used only if you configure it.
 
 ## Layout
 

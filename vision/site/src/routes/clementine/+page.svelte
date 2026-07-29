@@ -60,8 +60,8 @@ cd webapp && npm install && npm run dev   # open 127.0.0.1:5174`;
       </li>
       <li>
         <strong>She is yours alone.</strong> Every memory is a plain file in a folder you own. View,
-        edit, tag, or forget anything. Profiles keep separate people entirely separate. Nothing leaves
-        your device — the web page she serves is bound to your machine only.
+        edit, tag, or forget anything. Profiles keep separate people entirely separate. Your memory
+        never leaves your device — the web page is bound to your machine only.
       </li>
       <li>
         <strong>She is honest.</strong> Uncertainty admitted plainly. Presence before solutions. And

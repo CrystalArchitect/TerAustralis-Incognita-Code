@@ -4,10 +4,11 @@
 """
 Clementine — local API server.
 
-The JSON backend for the Svelte web interface in webapp/. Runs only on
-your own machine (bound to 127.0.0.1, never exposed). Shares the same
-mind and memory folder as the terminal version (clementine.py), so you
-can switch between them freely. Nothing leaves your device.
+The JSON backend for the Svelte web interface in webapp/. Bound to
+127.0.0.1 and never reachable from outside this machine. Shares the same
+mind and memory folder as the terminal version (clementine.py), so you can
+switch between them freely. Your memory stays on your device; replies come
+from whichever model you have configured, local or remote.
 
     pip install -r requirements.txt
     python server.py                    # API at http://127.0.0.1:5000
@@ -229,7 +230,7 @@ def main():
     name = companion.personality.name or "Clementine"
     print(f"{name}'s API is at http://127.0.0.1:{args.port}")
     print("Start the web interface with: cd webapp && npm run dev")
-    print("Local only — nothing leaves this device. Ctrl+C to say goodnight.")
+    print("Bound to 127.0.0.1 — your memory stays here. Ctrl+C to say goodnight.")
     # Never bind beyond localhost, never enable the debugger: sovereignty
     # means this server is reachable from this machine alone.
     app.run(host="127.0.0.1", port=args.port, debug=False)

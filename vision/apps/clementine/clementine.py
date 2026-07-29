@@ -12,7 +12,8 @@ no name of its own.
     python clementine.py --profile Crystal  # a named profile
     python clementine.py --model llama3.2:3b
 
-Everything runs on your own device. Nothing leaves it.
+Your memory stays on your own device. The model is local by default; point it
+at a remote one only if you choose to.
 """
 
 import argparse

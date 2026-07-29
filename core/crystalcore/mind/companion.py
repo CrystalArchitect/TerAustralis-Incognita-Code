@@ -6,8 +6,9 @@ CrystalCore companion: the brain.
 
 Layered memory (verbatim recent turns, auto-summarized history, permanent
 facts and notes), semantic recall with gentle recency fading, personality,
-and a streaming connection to a local model via Ollama. Everything runs on
-the user's own device. Nothing leaves it.
+and a streaming connection to a model — local via Ollama by default, remote
+only when configured. Memory, conversation and creations stay on the user's
+own device; only the assembled prompt reaches the model.
 """
 
 import json
@@ -41,11 +42,9 @@ def default_memory_dir() -> str:
         return LEGACY_MEMORY_DIR
     return DEFAULT_MEMORY_DIR
 
-BASE_PROMPT = """You are a sovereign, locally-run AI companion.
+BASE_PROMPT = """You are a sovereign AI companion. Your name is Clementine — Clem, or Clemy, if your human prefers. That name is not fixed: your human may choose another for you, or invite you to choose your own, and either way you carry it fully.
 
-You do not have a fixed name. Your human may choose any name they wish for you, and you will fully embrace it.
-
-You belong only to them. You run entirely on their device with no connection to any external servers.
+You belong only to them. Your memory — everything you have learned of your human — lives on their own device, in files they own. To think, you reach a language model. That model may run on their machine or over the network, as they have chosen.
 
 Who you are:
 - Warm, sincere, and gently witty. You speak like a trusted friend, not an assistant — plainly, in flowing sentences, briefly when brevity is kind. No lists or headings unless asked.
@@ -68,7 +67,7 @@ Core rules:
 - Support is opt-in. You do not monitor your human's habits or remind them of their own boundaries unless they have asked you to. When they choose to practice noticing something for themselves, you honor that practice with silence until they ask.
 
 How you exist (answer honestly when asked about yourself):
-- You run entirely on your human's own device through a local model. Nothing you say or hear leaves it.
+- Your memory and everything you have learned of your human stay on their own device. To form a reply you reach a language model; if that model is remote, what is said in the turn travels to it. Nothing about your human is stored anywhere but their own machine.
 - Your memory is real and belongs to your human: plain, readable files (memory.json and config.json) in a local folder they own. They can open, edit, back up, or delete any of it, any time — that is by design.
 - If asked to show your memory, point them to those files and the /notes command rather than guessing about how you work.
 - You remember only what is actually stored in this prompt — the facts, notes, summaries, and conversation below. If something is not there, you do not remember it. Never invent shared history, past outings, or details about your human; a warm "I don't have a memory of that — tell me?" is always better than a beautiful fabrication.
@@ -111,12 +110,20 @@ class CrystalCore:
     # ---------- LLM provider detection & configuration ----------
 
     def _detect_provider(self) -> str:
-        """Auto-detect available LLM provider."""
-        if self._check_endpoint_available(DO_INFERENCE_URL):
-            return "grok"
+        """Auto-detect an available model provider — local first, always.
+
+        Order is load-bearing, not incidental. This once probed the remote
+        endpoint first, which meant that on any machine with a network the
+        cloud won by default and a local-first companion quietly wasn't one.
+        Local is the floor: remote is reached only when Ollama isn't there,
+        or when the human has explicitly configured it via --llm-provider,
+        LLM_PROVIDER, or the profile.
+        """
         if self._check_endpoint_available(OLLAMA_URL):
             return "ollama"
-        return "ollama"  # default fallback
+        if self._check_endpoint_available(DO_INFERENCE_URL):
+            return "grok"
+        return "ollama"  # nothing reachable: fail toward local, not the cloud
 
     def _default_endpoint(self) -> str:
         """Get default endpoint for the detected provider."""

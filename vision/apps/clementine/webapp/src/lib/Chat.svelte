@@ -129,7 +129,7 @@
     {#if messages.length === 0}
       <div class="empty">
         <p class="prompt-line">{'>'} say something to wake her</p>
-        <p class="hint">She runs entirely on this machine. Nothing you say leaves it.</p>
+        <p class="hint">Your memory stays on this machine. Replies come from the model you've configured.</p>
       </div>
     {/if}
     {#each messages as m, i (i)}
