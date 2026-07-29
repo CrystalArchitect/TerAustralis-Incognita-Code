@@ -22,6 +22,8 @@ from pathlib import Path
 
 from . import transport
 from .agent import StarlineAgent
+from .consent import TokenStore
+from .token import ConsentError, ConsentToken, Revocation, Scope
 from .fragment import MemoryFragment
 from .identity import Identity
 from .transport import Denied
@@ -300,6 +302,234 @@ def test_stalled_connections_cannot_exhaust_the_server():
         a.stop_serving()
 
 
+def _store(tmp_prefix="starline_test_tok_"):
+    d = Path(tempfile.mkdtemp(prefix=tmp_prefix))
+    ident = Identity.generate()
+    return TokenStore(ident, d / "tokens.json"), ident
+
+
+def test_token_grants_only_what_its_scope_names():
+    """§6 no ambient authority: a token for one kind is not a token for
+    every kind."""
+    store, _ = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    store.issue(peer, "share reflections for the evening weave", kinds=("emotional",))
+    assert store.is_authorized(peer, "emotional")
+    assert not store.is_authorized(peer, "episodic")
+    assert not store.is_authorized(peer, "mythic")
+
+
+def test_token_with_no_kinds_admits_every_kind():
+    """The schema allows a class-wide grant; absence of a kind list means
+    all of them, not none of them."""
+    store, _ = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    store.issue(peer, "full exchange, this session only")
+    for kind in ("episodic", "semantic", "emotional", "mythic"):
+        assert store.is_authorized(peer, kind), kind
+
+
+def test_token_expires():
+    """§6 time binding, the gap this whole module exists to close: before
+    tokens, a grant said once was true forever."""
+    store, _ = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    token = store.issue(peer, "one minute of telemetry", ttl_seconds=60)
+    assert token.is_valid(recipient_fingerprint_hex=peer)
+    # Same token, evaluated after its expiry -- no clock manipulation,
+    # just asking the question at a later moment.
+    later = token.expires_at + 1
+    assert not token.is_valid(recipient_fingerprint_hex=peer, now=later)
+    try:
+        token.verify(recipient_fingerprint_hex=peer, now=later)
+        assert False, "an expired token must not verify"
+    except ConsentError as exc:
+        assert "expired" in str(exc)
+
+
+def test_token_refuses_a_peer_it_was_not_issued_to():
+    """A token is useless to anyone but its named recipient, even though
+    it is perfectly signed."""
+    store, _ = _store()
+    intended = Identity.generate().sign_public_bytes.hex()
+    someone_else = Identity.generate().sign_public_bytes.hex()
+    token = store.issue(intended, "for you alone")
+    assert token.is_valid(recipient_fingerprint_hex=intended)
+    assert not token.is_valid(recipient_fingerprint_hex=someone_else)
+    assert not store.is_authorized(someone_else)
+
+
+def test_tampering_with_any_field_breaks_the_signature():
+    """Every field is inside the signed payload -- widening scope or
+    pushing out expiry after signing must invalidate the token."""
+    store, ident = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    token = store.issue(peer, "narrow and short", kinds=("mythic",), ttl_seconds=60)
+    assert token.is_valid(recipient_fingerprint_hex=peer)
+
+    widened = ConsentToken.from_dict(token.to_dict())
+    widened.scope = Scope(kinds=("mythic", "episodic"))
+    assert not widened.is_valid(recipient_fingerprint_hex=peer), "scope widening must break the signature"
+
+    extended = ConsentToken.from_dict(token.to_dict())
+    extended.expires_at = extended.expires_at + 86400
+    assert not extended.is_valid(recipient_fingerprint_hex=peer), "expiry extension must break the signature"
+
+    repurposed = ConsentToken.from_dict(token.to_dict())
+    repurposed.purpose = "something else entirely"
+    assert not repurposed.is_valid(recipient_fingerprint_hex=peer), "purpose change must break the signature"
+
+
+def test_purpose_is_mandatory():
+    """§6 purpose binding. A permission whose reason nobody recorded
+    cannot be reviewed later."""
+    peer = Identity.generate().sign_public_bytes.hex()
+    for bad in ("", "   "):
+        try:
+            ConsentToken(issuer="00", recipient=peer, purpose=bad)
+            assert False, "a token without a purpose must not be constructible"
+        except ValueError:
+            pass
+
+
+def test_revocation_kills_the_token_and_is_signed():
+    store, ident = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    token = store.issue(peer, "until I change my mind")
+    assert store.is_authorized(peer)
+
+    rev = store.revoke(token.token_id)
+    assert rev.verify()
+    assert not store.is_authorized(peer)
+    try:
+        store.authorize(peer)
+        assert False, "a revoked token must not authorize"
+    except ConsentError as exc:
+        assert "revoked" in str(exc)
+
+
+def test_forged_revocation_is_refused():
+    """A revocation is a denial-of-service against a peer's consent if
+    anyone can mint one, so it is checked as carefully as a grant."""
+    store, ident = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    token = store.issue(peer, "should survive a forgery attempt")
+
+    impostor = Identity.generate()
+    forged = Revocation(token_id=token.token_id, issuer=impostor.sign_public_bytes.hex())
+    forged.sign(impostor)          # honestly signed -- by the wrong identity
+    assert forged.verify()          # it *is* a valid signature, by an impostor
+    assert not store.accept_revocation(forged), "a revocation from a non-issuer must be refused"
+    assert store.is_authorized(peer), "the token must survive"
+
+    unsigned = Revocation(token_id=token.token_id, issuer=ident.sign_public_bytes.hex())
+    assert not store.accept_revocation(unsigned), "an unsigned revocation must be refused"
+    assert store.is_authorized(peer)
+
+
+def test_revocation_gossiped_from_the_real_issuer_is_honoured():
+    """§5: revocation propagates through consented channels, so a node
+    must accept one it did not issue -- if it verifies."""
+    issuer_store, issuer_ident = _store("starline_test_issuer_")
+    peer = Identity.generate().sign_public_bytes.hex()
+    token = issuer_store.issue(peer, "will be revoked and gossiped")
+    rev = issuer_store.revoke(token.token_id)
+
+    # A different node that holds the same token, told about it second-hand.
+    other, _ = _store("starline_test_relay_")
+    other.tokens[token.token_id] = token
+    assert other.is_authorized(peer)
+    assert other.accept_revocation(rev)
+    assert not other.is_authorized(peer)
+
+
+def test_tokens_and_revocations_survive_a_reload():
+    store, ident = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    keep = store.issue(peer, "kept", kinds=("semantic",))
+    drop = store.issue(peer, "revoked")
+    store.revoke(drop.token_id)
+
+    reloaded = TokenStore(ident, store.path)
+    assert set(reloaded.tokens) == {keep.token_id, drop.token_id}
+    assert reloaded.revoked_ids == {drop.token_id}
+    assert reloaded.is_authorized(peer, "semantic")
+    assert not reloaded.is_authorized(peer, "episodic"), "the surviving token is scoped"
+
+
+def test_refusal_says_which_check_failed():
+    """The human deciding what to do next needs to know whether to
+    re-issue, widen scope, or refuse outright."""
+    store, _ = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    try:
+        store.authorize(peer)
+        assert False
+    except ConsentError as exc:
+        assert "no consent token" in str(exc)
+
+    store.issue(peer, "emotional only", kinds=("emotional",))
+    try:
+        store.authorize(peer, "episodic")
+        assert False
+    except ConsentError as exc:
+        assert "scope" in str(exc)
+
+
+def test_token_scope_is_enforced_over_a_real_connection():
+    """The end-to-end claim: with a TokenStore attached, a peer receives
+    only the kinds a live token admits -- over a real socket and a real
+    handshake, not just in the store's own unit tests."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "an episode b remembers")
+    b.add_local_fragment("mythic", "a myth b keeps")
+    b.grant(a.fingerprint)
+
+    store = TokenStore(b.identity, Path(tempfile.mkdtemp(prefix="starline_test_wire_")) / "t.json")
+    store.issue(a.identity.sign_public_bytes.hex(), "myth only, for the weave", kinds=("mythic",))
+    port = b.serve(token_store=store)
+    try:
+        results = a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+        contents = [f.content for f in results]
+        assert "a myth b keeps" in contents, "the scoped kind must come through"
+        assert "an episode b remembers" not in contents, "an unscoped kind must not"
+    finally:
+        b.stop_serving()
+
+
+def test_expired_token_stops_the_exchange_that_a_live_one_allowed():
+    """Time binding, proven on the wire: the same peer, the same request,
+    allowed and then refused purely because the token lapsed."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("mythic", "a myth b keeps")
+    b.grant(a.fingerprint)
+
+    store = TokenStore(b.identity, Path(tempfile.mkdtemp(prefix="starline_test_exp_")) / "t.json")
+    token = store.issue(a.identity.sign_public_bytes.hex(), "briefly", kinds=("mythic",), ttl_seconds=3600)
+
+    port = b.serve(token_store=store)
+    try:
+        assert len(a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)) == 1
+
+        # Expire it in place -- re-signed by the issuer, so this is an
+        # honest short token, not a tampered one.
+        token.expires_at = time.time() - 1
+        token.signature = ""
+        token.sign(b.identity)
+        store.tokens[token.token_id] = token
+        store.save()
+
+        try:
+            a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+            assert False, "an expired token must stop the exchange"
+        except Denied as exc:
+            assert "expired" in str(exc)
+    finally:
+        b.stop_serving()
+
+
 def main() -> int:
     tests = [
         test_identity_roundtrip,
@@ -307,6 +537,19 @@ def main() -> int:
         test_failed_save_leaves_the_old_identity_intact,
         test_oversized_handshake_frame_is_refused,
         test_stalled_connections_cannot_exhaust_the_server,
+        test_token_grants_only_what_its_scope_names,
+        test_token_with_no_kinds_admits_every_kind,
+        test_token_expires,
+        test_token_refuses_a_peer_it_was_not_issued_to,
+        test_tampering_with_any_field_breaks_the_signature,
+        test_purpose_is_mandatory,
+        test_revocation_kills_the_token_and_is_signed,
+        test_forged_revocation_is_refused,
+        test_revocation_gossiped_from_the_real_issuer_is_honoured,
+        test_tokens_and_revocations_survive_a_reload,
+        test_refusal_says_which_check_failed,
+        test_token_scope_is_enforced_over_a_real_connection,
+        test_expired_token_stops_the_exchange_that_a_live_one_allowed,
         test_fragment_sign_and_verify,
         test_denied_without_consent,
         test_granted_consent_allows_exchange,

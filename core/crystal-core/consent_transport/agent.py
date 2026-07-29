@@ -87,9 +87,13 @@ class StarlineAgent:
 
     # ---------- serving ----------
 
-    def serve(self, host: str = "127.0.0.1", port: int = 0) -> int:
+    def serve(self, host: str = "127.0.0.1", port: int = 0, token_store=None) -> int:
+        """Start serving. Pass a TokenStore to require a live Consent
+        Token in addition to the consent gate -- scope and expiry are then
+        enforced per fragment. Omitted, behaviour is unchanged."""
         self._server = StarlineServer(
-            self.identity, self.peers, self.consent, self._provide_fragments, host, port
+            self.identity, self.peers, self.consent, self._provide_fragments, host, port,
+            token_store=token_store,
         )
         return self._server.start()
 
