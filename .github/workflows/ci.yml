@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Syntax-check Python sources
-        run: python -m compileall -q core vision
+        run: python -m compileall -q core vision src
       - name: Starline Weaver self-test
         working-directory: core/crystal-core
         run: python -m clementine.bridge.selftest
