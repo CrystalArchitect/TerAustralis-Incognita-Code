@@ -181,10 +181,19 @@ class StarlineServer:
                 # Filtering rather than refusing the whole request: a peer
                 # holding a token for one kind should get that kind, not a
                 # blanket denial because they also asked for another.
-                allowed = []
+                #
+                # Byte cost is charged per fragment as we go, so a token
+                # with a max_bytes budget stops mid-list rather than
+                # letting the whole batch through because the first one
+                # fitted.
+                allowed, spend = [], 0
                 for frag in items:
-                    if self.token_store.is_authorized(peer.sign_public_hex, frag.kind):
+                    cost = len(frag.content.encode())
+                    if self.token_store.is_authorized(
+                        peer.sign_public_hex, frag.kind, want_bytes=spend + cost
+                    ):
                         allowed.append(frag)
+                        spend += cost
                 if not allowed and items:
                     try:
                         self.token_store.authorize(peer.sign_public_hex)
@@ -193,6 +202,15 @@ class StarlineServer:
                         reason = str(exc)
                     protocol.send_frame(conn, send_cs, protocol.denied(reason))
                     return
+                if allowed:
+                    # Charge the token only once data is actually about to
+                    # move. A refused request must not consume a
+                    # one-time-use grant.
+                    try:
+                        tok = self.token_store.authorize(peer.sign_public_hex)
+                        self.token_store.record_use(tok.token_id, spend)
+                    except Exception:
+                        pass
                 items = allowed
 
             protocol.send_frame(conn, send_cs, protocol.fragments([f.to_dict() for f in items]))

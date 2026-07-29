@@ -167,11 +167,14 @@ class ConsentToken:
 
     def verify(
         self,
+        recipient_fingerprint_hex: str,
         *,
-        recipient_fingerprint_hex: str | None = None,
         now: float | None = None,
         revoked_ids: set[str] | None = None,
         kind: str | None = None,
+        used_transfers: int = 0,
+        used_bytes: int = 0,
+        want_bytes: int = 0,
     ) -> None:
         """Raise ConsentError unless this token authorises the action.
 
@@ -186,10 +189,12 @@ class ConsentToken:
             if not getattr(self, name):
                 raise ConsentError(f"malformed token: {name} is empty")
 
-        # 2. identity binding
-        if recipient_fingerprint_hex is not None:
-            if self.recipient != recipient_fingerprint_hex:
-                raise ConsentError("token was not issued to this peer")
+        # 2. identity binding. Required, not optional: a token that will
+        # verify for anybody is not a token. This parameter used to
+        # default to None and skip the check, which meant is_valid() with
+        # no arguments returned True for a token issued to someone else.
+        if self.recipient != recipient_fingerprint_hex:
+            raise ConsentError("token was not issued to this peer")
 
         # 3. time binding
         if now < self.issued_at:
@@ -210,15 +215,39 @@ class ConsentToken:
         if revoked_ids and self.token_id in revoked_ids:
             raise ConsentError("token has been revoked")
 
-        # 6. scope
+        # 6. scope, and the limits that go with it. These were carried in
+        # the signed payload from the start and enforced nowhere, which is
+        # worse than omitting them: a reader sees one_time_use=True and
+        # reasonably believes something honours it.
         if kind is not None and not self.scope.admits(kind):
             raise ConsentError(f"token scope does not admit {kind!r} fragments")
 
-    def is_valid(self, **kwargs) -> bool:
+        limit = 1 if self.constraints.one_time_use else self.constraints.max_transfers
+        if limit and used_transfers >= limit:
+            raise ConsentError(
+                f"token transfer limit reached ({used_transfers}/{limit})"
+            )
+
+        if self.scope.max_bytes:
+            if used_bytes >= self.scope.max_bytes:
+                raise ConsentError(
+                    f"token byte budget spent ({used_bytes}/{self.scope.max_bytes})"
+                )
+            if want_bytes and used_bytes + want_bytes > self.scope.max_bytes:
+                raise ConsentError(
+                    f"transfer would exceed the token's byte budget "
+                    f"({used_bytes}+{want_bytes} > {self.scope.max_bytes})"
+                )
+
+    def is_valid(self, recipient_fingerprint_hex: str, **kwargs) -> bool:
         """verify() as a predicate, for callers that only want yes or no.
-        Prefer verify() where the reason matters — it usually does."""
+        Prefer verify() where the reason matters — it usually does.
+
+        The recipient is positional and required here for the same reason
+        it is on verify(): there is no safe default for "who is this for".
+        """
         try:
-            self.verify(**kwargs)
+            self.verify(recipient_fingerprint_hex, **kwargs)
             return True
         except ConsentError:
             return False

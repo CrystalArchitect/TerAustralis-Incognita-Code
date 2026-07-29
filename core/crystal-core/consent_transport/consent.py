@@ -20,7 +20,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from . import identity as identity_mod
-from .token import ConsentError, ConsentToken, Revocation, Scope
+from .token import ConsentError, Constraints, ConsentToken, Revocation, Scope
 
 DEFAULT_CONSENT_PATH = Path("starline_consent.json")
 DEFAULT_TOKEN_PATH = Path("starline_tokens.json")
@@ -102,8 +102,14 @@ class TokenStore:
         self.path = path
         self.tokens: dict[str, ConsentToken] = {}
         self.revocations: dict[str, Revocation] = {}
+        # What each token has actually spent. Limits that are not counted
+        # are not limits, so this is persisted with the tokens themselves --
+        # a one-time-use token that resets on restart is a token with no
+        # constraint at all.
+        self.usage: dict[str, dict[str, int]] = {}
         if path.exists():
             raw = json.loads(path.read_text())
+            self.usage = {k: dict(v) for k, v in (raw.get("usage") or {}).items()}
             for d in raw.get("tokens", []):
                 tok = ConsentToken.from_dict(d)
                 self.tokens[tok.token_id] = tok
@@ -119,6 +125,7 @@ class TokenStore:
         self.path.write_text(json.dumps({
             "tokens": [t.to_dict() for t in self.tokens.values()],
             "revocations": [r.to_dict() for r in self.revocations.values()],
+            "usage": self.usage,
         }, indent=2))
 
     @property
@@ -133,6 +140,8 @@ class TokenStore:
         kinds: tuple[str, ...] = (),
         max_bytes: int = 0,
         ttl_seconds: float | None = None,
+        constraints_one_time: bool = False,
+        max_transfers: int = 0,
     ) -> ConsentToken:
         """Mint and sign a token. `purpose` is mandatory by schema §6 --
         a permission whose reason nobody wrote down cannot be reviewed
@@ -143,6 +152,9 @@ class TokenStore:
             recipient=recipient_sign_public_hex,
             purpose=purpose,
             scope=Scope(kinds=kinds, max_bytes=max_bytes),
+            constraints=Constraints(
+                one_time_use=constraints_one_time, max_transfers=max_transfers
+            ),
             issued_at=issued,
             expires_at=issued + ttl_seconds if ttl_seconds else 0.0,
         ).sign(self.identity)
@@ -182,7 +194,23 @@ class TokenStore:
         self.save()
         return True
 
-    def authorize(self, recipient_sign_public_hex: str, kind: str | None = None) -> ConsentToken:
+    def spent(self, token_id: str) -> dict[str, int]:
+        return self.usage.get(token_id, {"transfers": 0, "bytes": 0})
+
+    def record_use(self, token_id: str, n_bytes: int = 0) -> None:
+        """Count a transfer against its token. Must be called once data
+        actually moves, or one_time_use and max_bytes mean nothing."""
+        u = self.usage.setdefault(token_id, {"transfers": 0, "bytes": 0})
+        u["transfers"] += 1
+        u["bytes"] += int(n_bytes)
+        self.save()
+
+    def authorize(
+        self,
+        recipient_sign_public_hex: str,
+        kind: str | None = None,
+        want_bytes: int = 0,
+    ) -> ConsentToken:
         """Return a live token authorising this peer for this kind, or
         raise ConsentError explaining why none does.
 
@@ -196,11 +224,15 @@ class TokenStore:
         for token in self.tokens.values():
             if token.recipient != recipient_sign_public_hex:
                 continue
+            spent = self.spent(token.token_id)
             try:
                 token.verify(
-                    recipient_fingerprint_hex=recipient_sign_public_hex,
+                    recipient_sign_public_hex,
                     revoked_ids=self.revoked_ids,
                     kind=kind,
+                    used_transfers=spent["transfers"],
+                    used_bytes=spent["bytes"],
+                    want_bytes=want_bytes,
                 )
             except ConsentError as exc:
                 reasons.append(str(exc))
@@ -216,9 +248,14 @@ class TokenStore:
             raise ConsentError("; ".join(sorted(set(reasons))))
         raise ConsentError("no consent token issued to this peer")
 
-    def is_authorized(self, recipient_sign_public_hex: str, kind: str | None = None) -> bool:
+    def is_authorized(
+        self,
+        recipient_sign_public_hex: str,
+        kind: str | None = None,
+        want_bytes: int = 0,
+    ) -> bool:
         try:
-            self.authorize(recipient_sign_public_hex, kind)
+            self.authorize(recipient_sign_public_hex, kind, want_bytes)
             return True
         except ConsentError:
             return False

@@ -530,6 +530,101 @@ def test_expired_token_stops_the_exchange_that_a_live_one_allowed():
         b.stop_serving()
 
 
+def test_identity_binding_cannot_be_skipped():
+    """Regression: verify() used to default the recipient to None and
+    skip the check entirely, so is_valid() with no arguments returned
+    True for a token issued to somebody else. There is no safe default
+    for 'who is this for', so there is now no default at all."""
+    issuer = Identity.generate()
+    alice = Identity.generate().sign_public_bytes.hex()
+    bob = Identity.generate().sign_public_bytes.hex()
+    tok = ConsentToken(
+        issuer=issuer.sign_public_bytes.hex(), recipient=alice, purpose="alice only"
+    ).sign(issuer)
+
+    try:
+        tok.is_valid()
+        assert False, "the recipient must not be omittable"
+    except TypeError:
+        pass
+    assert tok.is_valid(alice)
+    assert not tok.is_valid(bob)
+
+
+def test_one_time_use_is_actually_once():
+    """Regression: one_time_use was signed, persisted, and enforced
+    nowhere -- a field that reads as a control and was not."""
+    store, _ = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    tok = store.issue(peer, "a single handover", constraints_one_time=True)
+    assert store.is_authorized(peer)
+    store.record_use(tok.token_id, 10)
+    assert not store.is_authorized(peer), "a one-time token must not authorise twice"
+    try:
+        store.authorize(peer)
+        assert False
+    except ConsentError as exc:
+        assert "transfer limit" in str(exc)
+
+
+def test_max_transfers_is_counted():
+    store, _ = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    tok = store.issue(peer, "three and no more", max_transfers=3)
+    for i in range(3):
+        assert store.is_authorized(peer), f"transfer {i+1} should be allowed"
+        store.record_use(tok.token_id, 1)
+    assert not store.is_authorized(peer), "the fourth must be refused"
+
+
+def test_byte_budget_is_enforced_and_refuses_an_oversized_transfer():
+    store, _ = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    tok = store.issue(peer, "small things only", max_bytes=100)
+    assert store.is_authorized(peer, want_bytes=80), "inside the budget"
+    assert not store.is_authorized(peer, want_bytes=200), "a single oversized transfer must be refused"
+    store.record_use(tok.token_id, 80)
+    assert store.is_authorized(peer, want_bytes=15), "20 bytes of headroom remain"
+    assert not store.is_authorized(peer, want_bytes=50), "only 20 remain, 50 must be refused"
+    store.record_use(tok.token_id, 20)
+    assert not store.is_authorized(peer), "budget fully spent"
+
+
+def test_usage_survives_a_reload():
+    """A one-time-use token that resets on restart is not a constraint."""
+    store, ident = _store()
+    peer = Identity.generate().sign_public_bytes.hex()
+    tok = store.issue(peer, "once, across restarts", constraints_one_time=True)
+    store.record_use(tok.token_id, 5)
+    assert not store.is_authorized(peer)
+
+    reloaded = TokenStore(ident, store.path)
+    assert reloaded.spent(tok.token_id)["transfers"] == 1
+    assert not reloaded.is_authorized(peer), "usage must not reset on reload"
+
+
+def test_byte_budget_stops_a_batch_midway_on_the_wire():
+    """End to end: a token with a small budget must cut the batch off,
+    not let it through because the first fragment fitted."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("mythic", "x" * 40)
+    b.add_local_fragment("mythic", "y" * 40)
+    b.add_local_fragment("mythic", "z" * 40)
+    b.grant(a.fingerprint)
+
+    store = TokenStore(b.identity, Path(tempfile.mkdtemp(prefix="starline_test_bytes_")) / "t.json")
+    store.issue(a.identity.sign_public_bytes.hex(), "about two fragments' worth",
+                kinds=("mythic",), max_bytes=100)
+
+    port = b.serve(token_store=store)
+    try:
+        results = a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+        assert len(results) == 2, f"budget should admit exactly two, got {len(results)}"
+    finally:
+        b.stop_serving()
+
+
 def main() -> int:
     tests = [
         test_identity_roundtrip,
@@ -548,6 +643,12 @@ def main() -> int:
         test_revocation_gossiped_from_the_real_issuer_is_honoured,
         test_tokens_and_revocations_survive_a_reload,
         test_refusal_says_which_check_failed,
+        test_identity_binding_cannot_be_skipped,
+        test_one_time_use_is_actually_once,
+        test_max_transfers_is_counted,
+        test_byte_budget_is_enforced_and_refuses_an_oversized_transfer,
+        test_usage_survives_a_reload,
+        test_byte_budget_stops_a_batch_midway_on_the_wire,
         test_token_scope_is_enforced_over_a_real_connection,
         test_expired_token_stops_the_exchange_that_a_live_one_allowed,
         test_fragment_sign_and_verify,
