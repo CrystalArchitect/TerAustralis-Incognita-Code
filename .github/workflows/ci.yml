@@ -20,6 +20,15 @@ jobs:
           python-version: "3.12"
       - name: Syntax-check Python sources
         run: python -m compileall -q core vision src
+
+      # vision/site/src/content/ is a copy of the umbrella's mythos/content/.
+      # Copies drift: two documents diverged and nine were never copied at
+      # all before anyone noticed. This asserts the copy still matches the
+      # canon commit recorded in .canon-source -- a pinned commit, not the
+      # umbrella's moving main, so that a change over there cannot turn this
+      # repository red without this repository changing.
+      - name: Canon mirror is faithful
+        run: python3 .github/scripts/check-canon-mirror.py
       - name: Starline Weaver self-test
         working-directory: core/crystal-core
         run: python -m clementine.bridge.selftest

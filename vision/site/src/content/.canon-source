@@ -1,0 +1,9 @@
+# The umbrella commit this content set was mirrored from.
+# Verified by .github/scripts/check-canon-mirror.py in CI.
+#
+# Bumping this is a deliberate act: re-copy mythos/content/ from the
+# umbrella at the new commit, update the sha below, and the pull request
+# diff shows exactly what changed and what became public.
+#
+# TerAustralis-Incognita @ main, 2026-07-29
+67d36297f9b2488e4fa72952c6d6ff468a17c831
