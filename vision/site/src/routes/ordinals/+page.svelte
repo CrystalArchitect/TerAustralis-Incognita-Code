@@ -22,6 +22,32 @@
   </p>
 
   <section class="chapter node" style="--node:var(--gold)">
+    <h2>Where to find it</h2>
+    <dl class="collection-facts">
+      <dt>Collection</dt>
+      <dd>TerAustralis Incognita Mythos Art</dd>
+      <dt>Chain</dt>
+      <dd>BSV — inscribed as Ordinals, not on BTC</dd>
+      <dt>Platform</dt>
+      <dd>3dordi</dd>
+      <dt>Credited to</dt>
+      <dd>Crystal Arena-Turner — TerAustralis Incognita</dd>
+    </dl>
+    <p>
+      <a
+        class="btn btn-primary"
+        href="https://3dordi.io/collection/cc35f9a95773d2f97328ccb33c582d1f853e7856c47397751a06a0e910da8086_0"
+        target="_blank"
+        rel="noopener noreferrer">View the collection on 3dordi →</a>
+    </p>
+    <p class="attribution">
+      This is the one authorised collection. The artist credit follows the licence grant, which
+      requires every inscription and listing to name Crystal Arena-Turner — it records who made the
+      art, not who is selling it.
+    </p>
+  </section>
+
+  <section class="chapter node" style="--node:var(--gold)">
     <h2>What this is</h2>
     <p>
       Pac is inscribing the TerAustralis Incognita mythos art on-chain as Ordinals, working through
@@ -91,3 +117,30 @@
 </article>
 
 <Footer />
+
+<style>
+  .collection-facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 22px;
+    margin: 22px 0 26px;
+  }
+  .collection-facts dt {
+    color: var(--muted);
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .collection-facts dd {
+    margin: 0;
+  }
+  @media (max-width: 520px) {
+    .collection-facts {
+      grid-template-columns: 1fr;
+      gap: 2px 0;
+    }
+    .collection-facts dd {
+      margin-bottom: 14px;
+    }
+  }
+</style>
