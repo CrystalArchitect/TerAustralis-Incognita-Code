@@ -20,8 +20,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from . import identity as identity_mod
+from .token import ConsentError, Constraints, ConsentToken, Revocation, Scope
 
 DEFAULT_CONSENT_PATH = Path("starline_consent.json")
+DEFAULT_TOKEN_PATH = Path("starline_tokens.json")
 
 
 @dataclass
@@ -78,3 +80,182 @@ class ConsentEngine:
 
     def history_for(self, peer_fingerprint: str) -> list[ConsentReceipt]:
         return [r for r in self.receipts if r.peer_fingerprint == peer_fingerprint]
+
+
+class TokenStore:
+    """Consent Tokens issued by this node, and revocations it has seen.
+
+    The boolean ConsentEngine above answers "may this peer ask at all".
+    This answers the narrower question the schema actually specifies:
+    *may this peer have this kind of fragment, right now, under a token
+    that has not expired and has not been revoked.*
+
+    Both exist because they answer different questions and the boolean
+    one is load-bearing: every existing caller, every stored receipt, and
+    the whole revocation test suite depend on it. Tokens are additive.
+    A peer must clear the gate **and** hold a valid token when one is
+    required — never one instead of the other.
+    """
+
+    def __init__(self, identity: identity_mod.Identity, path: Path = DEFAULT_TOKEN_PATH):
+        self.identity = identity
+        self.path = path
+        self.tokens: dict[str, ConsentToken] = {}
+        self.revocations: dict[str, Revocation] = {}
+        # What each token has actually spent. Limits that are not counted
+        # are not limits, so this is persisted with the tokens themselves --
+        # a one-time-use token that resets on restart is a token with no
+        # constraint at all.
+        self.usage: dict[str, dict[str, int]] = {}
+        if path.exists():
+            raw = json.loads(path.read_text())
+            self.usage = {k: dict(v) for k, v in (raw.get("usage") or {}).items()}
+            for d in raw.get("tokens", []):
+                tok = ConsentToken.from_dict(d)
+                self.tokens[tok.token_id] = tok
+            for d in raw.get("revocations", []):
+                rev = Revocation.from_dict(d)
+                # Never load a revocation we cannot prove came from its
+                # issuer -- a forged one is a denial of service against
+                # our own consent.
+                if rev.verify():
+                    self.revocations[rev.token_id] = rev
+
+    def save(self) -> None:
+        self.path.write_text(json.dumps({
+            "tokens": [t.to_dict() for t in self.tokens.values()],
+            "revocations": [r.to_dict() for r in self.revocations.values()],
+            "usage": self.usage,
+        }, indent=2))
+
+    @property
+    def revoked_ids(self) -> set[str]:
+        return set(self.revocations)
+
+    def issue(
+        self,
+        recipient_sign_public_hex: str,
+        purpose: str,
+        *,
+        kinds: tuple[str, ...] = (),
+        max_bytes: int = 0,
+        ttl_seconds: float | None = None,
+        constraints_one_time: bool = False,
+        max_transfers: int = 0,
+    ) -> ConsentToken:
+        """Mint and sign a token. `purpose` is mandatory by schema §6 --
+        a permission whose reason nobody wrote down cannot be reviewed
+        later, which is the whole point of writing it down."""
+        issued = time.time()
+        token = ConsentToken(
+            issuer=self.identity.sign_public_bytes.hex(),
+            recipient=recipient_sign_public_hex,
+            purpose=purpose,
+            scope=Scope(kinds=kinds, max_bytes=max_bytes),
+            constraints=Constraints(
+                one_time_use=constraints_one_time, max_transfers=max_transfers
+            ),
+            issued_at=issued,
+            expires_at=issued + ttl_seconds if ttl_seconds else 0.0,
+        ).sign(self.identity)
+        self.tokens[token.token_id] = token
+        self.save()
+        return token
+
+    def revoke(self, token_id: str) -> Revocation:
+        """Kill a token. Takes effect here immediately; the signed object
+        it returns is what a peer needs in order to honour it too."""
+        token = self.tokens.get(token_id)
+        if token is None:
+            raise ConsentError(f"no such token: {token_id}")
+        if not token.revocable:
+            raise ConsentError("token was issued as irrevocable")
+        rev = Revocation(
+            token_id=token_id, issuer=self.identity.sign_public_bytes.hex()
+        ).sign(self.identity)
+        self.revocations[token_id] = rev
+        self.save()
+        return rev
+
+    def accept_revocation(self, rev: Revocation) -> bool:
+        """Honour a revocation gossiped by someone else.
+
+        Returns whether it was accepted. Refused unless it verifies
+        against the issuer it names -- schema §5 says any node receiving
+        a *valid* revocation must treat the token as dead, and the word
+        doing the work there is 'valid'.
+        """
+        if not rev.verify():
+            return False
+        known = self.tokens.get(rev.token_id)
+        if known is not None and known.issuer != rev.issuer:
+            return False  # signed by someone, but not by this token's issuer
+        self.revocations[rev.token_id] = rev
+        self.save()
+        return True
+
+    def spent(self, token_id: str) -> dict[str, int]:
+        return self.usage.get(token_id, {"transfers": 0, "bytes": 0})
+
+    def record_use(self, token_id: str, n_bytes: int = 0) -> None:
+        """Count a transfer against its token. Must be called once data
+        actually moves, or one_time_use and max_bytes mean nothing."""
+        u = self.usage.setdefault(token_id, {"transfers": 0, "bytes": 0})
+        u["transfers"] += 1
+        u["bytes"] += int(n_bytes)
+        self.save()
+
+    def authorize(
+        self,
+        recipient_sign_public_hex: str,
+        kind: str | None = None,
+        want_bytes: int = 0,
+    ) -> ConsentToken:
+        """Return a live token authorising this peer for this kind, or
+        raise ConsentError explaining why none does.
+
+        Raising rather than returning None is deliberate: the caller is
+        about to decide whether data moves, and "no, because the token
+        expired forty minutes ago" is a different operational fact from
+        "no, because you were never granted this kind."
+        """
+        reasons: list[str] = []
+        best: ConsentToken | None = None
+        for token in self.tokens.values():
+            if token.recipient != recipient_sign_public_hex:
+                continue
+            spent = self.spent(token.token_id)
+            try:
+                token.verify(
+                    recipient_sign_public_hex,
+                    revoked_ids=self.revoked_ids,
+                    kind=kind,
+                    used_transfers=spent["transfers"],
+                    used_bytes=spent["bytes"],
+                    want_bytes=want_bytes,
+                )
+            except ConsentError as exc:
+                reasons.append(str(exc))
+                continue
+            # Prefer the token that lasts longest, so a peer holding both
+            # a narrow short token and a broad long one is not cut off
+            # early by whichever happened to be stored first.
+            if best is None or token.expires_at > best.expires_at:
+                best = token
+        if best is not None:
+            return best
+        if reasons:
+            raise ConsentError("; ".join(sorted(set(reasons))))
+        raise ConsentError("no consent token issued to this peer")
+
+    def is_authorized(
+        self,
+        recipient_sign_public_hex: str,
+        kind: str | None = None,
+        want_bytes: int = 0,
+    ) -> bool:
+        try:
+            self.authorize(recipient_sign_public_hex, kind, want_bytes)
+            return True
+        except ConsentError:
+            return False
