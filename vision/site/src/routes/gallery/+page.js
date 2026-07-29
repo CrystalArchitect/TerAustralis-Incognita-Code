@@ -88,7 +88,7 @@ export function load() {
     { filename: 'lattice-canopy.jpeg', description: 'A lone figure reaches up toward the living lattice canopy above the red dust' },
     { filename: 'starline-ascension.jpeg', description: 'A figure stands before the Starline ascension tower, rising into a single point of light' },
     { filename: 'sovereign-heart-map.jpeg', description: 'The Sovereign Heart: the continent in red dust and ochre, Dreamtime veins threading toward a crystalline node in the southeast' },
-    { filename: 'lattice-components.jpeg', description: 'The four Built components as a labelled lattice — Clementine, Starline, Songline Bus, CrystalBridge' },
+    { filename: 'lattice-components.jpeg', description: 'The four Built components as a labelled lattice — Clementine, Starline, CrystalBus, CrystalBridge. The artwork carries an earlier label for the bus; the component name is CrystalBus.' },
     { filename: 'red-dust-rivers.jpeg', description: 'Rivers of light braiding across the red dust under a gold-and-teal nebula' },
     { filename: 'arches-of-the-crossing.jpeg', description: 'A lone figure on the light-braided path beneath the great arches, a ship banking overhead' },
     { filename: 'walker-of-the-light-road.jpeg', description: 'A walker on the glowing road across the red plain, a teal storm-nebula breaking overhead' },
