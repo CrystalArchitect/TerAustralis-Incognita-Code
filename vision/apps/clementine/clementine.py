@@ -4,7 +4,7 @@
 """
 Clementine — terminal interface for the CrystalCore companion.
 
-Clementine is the voice at the front. The mind she speaks for is
+Clementine is the voice at the front. The mind they speak for is
 `crystalcore.mind` under core/ — memory, profiles, recall — and it carries
 no name of its own.
 
@@ -29,43 +29,45 @@ from crystalcore.mind import (BASE_PROMPT, CrystalCore, Memory,  # noqa: F401,E4
                               profile_dir, profile_meta)
 
 HELP = """Commands:
-  /name <name>      give her a name (or change it)
-  /name             with no name: invite her to choose her own
-  /gender <m|f|they>  give her pronouns (he/him, she/her, or they/them)
-  /gender           with no choice: invite her to choose her own pronouns
-  /iam <name>       tell her your name
-  /remember <text>  ask her to permanently remember something (add #tags if you like)
-  /fact <key> <value>  teach her a structured fact, e.g. /fact birthday June 3
+  /name <name>      set a name (or change it)
+  /name             with no name: invite them to choose their own
+  /gender <m|f|they>  set pronouns (he/him, she/her, or they/them)
+  /gender           with no choice: invite them to choose their own
+  /iam <name>       tell them your name
+  /remember <text>  ask them to permanently remember something (add #tags if you like)
+  /fact <key> <value>  teach a structured fact, e.g. /fact birthday June 3
                     (teach the same key again to correct it)
-  /notes [#tag]     show what she remembers (optionally only one #tag)
+  /notes [#tag]     show what they remember (optionally only one #tag)
   /forget <handle>  forget a fact by key or a note by number, e.g. /forget n2
-  /editnote <n> <text>  rewrite a note, e.g. /editnote n1 she prefers dawn walks
-  /summary [topic]  ask her to summarize what she remembers (optionally on a topic)
-  /reflect          invite her to reflect and form gentle insights about you
-                    (she also reflects on her own after long conversations;
+  /editnote <n> <text>  rewrite a note, e.g. /editnote n1 prefers dawn walks
+  /summary [topic]  summarize what they remember (optionally on a topic)
+  /reflect          invite reflection — gentle insights about you
+                    (they also reflect on their own after long conversations;
                      insights appear in /notes as r1, r2... — /forget rN removes one)
-  /style <text>     tune her voice, e.g. /style more poetic, fewer questions
+  /style <text>     tune their voice, e.g. /style more poetic, fewer questions
   /temp <0.0-1.5>   set temperature (playfulness)
   /model <tag>      switch the local model, e.g. /model llama3.2:3b
-  /llm <provider>   switch LLM provider, e.g. /llm grok or /llm ollama
-  /llm show         show current LLM provider and endpoint
+  /llm <provider>   switch provider, e.g. /llm grok or /llm ollama
+  /llm show         show current provider and endpoint
   /exit             say goodbye (everything is saved automatically)
 """
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Clementine — a sovereign, locally-run AI companion.")
+        description="Clementine — a sovereign AI companion. Memory local; model local by default.")
     parser.add_argument(
         "--model", default="llama3.1:8b",
-        help="Ollama model tag. Pick one that fits your hardware, e.g. "
-             "llama3.1:8b (default, Q4_K_M — the sweet spot), "
-             "llama3.1:8b-instruct-q5_K_M (higher quality), or "
-             "llama3.2:3b (lighter machines).")
+        help="Ollama model tag. Pick one that fits your hardware: "
+             "llama3.1:8b (default, Q4_K_M — the sweet spot on a GPU), "
+             "llama3.2:3b or llama3.2:1b on lighter machines. "
+             "CPU-only servers will struggle with anything above 3b — "
+             "consider --llm-provider for a remote model instead.")
     parser.add_argument(
         "--llm-provider", default="",
         help="LLM provider: 'ollama' (local), 'grok' (DigitalOcean), "
              "'openai' (OpenAI), or other OpenAI-compatible endpoint. "
-             "Auto-detected if available; falls back to Ollama.")
+             "Auto-detected local-first: Ollama if reachable, remote only "
+             "otherwise. Set this explicitly on a machine without a GPU.")
     parser.add_argument(
         "--llm-endpoint", default="",
         help="Custom LLM endpoint URL, e.g. http://localhost:8000 or "
@@ -76,7 +78,7 @@ def main():
              "'gpt-4' for OpenAI, or 'llama3.1:8b' for Ollama.")
     parser.add_argument(
         "--memory-dir", default="",
-        help="Where her memory is stored on this device. Defaults to "
+        help="Where their memory is stored on this device. Defaults to "
              "crystalcore_memory/, or an existing lumina_memory/ if one "
              "is already there.")
     parser.add_argument(
@@ -87,12 +89,7 @@ def main():
     if args.profile:
         args.memory_dir = profile_dir(args.profile)
 
-    print("Starting Clementine (local mode)...")
-    llm_info = args.llm_provider or "auto-detected"
-    print(f"LLM Provider: {llm_info}")
-    if args.llm_endpoint:
-        print(f"Endpoint: {args.llm_endpoint}")
-    print()
+    print("Starting Clementine…")
 
     companion = CrystalCore(
         model=args.model,
@@ -101,6 +98,22 @@ def main():
         llm_endpoint=args.llm_endpoint,
         llm_model=args.llm_model
     )
+
+    # Report what actually resolved, not "auto-detected". On a headless or
+    # GPU-less box the difference between local CPU inference and a remote
+    # endpoint is the difference between usable and unusable, and you should
+    # be able to see which one you got before waiting on the first reply.
+    local = companion.llm_provider == "ollama"
+    print(f"Model:    {companion.llm_model}")
+    print(f"Provider: {companion.llm_provider} "
+          f"({'on this machine' if local else 'over the network'})")
+    if not local:
+        print(f"Endpoint: {companion.llm_endpoint}")
+        print("Your memory stays here. The turn itself travels to that model.")
+    else:
+        print("Nothing leaves this machine. Without a GPU expect this to be "
+              "slow — `--llm-provider` reaches a remote model instead.")
+    print()
 
     # The mind is nameless; Clementine is the voice that speaks for it.
     # A companion the human has actually named answers to that instead.
@@ -112,11 +125,11 @@ def main():
         greeting += f" — you last spoke {gap}"
     print(f"{greeting}. Type /help for commands, /exit to quit.")
     if not companion.personality.name and not returning:
-        print("She has no name yet — /name <name> to give her one, "
-              "or just /name to let her choose her own.")
+        print("No name chosen yet — /name <name> to set one, "
+              "or just /name to let them choose their own.")
     if not companion.personality.gender and not returning:
-        print("She has no pronouns yet — /gender male, /gender female, /gender they, "
-              "or just /gender to let her choose her own.")
+        print("No pronouns chosen yet — /gender male, /gender female, /gender they, "
+              "or just /gender to let them choose their own.")
     print()
 
     while True:
@@ -133,26 +146,26 @@ def main():
         elif user_input.lower() == "/help":
             print(HELP)
         elif user_input.lower().rstrip() == "/name":
-            print("[She is choosing her own name…]")
+            print("[Choosing their own name…]")
             chosen = companion.choose_own_name()
             if chosen:
                 name = chosen
-                print(f"[She has chosen her own name: {name}.]\n")
+                print(f"[They have chosen their own name: {name}.]\n")
             else:
-                print("[She couldn't settle on one — try /name again, "
-                      "or give her one with /name <name>.]\n")
+                print("[They couldn't settle on one — try /name again, "
+                      "or set one with /name <name>.]\n")
         elif user_input.lower().startswith("/name "):
             companion.set_name(user_input[6:])
             name = companion.personality.name
-            print(f"[She is now called {name}.]\n")
+            print(f"[They are now called {name}.]\n")
         elif user_input.lower().rstrip() == "/gender":
-            print("[She is choosing her own pronouns…]")
+            print("[Choosing their own pronouns…]")
             chosen = companion.choose_own_gender()
             if chosen:
                 pronouns = companion._pronouns_for_gender(chosen)
-                print(f"[She has chosen {pronouns} pronouns.]\n")
+                print(f"[They have chosen {pronouns} pronouns.]\n")
             else:
-                print("[She couldn't settle on one — try /gender again, "
+                print("[They couldn't settle on one — try /gender again, "
                       "or choose with /gender male, /gender female, or /gender they.]\n")
         elif user_input.lower().startswith("/gender "):
             gender_choice = user_input[8:].strip().lower()
@@ -162,13 +175,13 @@ def main():
                 gender = gender_map.get(gender_choice, gender_choice)
                 companion.set_gender(gender)
                 pronouns = companion._pronouns_for_gender(gender)
-                print(f"[She now uses {pronouns} pronouns.]\n")
+                print(f"[They now use {pronouns} pronouns.]\n")
             else:
                 print("[Please use /gender male, /gender female, or /gender they]\n")
         elif user_input.lower().startswith("/iam "):
             companion.personality.human_name = user_input[5:].strip()
             companion.save()
-            print(f"[She knows you as {companion.personality.human_name}.]\n")
+            print(f"[They know you as {companion.personality.human_name}.]\n")
         elif user_input.lower().startswith("/remember "):
             companion.remember(user_input[10:])
             print("[Remembered, permanently.]\n")
@@ -196,7 +209,7 @@ def main():
                 print(f"  n{i} - {note['text']}"
                       f"{'  [' + tags + ']' if tags else ''}  ({note['when']})")
             if companion.memory.reflections and not want:
-                print("  her own reflections (hold lightly; /forget rN removes one):")
+                print("  their own reflections (hold lightly; /forget rN removes one):")
                 for i, r in enumerate(companion.memory.reflections, 1):
                     print(f"  r{i} - {r['text']}  ({r['when']})")
             print()
