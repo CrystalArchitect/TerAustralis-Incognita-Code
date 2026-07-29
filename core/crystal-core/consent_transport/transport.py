@@ -87,11 +87,23 @@ class StarlineServer:
         fragment_provider,
         host: str = "127.0.0.1",
         port: int = DEFAULT_PORT,
+        token_store=None,
     ):
         self.identity = identity
         self.peer_store = peer_store
         self.consent_engine = consent_engine
         self.fragment_provider = fragment_provider
+        # Optional second gate. The boolean engine answers "may this peer
+        # ask at all"; a TokenStore answers the narrower question the
+        # Consent Token schema specifies -- may they have *this kind*,
+        # right now, under a token that has not expired or been revoked.
+        # Both must say yes. Omitted, the server behaves exactly as before,
+        # which is why every existing deployment keeps working.
+        #
+        # No wire change is needed for this: the issuer holds its own
+        # tokens and checks them before releasing anything, the same shape
+        # as the consent check above it.
+        self.token_store = token_store
         self.host = host
         self.port = port
         self._sock: socket.socket | None = None
@@ -163,6 +175,44 @@ class StarlineServer:
                 return
 
             items = self.fragment_provider(frame.get("kinds", []), frame.get("since", 0.0), peer.fingerprint)
+
+            if self.token_store is not None:
+                # Filter by what a live token actually admits, per fragment.
+                # Filtering rather than refusing the whole request: a peer
+                # holding a token for one kind should get that kind, not a
+                # blanket denial because they also asked for another.
+                #
+                # Byte cost is charged per fragment as we go, so a token
+                # with a max_bytes budget stops mid-list rather than
+                # letting the whole batch through because the first one
+                # fitted.
+                allowed, spend = [], 0
+                for frag in items:
+                    cost = len(frag.content.encode())
+                    if self.token_store.is_authorized(
+                        peer.sign_public_hex, frag.kind, want_bytes=spend + cost
+                    ):
+                        allowed.append(frag)
+                        spend += cost
+                if not allowed and items:
+                    try:
+                        self.token_store.authorize(peer.sign_public_hex)
+                        reason = "no token admits the requested kinds"
+                    except Exception as exc:
+                        reason = str(exc)
+                    protocol.send_frame(conn, send_cs, protocol.denied(reason))
+                    return
+                if allowed:
+                    # Charge the token only once data is actually about to
+                    # move. A refused request must not consume a
+                    # one-time-use grant.
+                    try:
+                        tok = self.token_store.authorize(peer.sign_public_hex)
+                        self.token_store.record_use(tok.token_id, spend)
+                    except Exception:
+                        pass
+                items = allowed
+
             protocol.send_frame(conn, send_cs, protocol.fragments([f.to_dict() for f in items]))
         except (HandshakeFailed, protocol.ProtocolError, OSError):
             pass  # a failed/hostile connection just gets dropped, no diagnostic leak
