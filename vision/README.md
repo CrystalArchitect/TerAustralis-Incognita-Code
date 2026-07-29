@@ -7,7 +7,7 @@ this area holds Crystal Vision: user-facing applications, interfaces, and the co
 
 | Path | Component |
 |---|---|
-| `apps/lumina/` | **Lumina** — sovereign AI companion, Ollama-backed (local-first, memory-aware, configurable LLM provider) · terminal, Flask API, Svelte webapp, browser voice · embedded CrystalCore Framework · a core test suite (16 tests) |
+| `apps/clementine/` | **Clementine** — the front-of-house voice of the sovereign AI companion, Ollama-backed (local-first, memory-aware, configurable LLM provider) · terminal, Flask API, Svelte webapp, browser voice · drives `crystalcore.mind` under `core/` · a core test suite (33 tests) |
 | `apps/voicebox/` | Voice layer HTTP server (TTS/STT interfaces) |
 | `apps/crystal-interface/` | **Demo shell** — simulated data, Authority held (not production) |
 | `apps/vision-web/` | **Demo shell** — simulated data, Authority held (not production) |
@@ -16,8 +16,8 @@ this area holds Crystal Vision: user-facing applications, interfaces, and the co
 ## Prove it
 
 ```bash
-# From the vision/apps/lumina directory (tests embedded)
-cd vision/apps/lumina
+# From the vision/apps/clementine directory (tests embedded)
+cd vision/apps/clementine
 python -m pytest tests/
 ```
 
@@ -28,7 +28,7 @@ present; integration, performance, and end-to-end coverage don't exist yet.
 
 ## The dependency rule
 
-**Crystal Vision may depend on Crystal Core; Crystal Core never imports Crystal Vision.** Vision apps that need Core features import them explicitly (e.g., Lumina imports its own embedded Framework). Core services reach Vision data *by configured data path at runtime* — the bridge serves the companion without importing it.
+**Crystal Vision may depend on Crystal Core; Crystal Core never imports Crystal Vision.** Vision apps that need Core features import them explicitly (e.g., Clementine imports `crystalcore.mind`). Core services reach Vision data *by configured data path at runtime* — the bridge serves the companion without importing it.
 
 ---
 

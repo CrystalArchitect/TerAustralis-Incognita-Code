@@ -17,14 +17,14 @@ this README's original one-line heading carried the old double-a drift.
 
 [`core/`](core/) holds **Crystal Core** — the protocol pack (with
 Clementine), CrystalBridge, profiles, the mesh stub, and the TypeScript
-SDK. [`vision/`](vision/) holds **Crystal Vision** — Lumina, voicebox, the
+SDK. [`vision/`](vision/) holds **Crystal Vision** — Clementine, voicebox, the
 demo shells, and the public site. Both imported from the umbrella's canon
 branch `claude/crystalcore-boot-visual-jau1bk` @ `32692fd` under the
 approved Migration-Plan Stage 1 (PR 1 engine, PR 3 vision).
 
 CI (`.github/workflows/ci.yml`) runs compileall, all four Crystal Core
 self-tests, the CrystalBridge self-test, the mesh stub tests, and
-Lumina's test suite on every push — mirroring the umbrella's old checks
+the companion's test suite on every push — mirroring the umbrella's old checks
 against these real paths, per Migration-Plan Stage 2. The public site's
 Pages deploy
 (`.github/workflows/deploy.yml`) and custom domain (`CNAME`) also moved
@@ -43,7 +43,7 @@ per the umbrella's
   libraries (the CrystalCore Framework, the protocol pack with Clementine
   as a named logical component, CrystalBridge, the mesh stub, the SDK).
 - **Crystal Vision** — the user-facing application built on Crystal Core,
-  with **Lumina**, the flagship sovereign companion, wholly within it.
+  with **Clementine**, the flagship sovereign companion, wholly within it.
 
 Whether both live here as two top-level areas or split into separate
 repositories is the Migration Plan's Stage 3 decision point. The

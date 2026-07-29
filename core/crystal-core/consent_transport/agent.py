@@ -31,7 +31,7 @@ class StarlineAgent:
         self.consent = ConsentEngine(self.identity, state_dir / "starline_consent.json")
         self._server: StarlineServer | None = None
         self._local_fragments: list[MemoryFragment] = []  # in-memory demo store; a real
-        # companion would back this with its own persistent memory (e.g. Lumina's
+        # companion would back this with its own persistent memory (e.g. the mind's
         # memory.json), filtered through whatever the human has approved for sharing.
 
     # ---------- identity ----------

@@ -29,9 +29,9 @@ jobs:
       # repository red without this repository changing.
       - name: Canon mirror is faithful
         run: python3 .github/scripts/check-canon-mirror.py
-      - name: Starline Weaver self-test
+      - name: Bridge self-test
         working-directory: core/crystal-core
-        run: python -m clementine.bridge.selftest
+        run: python -m bridge.selftest
       - name: Pipeline self-test
         working-directory: core/crystal-core
         run: python -m services.selftest
@@ -57,7 +57,7 @@ jobs:
         run: |
           pip install pytest
           python -m pytest tests -q
-      - name: Lumina dependencies
-        run: pip install -r vision/apps/lumina/requirements.txt pytest
-      - name: Lumina core tests
-        run: python -m pytest vision/apps/lumina/tests -q
+      - name: Companion dependencies
+        run: pip install -r vision/apps/clementine/requirements.txt pytest
+      - name: Companion core tests
+        run: python -m pytest vision/apps/clementine/tests -q

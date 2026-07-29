@@ -302,7 +302,7 @@ Vercel enforces HTTPS by default. HSTS is not needed for first deployment but ca
 
 - [ ] Website loads at teraustralis.com.au
 - [ ] HTTPS certificate is valid (green lock in browser)
-- [ ] All pages render correctly (homepage, Codex, Lumina, Archive, etc.)
+- [ ] All pages render correctly (homepage, Codex, the companion page, Archive, etc.)
 - [ ] Navigation links work (no 404s)
 - [ ] Dark mode/light mode toggle (if implemented) works
 - [ ] Reduced motion respected (test with `prefers-reduced-motion: reduce` in DevTools)

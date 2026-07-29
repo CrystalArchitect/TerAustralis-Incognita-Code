@@ -23,7 +23,7 @@ class Peer:
     fingerprint: str          # Ed25519 public key, hex, truncated — display id
     sign_public_hex: str      # full Ed25519 public key, hex
     dh_public_hex: str        # full X25519 public key, hex
-    label: str = ""           # human-given name, e.g. "Sam's Lumina"
+    label: str = ""           # human-given name, e.g. "Sam's companion"
     consented: bool = False   # has the human approved fragment exchange with this peer?
 
 

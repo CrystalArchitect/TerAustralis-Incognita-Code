@@ -233,7 +233,7 @@ def matrix_result_event(
     append). *responses* and *compare* are plain dicts — the shape
     ``StarlineWeaver.run_matrix()``'s transcript entries and ``cross_compare()``
     already produce, filtered to the reply cycle by the caller. No import of
-    ``clementine`` here; the caller does the extracting, this module only records.
+    ``bridge`` here; the caller does the extracting, this module only records.
 
     Unlike gate arguments, response content is stored in full, not fingerprinted
     — the whole point of witnessing a matrix run is being able to read back what

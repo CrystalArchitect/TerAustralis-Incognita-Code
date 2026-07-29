@@ -23,10 +23,18 @@ Thumbs.db
 .idea/
 *.swp
 
-# Clementine local memory — personal conversations and profiles never go in git
+# Local companion memory — personal conversations and profiles never go in
+# git. Every name these folders have ever had stays listed: a person's
+# history must not become git-visible because a default was renamed.
+crystalcore_memory.json
+crystalcore_memory/
+crystalcore_profiles/
 clementine_memory.json
 clementine_memory/
 clementine_profiles/
+lumina_memory.json
+lumina_memory/
+lumina_profiles/
 memory/config.json
 
 # CrystalCore.OS local state

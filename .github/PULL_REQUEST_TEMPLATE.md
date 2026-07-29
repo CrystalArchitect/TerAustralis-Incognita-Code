@@ -22,9 +22,9 @@
      CI (.github/workflows/ci.yml) runs the same checks. -->
 
 - [ ] `python -m compileall -q core vision`
-- [ ] Crystal Core self-tests (`clementine.bridge` / `services` / `starline` / `rdp`, in `core/crystal-core/`)
+- [ ] Crystal Core self-tests (`bridge` / `services` / `starline` / `rdp`, in `core/crystal-core/`)
 - [ ] Mesh stub tests (`cd core && PYTHONPATH=. pytest tests -q`)
-- [ ] `pytest vision/apps/lumina/tests`
+- [ ] `pytest vision/apps/clementine/tests`
 - [ ] Site builds (`cd vision/site && npm run build`) — if the site changed
 - [ ] No generated files, secrets, or personal data staged
 
