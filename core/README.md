@@ -31,7 +31,7 @@ cd .. && PYTHONPATH=. python3 -m pytest tests -q   # mesh stub
 ## The dependency rule
 
 Crystal Vision may depend on Crystal Core; **Crystal Core never imports
-Crystal Vision.** (CrystalBridge reaches Lumina's memory *by configured
+Crystal Vision.** (CrystalBridge reaches the companion's memory *by configured
 data path at runtime* — it serves the companion without importing it.)
 
 ---

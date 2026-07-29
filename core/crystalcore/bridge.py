@@ -1,7 +1,7 @@
 # Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
 # SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
-"""CrystalBridge — the MCP stdio server that lets a guest AI meet Lumina.
+"""CrystalBridge — the MCP stdio server that lets a guest AI meet the companion.
 
 Reconstructed spec: the original `docs/CRYSTALBRIDGE.md` design doc was lost
 along with the machine this project was first built on. This file's shape is
@@ -10,9 +10,9 @@ doing anything), `docs/guides/MCP-Guest.md` / `docs/guides/Access.md` (the CLI a
 contract guests already assume: `python -m crystalcore.bridge --profile
 <name>`, guest identity via the CRYSTALBRIDGE_GUEST env var), and
 `src/profiles/default/bridge_config.json` (the config shape). `recall` and
-`teach` are deliberately thin, obvious wrappers around Lumina's existing
+`teach` are deliberately thin, obvious wrappers around the mind's existing
 memory methods rather than new memory logic of their own — this file grants
-*access* to Lumina, it doesn't reimplement her.
+*access* to the mind, it doesn't reimplement it.
 
 Every tool call passes through ConsentGate.check() first. Nothing runs for a
 guest who isn't approved for that specific tool.
@@ -21,9 +21,7 @@ guest who isn't approved for that specific tool.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import os
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -32,35 +30,39 @@ from mcp.server.fastmcp import FastMCP
 from crystalcore.config import BridgeConfig
 from crystalcore.gate import ConsentGate
 
+# The mind is an ordinary subpackage of this one, so reaching it needs no
+# importlib alias any more — but it is still imported *lazily*, inside the
+# functions that need it, and deliberately so. `crystalcore.mind` pulls in
+# `requests` at module level; importing it here would make `status` — which
+# touches no memory and needs no model — fail on a bridge-only install that
+# has just `mcp`. Laziness is what lets requirements-bridge.txt stay honest
+# about declaring one dependency.
+
 SRC_ROOT = Path(__file__).resolve().parent.parent          # core/
 REPO_ROOT = SRC_ROOT.parent                                 # repo root (parent of core/ and vision/)
-# Lumina lives in the vision/ half of the tree, not core/. The Stage 1/2
-# repo split moved src/apps/ -> vision/apps/ and src/crystalcore/ ->
-# core/crystalcore/, so the two are now siblings under the repo root, not
-# a single shared src/ root.
-LUMINA_PKG_DIR = REPO_ROOT / "vision" / "apps" / "lumina" / "crystalcore"
+# The front-of-house interface. Only the *memory* the mind reads lives
+# beside the interface; that is what this path is for.
+APP_DIR = REPO_ROOT / "vision" / "apps" / "clementine"
 
 
-def _load_lumina_framework():
-    """Import Lumina's `crystalcore` package under a distinct module
-    name, since it would otherwise collide with this package (both are
-    literally named `crystalcore`, in different directories)."""
-    alias = "lumina_framework"
-    if alias in sys.modules:
-        return sys.modules[alias]
-    spec = importlib.util.spec_from_file_location(
-        alias,
-        LUMINA_PKG_DIR / "__init__.py",
-        submodule_search_locations=[str(LUMINA_PKG_DIR)],
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[alias] = module
-    spec.loader.exec_module(module)
-    return module
+def _profiles_root() -> Path:
+    """The profiles folder, anchored to the interface rather than to cwd.
+
+    Mirrors the mind's own legacy fallback so the bridge and a human at the
+    terminal always reach the same memory, including on installs that still
+    carry the older folder name.
+    """
+    from crystalcore.mind import profiles as mind_profiles
+
+    new = APP_DIR / mind_profiles.DEFAULT_PROFILES_DIR.name
+    legacy = APP_DIR / mind_profiles.LEGACY_PROFILES_DIR.name
+    if not new.exists() and legacy.exists():
+        return legacy
+    return new
 
 
 class Bridge:
-    """Holds the one Lumina instance this bridge process gives guests
+    """Holds the one companion instance this bridge process gives guests
     limited, gated access to."""
 
     def __init__(self, config: BridgeConfig, guest: str):
@@ -75,25 +77,24 @@ class Bridge:
 
     @property
     def companion(self):
-        """Lumina, loaded lazily so `status` doesn't need Ollama.
+        """The companion, loaded lazily so `status` doesn't need Ollama.
 
-        Lumina's own `profiles.profile_dir()` resolves relative to the
-        *calling process's* working directory, not to vision/apps/lumina/ —
-        so it can't be used here directly. This bridge is meant to be run
-        from the `core/` directory (so `crystalcore` imports), which is a
-        different cwd than Lumina's own CLI uses (`cd vision/apps/lumina &&
-        python3 lumina.py`). Build the path explicitly, anchored to
-        vision/apps/lumina/, so the bridge always reaches the same memory a
-        human running Lumina directly would see — not a second, empty
-        profile dir wherever the bridge happened to be launched from.
+        The mind's own `profiles.profile_dir()` resolves relative to the
+        *calling process's* working directory. This bridge runs from
+        `core/`, a different cwd than the terminal interface uses
+        (`cd vision/apps/clementine && python3 clementine.py`), so the path
+        is built explicitly and anchored to the interface — otherwise the
+        bridge would open a second, empty profile dir wherever it happened
+        to be launched from, instead of the memory the human actually sees.
         """
         if self._companion is None:
-            framework = _load_lumina_framework()
+            from crystalcore.mind import CrystalCore
+
             safe_name = "".join(
                 c for c in self.config.profile if c.isalnum() or c in "-_ "
             ).strip()
-            memory_dir = LUMINA_PKG_DIR.parent / "lumina_profiles" / safe_name
-            self._companion = framework.Lumina(memory_dir=str(memory_dir))
+            memory_dir = _profiles_root() / safe_name
+            self._companion = CrystalCore(memory_dir=str(memory_dir))
         return self._companion
 
 
@@ -116,7 +117,7 @@ def build_server(bridge: Bridge) -> FastMCP:
 
     @mcp.tool()
     def recall(query: str = "") -> dict[str, Any]:
-        """Recall what Lumina remembers, optionally filtered by a query."""
+        """Recall what the companion remembers, optionally filtered by a query."""
         refusal = bridge.refuse("recall", {"query": query})
         if refusal:
             return refusal
@@ -125,7 +126,7 @@ def build_server(bridge: Bridge) -> FastMCP:
 
     @mcp.tool()
     def teach(text: str) -> dict[str, Any]:
-        """Teach Lumina something to remember permanently."""
+        """Teach the companion something to remember permanently."""
         refusal = bridge.refuse("teach", {"text": text})
         if refusal:
             return refusal
@@ -135,7 +136,7 @@ def build_server(bridge: Bridge) -> FastMCP:
     @mcp.tool()
     def message(text: str) -> dict[str, Any]:
         """Leave a message for the human. Recorded, but not automatically
-        folded into Lumina's memory — that's what `teach` is for."""
+        folded into the companion's memory — that's what `teach` is for."""
         refusal = bridge.refuse("message", {"text": text})
         if refusal:
             return refusal

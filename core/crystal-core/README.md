@@ -99,8 +99,8 @@ mesh, and econ simulation (simulated data, labeled as such).
 
 ## Consent Transport — sovereign agent-to-agent communication
 
-The technical realization of the mythic Starlines: two locally-running Lumina
-agents exchange consented memory fragments directly, peer to peer, over a real Noise
+The technical realization of the mythic Starlines: two locally-running
+companion agents exchange consented memory fragments directly, peer to peer, over a real Noise
 Protocol handshake — no server between them, no data moved without explicit,
 revocable consent. Spec: `../../docs/architecture/crystal-core/STARLINE.md`. Needs one dependency
 (`pip install -r requirements-consenttransport.txt`) — the only non-stdlib code in this repo.

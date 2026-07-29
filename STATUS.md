@@ -13,28 +13,36 @@ CrystalCore.OS-the-Crystal-Architecture-Archive.
 Executes, or can be opened and used by someone other than me.
 
 - Crystal Core self-tests — all four suites pass on a fresh clone,
-  re-verified 2026-07-24 (Python 3.11): `clementine.bridge` 7/7,
-  `services` 4/4, `rdp` 31/31, `consent_transport` 9/9 (the suite the
-  old `starline` alias points at). `consent_transport` needs
+  re-verified 2026-07-29 (Python 3.11): `bridge` 7/7, `services` 4/4,
+  `rdp` 31/31, `consent_transport` 32/32 (the suite the old `starline`
+  alias points at). `consent_transport` needs
   `pip install -r requirements-consenttransport.txt`; everything else
   is stdlib-only. One environment trap, not a code fault: a broken
   system `cryptography` build fails at import in a way that looks like
   a code failure — `pip install --ignore-installed cryptography`
-  clears it.
-- Lumina core tests — 16/16 pass (`python -m pytest tests/` from
-  `vision/apps/lumina`; needs `pytest`, `requests`, `flask`),
-  re-verified 2026-07-24.
+  clears it. The bus module is `bridge`, not `clementine.bridge`: the
+  name Clementine moved to the front-of-house interface, and the layer
+  it used to name is now described by what it does.
+- Companion core tests — 33/33 pass (`python -m pytest
+  vision/apps/clementine/tests`; needs `pytest`, `requests`, `flask`),
+  re-verified 2026-07-29. Previously recorded as 16/16 for `test_core`
+  alone; the count now includes `test_server_csrf`, which the CI step
+  was already running.
 - CrystalBridge self-test — 7/7 pass (`cd core && python -m
   crystalcore.selftest`; needs `pip install -r
   core/crystalcore/requirements-bridge.txt` for the `mcp` SDK), added
-  2026-07-24. Two bugs fixed to get here: `bridge.py` resolved Lumina's
-  package to `core/apps/lumina/crystalcore` (which doesn't exist —
-  Lumina lives under `vision/`), so `recall`/`teach`/`message` crashed
-  at runtime; and the `mcp` dependency was undeclared. Honest scope:
-  `ConsentGate` enforces two checks (approval, tool-permission), not
-  the four its docstring once claimed — `scope`/`provenance` were
-  documented as intended but never built (no surviving spec for what
-  either should mean); the docstring now says two.
+  2026-07-24. Two bugs fixed to get here: `bridge.py` resolved the
+  mind's package to `core/apps/lumina/crystalcore` (which doesn't
+  exist), so `recall`/`teach`/`message` crashed at runtime; and the
+  `mcp` dependency was undeclared. That first bug is now gone by
+  construction rather than by fix — the mind is `crystalcore.mind`, an
+  ordinary subpackage, so there is no path to get wrong and no
+  `importlib` alias to maintain. Its two regression tests were rewritten
+  accordingly and both now pass outright instead of skipping. Honest
+  scope, unchanged: `ConsentGate` enforces two checks (approval,
+  tool-permission), not the four its docstring once claimed —
+  `scope`/`provenance` were documented as intended but never built (no
+  surviving spec for what either should mean); the docstring says two.
 - Demo shells render in a headless browser, verified 2026-07-24:
   `vision/apps/crystal-interface/`, `vision/apps/vision-web/`, and the
   engine's own `core/crystal-core/index.html`. Simulated data,
@@ -51,8 +59,10 @@ Executes, or can be opened and used by someone other than me.
 ## Built, not currently running
 Code exists and is complete enough to run. No runtime here exercises it.
 
-- Lumina itself (`lumina.py`, `server.py`, the Svelte webapp) — needs
-  Ollama and an npm build; neither exercised this session.
+- The interface itself (`clementine.py`, `server.py`, the Svelte
+  webapp) — needs Ollama and an npm build; neither exercised this
+  session. The Python half is import-clean and its tests pass; the
+  webapp rename is source-level only and has not been built here.
 - voicebox (`vision/apps/voicebox/server.py`) — TTS/STT HTTP layer.
 - `vision/site/` — the SvelteKit source of teraustralis.com.au. It
   builds to static output, and since Stage 2 (PR #4) this repo carries
@@ -82,6 +92,50 @@ Code exists and is complete enough to run. No runtime here exercises it.
 ## Concept only
 Nothing in this repo sits at this tier; concepts live in the umbrella
 and the system ledger.
+
+## Naming, as of 2026-07-29
+
+The three layers now carry the names they were always meant to, and the
+code matches:
+
+- **CrystalCore** — the architecture, and the mind within it. The mind
+  moved from `vision/apps/lumina/crystalcore/` to `core/crystalcore/mind/`,
+  which is where it belongs and which retired a real hazard: two different
+  packages were both literally named `crystalcore`, which had already
+  produced one runtime bug, one `importlib` alias, and one explanatory
+  comment in a test fixture. The companion class is `CrystalCore`.
+- **The bridge** — named for what it does. Formerly `clementine.bridge`;
+  now `bridge`, with `BridgeHub` in place of `ClementineHub`.
+- **Clementine** — the voice at the front, and the only place a persona
+  name appears: `vision/apps/clementine/`.
+
+The mind itself is nameless. `Personality.name` still defaults to `""`,
+so a companion is unnamed until the human names it or it chooses its own.
+Clementine names the interface, not the entity behind it.
+
+Two continuity guarantees, because renaming folders would otherwise
+delete people's history: `crystalcore_memory/` and `crystalcore_profiles/`
+are the new defaults, but an existing `lumina_memory/` or
+`lumina_profiles/` is still found and used where the new one is absent
+(`companion.default_memory_dir()`, `profiles.PROFILES_DIR`, and
+`bridge._profiles_root()` all agree on this). The webapp likewise reads
+the old `lumina.*` localStorage keys when the new ones are missing, so
+nobody's voice settings reset on upgrade.
+
+Not renamed, deliberately:
+
+- `vision/site/` — the content set is a pinned mirror of umbrella canon
+  (`check-canon-mirror.py`). Renaming there means editing canon in
+  CrystalCore.OS-the-Crystal-Architecture-Archive first and re-pinning;
+  doing it here would turn CI red, which is the guard working as
+  designed. The public `/lumina` route also needs a redirect rather than
+  a rename, or existing links break.
+- `core/crystal-core/bridge/transcripts/` — records of runs that actually
+  happened, where the hub was called `clementine` at the time. Rewriting
+  them would falsify a record, which is precisely what `rdp` exists to
+  make impossible.
+- `StarlineWeaver` (the bus class) — carries no persona name and was not
+  in scope.
 
 ## Known unknowns
 

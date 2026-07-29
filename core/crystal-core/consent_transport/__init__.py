@@ -1,7 +1,7 @@
 # Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
 # SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
-"""Consent Transport — the sovereign communication layer between Lumina agents.
+"""Consent Transport — the sovereign communication layer between companion agents.
 
 Formerly published as "Starline"; renamed so the built layer carries a plain
 name (see the Lexicon and docs/architecture/crystal-core/STARLINE.md). Two
