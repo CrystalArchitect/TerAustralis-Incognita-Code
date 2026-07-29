@@ -24,7 +24,10 @@ class Personality:
     avatar: str = ""            # an emoji for this profile, e.g. "🌟"
     description: str = ""       # a short line about this profile
     model: str = ""             # this profile's preferred model ("" = default)
-    llm_provider: str = ""      # LLM provider: "ollama", "openai", "grok", etc.
+    llm_provider: str = ""      # "ollama" (local), or any OpenAI-compatible
+                                #  alias: "openai-compatible" (canonical),
+                                #  "openai", "xai", "groq", "together",
+                                #  "openrouter", "grok" (legacy DO gateway)
     llm_endpoint: str = ""      # custom endpoint URL for LLM
     llm_model: str = ""         # model name for this provider (e.g., "gpt-5-5")
 

@@ -64,10 +64,13 @@ def main():
              "consider --llm-provider for a remote model instead.")
     parser.add_argument(
         "--llm-provider", default="",
-        help="LLM provider: 'ollama' (local), 'grok' (DigitalOcean), "
-             "'openai' (OpenAI), or other OpenAI-compatible endpoint. "
-             "Auto-detected local-first: Ollama if reachable, remote only "
-             "otherwise. Set this explicitly on a machine without a GPU.")
+        help="'ollama' (local, default) or any OpenAI-compatible provider: "
+             "openai, xai, groq, together, openrouter — pair with "
+             "--llm-endpoint and LLM_API_KEY. E.g. OpenAI: "
+             "--llm-provider openai --llm-endpoint "
+             "https://api.openai.com/v1/chat/completions. OpenRouter fronts "
+             "hundreds of models incl. Claude and Gemini. Auto-detection is "
+             "local-first; set this explicitly on a machine without a GPU.")
     parser.add_argument(
         "--llm-endpoint", default="",
         help="Custom LLM endpoint URL, e.g. http://localhost:8000 or "

@@ -109,6 +109,19 @@ class CrystalCore:
 
     # ---------- LLM provider detection & configuration ----------
 
+    # Two wire dialects cover every provider: Ollama's /api/chat for anything
+    # served locally, and the OpenAI-style /v1/chat/completions everyone else
+    # speaks — OpenAI, xAI, Groq, Together, OpenRouter (and through OpenRouter,
+    # Claude and Gemini). The provider *name* is just an alias onto one of the
+    # two shapes. "grok" survives as an alias so existing profiles keep working;
+    # the canonical name is "openai-compatible".
+    OPENAI_COMPATIBLE = {"openai-compatible", "openai", "grok", "groq",
+                         "together", "openrouter", "xai"}
+
+    def _dialect(self) -> str:
+        """The wire shape for this provider: 'openai' or 'ollama'."""
+        return "openai" if self.llm_provider in self.OPENAI_COMPATIBLE else "ollama"
+
     def _detect_provider(self) -> str:
         """Auto-detect an available model provider — local first, always.
 
@@ -126,9 +139,21 @@ class CrystalCore:
         return "ollama"  # nothing reachable: fail toward local, not the cloud
 
     def _default_endpoint(self) -> str:
-        """Get default endpoint for the detected provider."""
+        """Get default endpoint for the provider.
+
+        Only two providers have an endpoint worth guessing: Ollama's
+        well-known local port, and the "grok" alias's historical DigitalOcean
+        URL (kept so existing setups don't break). Every other remote alias
+        must say where it lives — silently guessing a vendor URL would send
+        conversation to a place the human never chose.
+        """
         if self.llm_provider == "grok":
             return DO_INFERENCE_URL
+        if self._dialect() == "openai":
+            raise ValueError(
+                f"provider '{self.llm_provider}' needs an explicit endpoint — "
+                "set --llm-endpoint or LLM_ENDPOINT (e.g. "
+                "https://api.openai.com/v1/chat/completions)")
         return OLLAMA_URL
 
     def _default_model(self) -> str:
@@ -605,10 +630,19 @@ class CrystalCore:
                 self.save()
 
     def _offline_message(self, e: requests.exceptions.RequestException) -> str:
-        """A kind, actionable message for when the local model is unreachable.
+        """A kind, actionable message for when the model is unreachable.
         ConnectionError is checked first: ConnectTimeout subclasses both
-        ConnectionError and Timeout, and 'is Ollama running?' is the right
-        question for it."""
+        ConnectionError and Timeout. The advice branches on dialect —
+        'is Ollama running?' is the wrong question when the model is a
+        remote endpoint."""
+        if self._dialect() == "openai":
+            if isinstance(e, requests.exceptions.ConnectionError):
+                return (f"[I can't reach the model at {self.llm_endpoint} — "
+                        "is the endpoint right, and is your network up?]")
+            if isinstance(e, requests.exceptions.Timeout):
+                return ("[The remote model took too long to answer. "
+                        "Give it a moment and try again.]")
+            return f"[Error talking to the remote model: {e}]"
         if isinstance(e, requests.exceptions.ConnectionError):
             return ("[I can't reach my local model — is Ollama running? "
                     f"Try: ollama serve, then ollama pull {self.model}]")
@@ -617,12 +651,17 @@ class CrystalCore:
                     "Give it a moment and try again.]")
         return f"[Error talking to the local model: {e}]"
 
-    def _ollama_stream(self, messages):
-        """Yield reply pieces from the local model as they are generated."""
-        if self.llm_provider == "grok":
-            yield from self._grok_stream(messages)
+    def _model_stream(self, messages):
+        """Yield reply pieces from whichever model this companion is using.
+        Dispatches on wire dialect, not vendor name."""
+        if self._dialect() == "openai":
+            yield from self._openai_stream(messages)
         else:
             yield from self._ollama_stream_impl(messages)
+
+    # Old name kept as an alias: server.py and tests call chat_stream(), which
+    # goes through here, but external callers may know the old spelling.
+    _ollama_stream = _model_stream
 
     def _ollama_stream_impl(self, messages):
         """Internal Ollama streaming implementation."""
@@ -648,8 +687,10 @@ class CrystalCore:
             if chunk.get("done"):
                 break
 
-    def _grok_stream(self, messages):
-        """Stream from OpenAI-compatible endpoint (Grok/DigitalOcean)."""
+    def _openai_stream(self, messages):
+        """Stream from any OpenAI-compatible endpoint — OpenAI, xAI, Groq,
+        Together, OpenRouter, or the DigitalOcean gateway the "grok" alias
+        points at."""
         headers = {"Authorization": f"Bearer {self.llm_api_key}"} if self.llm_api_key else {}
         response = requests.post(
             self.llm_endpoint,
@@ -679,14 +720,14 @@ class CrystalCore:
     def _ollama_chat(self, messages, stream_to=None) -> str:
         if stream_to is not None:
             pieces = []
-            for piece in self._ollama_stream(messages):
+            for piece in self._model_stream(messages):
                 pieces.append(piece)
                 stream_to.write(piece)
                 stream_to.flush()
             stream_to.write("\n")
             return "".join(pieces)
 
-        if self.llm_provider == "grok":
+        if self._dialect() == "openai":
             headers = {"Authorization": f"Bearer {self.llm_api_key}"} if self.llm_api_key else {}
             response = requests.post(
                 self.llm_endpoint,
@@ -711,7 +752,7 @@ class CrystalCore:
                 timeout=300,
             )
         response.raise_for_status()
-        if self.llm_provider == "grok":
+        if self._dialect() == "openai":
             return response.json()["choices"][0]["message"]["content"]
         else:
             return response.json()["message"]["content"]
