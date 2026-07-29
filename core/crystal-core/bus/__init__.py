@@ -9,7 +9,7 @@ The bridge is the communicator between models and nodes. Two roles run here:
     is the Dreamline Train (the peer-to-peer transport layer, the starline/ package).
   * the **Truthline Narrator** — the hub's check that labels and validates every
     message's truth layer (science | story | vision) before it is heard
-    (BridgeHub.validate in agents.py).
+    (BusHub.validate in agents.py).
 
 Vision: all minds, one weave.
 Reality (labeled): v0 in-process multi-agent message bus with pluggable AI adapters.

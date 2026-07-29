@@ -3,17 +3,17 @@
 
 """Self-test for the Starline Weaver — proves the law is real, not decorative.
 
-    python3 -m bridge.selftest
+    python3 -m bus.selftest
 """
 
 from __future__ import annotations
 
-from .agents import BridgeHub, EchoAgent, RedButtonAgent, SevenSistersAgent, UnlabeledAgent
+from .agents import BusHub, EchoAgent, RedButtonAgent, SevenSistersAgent, UnlabeledAgent
 from .bus import StarlineWeaver
 
 
 def test_conversation_flows():
-    bus = StarlineWeaver(BridgeHub(), [EchoAgent(), SevenSistersAgent()])
+    bus = StarlineWeaver(BusHub(), [EchoAgent(), SevenSistersAgent()])
     transcript = bus.run("first water", 4)
     delivered = [e for e in transcript if e["delivered"]]
     assert len(delivered) == 1 + 4 * 2, "opening + 2 agents x 4 turns should all deliver"
@@ -21,7 +21,7 @@ def test_conversation_flows():
 
 
 def test_unlabeled_speech_is_rejected():
-    bus = StarlineWeaver(BridgeHub(), [UnlabeledAgent()])
+    bus = StarlineWeaver(BusHub(), [UnlabeledAgent()])
     transcript = bus.run("drift check", 3)
     rejected = [e for e in transcript if not e["delivered"]]
     assert len(rejected) == 3, "every unlabeled message must be rejected"
@@ -29,7 +29,7 @@ def test_unlabeled_speech_is_rejected():
 
 
 def test_red_button_halts_bus():
-    bus = StarlineWeaver(BridgeHub(), [RedButtonAgent(after=2), SevenSistersAgent()])
+    bus = StarlineWeaver(BusHub(), [RedButtonAgent(after=2), SevenSistersAgent()])
     transcript = bus.run("halt check", 10)
     assert transcript[-1]["content"].startswith("RED BUTTON"), "bus must close with a halt notice"
     cycles = [e["cycle"] for e in transcript if e["cycle"] > 0]
@@ -37,7 +37,7 @@ def test_red_button_halts_bus():
 
 
 def test_matrix_gives_independent_answers():
-    bus = StarlineWeaver(BridgeHub(), [EchoAgent(), EchoAgent()])
+    bus = StarlineWeaver(BusHub(), [EchoAgent(), EchoAgent()])
     transcript = bus.run_matrix("what is water")
     replies = [e for e in transcript if e["cycle"] == 1]
     assert len(replies) == 2, "every agent should be asked exactly once"
@@ -47,7 +47,7 @@ def test_matrix_gives_independent_answers():
 
 
 def test_matrix_rejects_unlabeled_without_blocking_others():
-    bus = StarlineWeaver(BridgeHub(), [UnlabeledAgent(), EchoAgent()])
+    bus = StarlineWeaver(BusHub(), [UnlabeledAgent(), EchoAgent()])
     transcript = bus.run_matrix("drift check")
     replies = [e for e in transcript if e["cycle"] == 1]
     assert replies[0]["delivered"] is False, "unlabeled speech is still rejected in matrix mode"
@@ -55,7 +55,7 @@ def test_matrix_rejects_unlabeled_without_blocking_others():
 
 
 def test_matrix_cross_compare_counts_not_judges():
-    bus = StarlineWeaver(BridgeHub(), [EchoAgent(), EchoAgent()])
+    bus = StarlineWeaver(BusHub(), [EchoAgent(), EchoAgent()])
     bus.run_matrix("what is water")
     compare = bus.cross_compare()
     assert compare == {
@@ -65,7 +65,7 @@ def test_matrix_cross_compare_counts_not_judges():
 
 
 def test_matrix_red_button_stops_remaining_agents():
-    bus = StarlineWeaver(BridgeHub(), [RedButtonAgent(after=1), EchoAgent()])
+    bus = StarlineWeaver(BusHub(), [RedButtonAgent(after=1), EchoAgent()])
     transcript = bus.run_matrix("halt check")
     assert transcript[-1]["content"].startswith("RED BUTTON")
     replies = [e for e in transcript if e["cycle"] == 1]

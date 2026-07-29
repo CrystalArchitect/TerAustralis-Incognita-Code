@@ -152,7 +152,7 @@ def matrix_demo() -> None:
     """Run the *real* Starline Weaver matrix mode, recorded onto a real RDP chain.
 
     Unlike `demo()` (synthetic decision contexts) this imports and drives the
-    actual `bridge` package — proof the wiring is real, not a mock.
+    actual `bus` package — proof the wiring is real, not a mock.
     The import is lazy (inside this function, with the repo root added to
     sys.path) so `rdp.run demo` never has to touch the bridge, and this
     subcommand works whether run from `crystal-core` or the repo root.
@@ -164,14 +164,14 @@ def matrix_demo() -> None:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
 
-    from bridge.agents import BridgeHub, EchoAgent, SevenSistersAgent, UnlabeledAgent
-    from bridge.bus import StarlineWeaver
+    from bus.agents import BusHub, EchoAgent, SevenSistersAgent, UnlabeledAgent
+    from bus.bus import StarlineWeaver
 
     from .adapters import record_matrix_result
 
     print("Starline Weaver matrix mode — witnessed by RDP\n")
 
-    bus = StarlineWeaver(BridgeHub(), [EchoAgent(), SevenSistersAgent(), UnlabeledAgent()])
+    bus = StarlineWeaver(BusHub(), [EchoAgent(), SevenSistersAgent(), UnlabeledAgent()])
     question = "what is the Starline Weaver?"
     transcript = bus.run_matrix(question)
     compare = bus.cross_compare()

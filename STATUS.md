@@ -13,21 +13,34 @@ CrystalCore.OS-the-Crystal-Architecture-Archive.
 Executes, or can be opened and used by someone other than me.
 
 - Crystal Core self-tests — all four suites pass on a fresh clone,
-  re-verified 2026-07-29 (Python 3.11): `bridge` 7/7, `services` 4/4,
+  re-verified 2026-07-29 (Python 3.11): `bus` 7/7, `services` 4/4,
   `rdp` 31/31, `consent_transport` 32/32 (the suite the old `starline`
   alias points at). `consent_transport` needs
   `pip install -r requirements-consenttransport.txt`; everything else
   is stdlib-only. One environment trap, not a code fault: a broken
   system `cryptography` build fails at import in a way that looks like
   a code failure — `pip install --ignore-installed cryptography`
-  clears it. The bus module is `bridge`, not `clementine.bridge`: the
-  name Clementine moved to the front-of-house interface, and the layer
-  it used to name is now described by what it does.
-- Companion core tests — 33/33 pass (`python -m pytest
+  clears it. The bus module is `bus` — the **CrystalBus** of canon
+  (`mythos/NAMES.md`), with `BusHub` as its validator/router. It was
+  briefly `bridge` after Clementine's name moved to the interface, which
+  collided with CrystalBridge, a different component; the module now
+  matches canon and the collision is gone.
+- Companion core tests — 47/47 pass (`python -m pytest
   vision/apps/clementine/tests`; needs `pytest`, `requests`, `flask`),
-  re-verified 2026-07-29. Previously recorded as 16/16 for `test_core`
-  alone; the count now includes `test_server_csrf`, which the CI step
-  was already running.
+  re-verified 2026-07-29: the original 33, plus 10 provider-dialect
+  tests (including the regression for `--llm-provider openai`, which
+  was advertised but had never worked — it sent Ollama-shaped JSON at
+  remote endpoints), plus 4 export/import round-trip tests.
+- Provider policy, verified by live smoke test: detection never selects
+  a remote — no Ollama and nothing configured means she stays local and
+  fails kindly, naming both fixes. Remote inference happens only when
+  configured (`--llm-provider` / `LLM_PROVIDER` / profile). Any
+  OpenAI-compatible endpoint works; `grok` survives as a legacy alias.
+- Memory export/import — `GET /api/export` downloads the whole
+  relationship as `clementine-memory-YYYY-MM-DD.json`; `POST
+  /api/import` restores it, rejecting non-bundles without touching
+  existing memory. Round-trip covered by tests; the same bundle format
+  is the contract for the public web build.
 - CrystalBridge self-test — 7/7 pass (`cd core && python -m
   crystalcore.selftest`; needs `pip install -r
   core/crystalcore/requirements-bridge.txt` for the `mcp` SDK), added
@@ -88,6 +101,19 @@ Code exists and is complete enough to run. No runtime here exercises it.
 - `core/node/mesh/` — in-process mesh stub, libp2p-shaped; no real
   networking.
 - `core/sdk/typescript/` — client SDK scaffold; no consumer wired up.
+- The **outbound gate** — "she travels light": a depersonalised question
+  leaves, nothing of the human does, every outbound question logged via
+  `rdp`. Specified (see the design brief), not implemented. Until it
+  exists, the honest locality claim deliberately stops at "the turn
+  travels to the model you chose."
+- An **emotion detection engine**. The umbrella's
+  `dbt/crystalcore_emotion_warehouse/` describes a full warehouse
+  ("real-time emotion detection", active learning, Bayesian
+  uncertainty, multimodal fusion) — that engine exists in **no**
+  repository, and this one deliberately does not classify the human's
+  emotions: the companion's prompt forbids monitoring, and the unwired
+  `sovereignty_scorer` carries the same precedent. Recorded here so the
+  warehouse spec reads as a design, not a description.
 
 ## Concept only
 Nothing in this repo sits at this tier; concepts live in the umbrella
@@ -104,8 +130,10 @@ code matches:
   packages were both literally named `crystalcore`, which had already
   produced one runtime bug, one `importlib` alias, and one explanatory
   comment in a test fixture. The companion class is `CrystalCore`.
-- **The bridge** — named for what it does. Formerly `clementine.bridge`;
-  now `bridge`, with `BridgeHub` in place of `ClementineHub`.
+- **The CrystalBus** — the communicator between models. Formerly
+  `clementine.bridge`, briefly `bridge` (which collided with
+  CrystalBridge); now `bus`, with `BusHub` in place of `ClementineHub`,
+  matching canon.
 - **Clementine** — the voice at the front, and the only place a persona
   name appears: `vision/apps/clementine/`.
 
@@ -130,7 +158,7 @@ Not renamed, deliberately:
   doing it here would turn CI red, which is the guard working as
   designed. The public `/lumina` route also needs a redirect rather than
   a rename, or existing links break.
-- `core/crystal-core/bridge/transcripts/` — records of runs that actually
+- `core/crystal-core/bus/transcripts/` — records of runs that actually
   happened, where the hub was called `clementine` at the time. Rewriting
   them would falsify a record, which is precisely what `rdp` exists to
   make impossible.
