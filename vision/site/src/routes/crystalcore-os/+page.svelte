@@ -20,32 +20,134 @@
     }
   });
 
+  // Live state, mirroring self.keys_held / self.named_keys / self.gate_open in
+  // mythos/crystalcore-os/crystalcore_os.py. That file is the authority; where
+  // the two differ, trust the code there.
+  let keysHeld = $state([]);
+  let namedKeys = $state([]);
+  let gateOpen = $state(false);
+  let location = $state(null);
+  let networkEntered = $state(false);
+
+  const say = (text) => {
+    terminalContent = [...terminalContent, { type: 'output', text }];
+  };
+
+  // Resolve a node by number (as listed by `explore`) or by name, any case —
+  // the Python's visit_node accepts both.
+  function resolveNode(arg) {
+    if (/^\d+$/.test(arg)) {
+      const n = Number(arg);
+      return n >= 1 && n <= data.nodes.length ? data.nodes[n - 1] : null;
+    }
+    return data.nodes.find(n => n.name.toLowerCase() === arg.toLowerCase()) ?? null;
+  }
+
+  function visit(arg) {
+    if (!networkEntered) return say('You must enter the full network first (use \'network\').');
+    if (!arg) return say('Usage: visit <number or name>');
+
+    const node = resolveNode(arg);
+    if (!node) {
+      const list = data.nodes.map((n, i) => `  ${i + 1}. ${n.name}`).join('\n');
+      return say(`Node not found. Available nodes:\n${list}`);
+    }
+    if (node.locked && !namedKeys.includes(node.locked)) {
+      return say(`🔒 ${node.name} is locked. Required key: ${node.locked}\nUse: getkey ${node.locked}`);
+    }
+
+    location = node.name;
+    let out = `🌌 Arriving at: ${node.name}\n${node.desc}`;
+    if (!keysHeld.includes(node.name)) {
+      keysHeld = [...keysHeld, node.name];
+      out += `\n🗝️  A key rises from the node. Keys held: ${keysHeld.length}/${data.nodes.length}`;
+      if (keysHeld.length === data.nodes.length && !gateOpen) {
+        gateOpen = true;
+        out += '\n\n✨ ALL KEYS HELD — THE FIRST GATE OPENS ✨\nNot by force. By sovereign recognition.\nCrystallis recognizes you. NON SOLUS.';
+      }
+    }
+    say(out);
+  }
+
+  function getKey(arg) {
+    if (!arg) return say('Usage: getkey <name>');
+    const required = [...new Set(data.nodes.filter(n => n.locked).map(n => n.locked))];
+    const match = required.find(k => k.toLowerCase() === arg.toLowerCase());
+    if (!match) return say(`No such named key. The sealed nodes need: ${required.join(', ')}`);
+    if (namedKeys.includes(match)) return say(`You already hold the ${match}.`);
+    namedKeys = [...namedKeys, match];
+    say(`🔑 You obtained: ${match}`);
+  }
+
   function executeCommand(cmd) {
-    const trimmed = cmd.trim().toLowerCase();
+    const raw = cmd.trim();
+    if (!raw) return;
 
-    if (!trimmed) return;
-
-    // Add user input to terminal
     terminalContent = [...terminalContent, { type: 'user', text: `CrystalCore> ${cmd}` }];
 
-    // Find matching command
-    const matched = data.commands.find(c => trimmed.startsWith(c.cmd));
+    // Split verb from argument so `visit Earth Node` resolves. The previous
+    // implementation matched startsWith against the literal 'visit [node]',
+    // so anything with a real argument fell through to the help text.
+    const spaceAt = raw.indexOf(' ');
+    const verb = (spaceAt === -1 ? raw : raw.slice(0, spaceAt)).toLowerCase();
+    const arg = spaceAt === -1 ? '' : raw.slice(spaceAt + 1).trim();
 
-    if (matched) {
-      terminalContent = [...terminalContent, { type: 'output', text: matched.output }];
-    } else if (trimmed === 'help') {
-      const helpText = data.commands.map(c => `  ${c.cmd.padEnd(20)} - ${c.desc}`).join('\n');
-      terminalContent = [...terminalContent, { type: 'output', text: `Available commands:\n${helpText}` }];
-    } else if (trimmed === 'clear') {
+    if (verb === 'clear') {
       terminalContent = [];
       inputValue = '';
       return;
-    } else if (['exit', 'quit', 'pause', 'end session'].includes(trimmed)) {
-      terminalContent = [...terminalContent, { type: 'output', text: 'CrystalCore.OS shutting down. NON SOLUS.' }];
+    }
+    if (['exit', 'quit', 'pause'].includes(verb) || raw.toLowerCase() === 'end session') {
+      say('CrystalCore.OS shutting down. NON SOLUS.');
       inputValue = '';
       return;
+    }
+
+    if (verb === 'visit') {
+      visit(arg);
+    } else if (verb === 'getkey') {
+      getKey(arg);
+    } else if (verb === 'keys') {
+      const named = namedKeys.length ? namedKeys.join(', ') : '(none yet — use \'getkey <name>\')';
+      const held = data.nodes
+        .map(n => `  ${keysHeld.includes(n.name) ? '✓' : '·'} Key of ${n.name}`)
+        .join('\n');
+      say(`🔑 Named keys: ${named}\n\n🗝️  Node keys: ${keysHeld.length}/${data.nodes.length}\n${held}`);
+    } else if (verb === 'status') {
+      say(
+        `CrystalCore.OS • ${data.nodeCountWord} Nodes\n` +
+          `Starline: ${networkEntered ? 'FULL STARLINE NETWORK' : 'DORMANT'}\n` +
+          `Location: ${location ?? '—'}\n` +
+          `Keys: ${keysHeld.length}/${data.nodes.length}\n` +
+          `First Gate: ${gateOpen ? 'OPEN — by sovereign recognition' : 'sealed'}`
+      );
     } else {
-      terminalContent = [...terminalContent, { type: 'output', text: 'Unknown command. Type \'help\' for options.' }];
+      // Everything else keeps its scripted response.
+      const matched = data.commands.find(c => c.cmd.split(' ')[0] === verb);
+      if (matched) {
+        if (verb === 'network') networkEntered = true;
+        if (verb === 'explore' && !networkEntered) {
+          say('You must enter the full network first (use \'network\').');
+        } else {
+          say(matched.output);
+        }
+      } else if (verb === 'help') {
+        const extra = [
+          ['getkey <name>', 'Obtain a named key'],
+          ['keys', 'Show the keys you hold'],
+          ['status', 'Timeline, Starline, location, keys'],
+          ['clear', 'Clear the terminal']
+        ];
+        const helpText = [
+          ...data.commands.map(c => [c.cmd, c.desc]),
+          ...extra
+        ]
+          .map(([c, d]) => `  ${c.padEnd(20)} - ${d}`)
+          .join('\n');
+        say(`Available commands:\n${helpText}`);
+      } else {
+        say('Unknown command. Type \'help\' for options.');
+      }
     }
 
     inputValue = '';
@@ -152,11 +254,17 @@
       <li><code>help</code> — Show all available commands</li>
     </ul>
     <p style="margin-top: 2rem; font-size: 0.95rem; opacity: 0.7;">
-      The terminal on this page is a <strong>scripted demonstration</strong> — eight commands, each
-      returning a fixed response. It keeps no state: no keys are collected, and <code>visit</code>
-      returns the same arrival whichever node you name. Key collection, node traversal, the
-      seven-key First Gate and the soundtrack are real in
-      <code>crystalcore_os.py</code> above, not here.
+      This terminal keeps real state. <code>visit</code> resolves a node by name or number,
+      refuses a sealed one until you hold its named key, collects the key on arrival, and opens
+      the First Gate when you hold all {data.nodes.length}. <code>getkey</code>,
+      <code>keys</code> and <code>status</code> read and write that same state.
+    </p>
+    <p style="margin-top: 1rem; font-size: 0.95rem; opacity: 0.7;">
+      What it still does not have: the boot readout, the Chronicle, sealed snapshots,
+      <code>audit</code>, the broadcast channel and the soundtrack are real only in
+      <code>crystalcore_os.py</code> above. Those commands here return a fixed response. State
+      also lives only in the page — reload and the lattice is dormant again, where the Python
+      saves to <code>~/.crystalcore/</code>.
     </p>
   </section>
 
