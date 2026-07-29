@@ -19,8 +19,11 @@ Then, in another terminal, start the web interface:
 """
 
 import argparse
+import json
 import pathlib
 import sys
+from dataclasses import asdict
+from datetime import datetime
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, request
@@ -143,6 +146,54 @@ def create_app(companion: CrystalCore) -> Flask:
         handle = ((request.get_json(silent=True) or {}).get("handle") or "").strip()
         forgotten = holder["c"].forget(handle)
         return jsonify({"ok": bool(forgotten), "forgotten": forgotten})
+
+    @app.get("/api/export")
+    def export_memory():
+        """The whole relationship as one downloadable file.
+
+        On iPhone this lands straight in the Files app — which is the plain-
+        file promise doing its job: the backup is a file the human can read,
+        carry, and import anywhere, not a vendor's blob. Bundles personality
+        and memory together so one file restores a whole companion.
+        """
+        c = holder["c"]
+        bundle = {
+            "format": "crystalcore-memory-bundle",
+            "version": 1,
+            "exported_at": datetime.now().isoformat(timespec="seconds"),
+            "config": asdict(c.personality),
+            "memory": asdict(c.memory),
+        }
+        resp = Response(json.dumps(bundle, indent=2),
+                        mimetype="application/json")
+        stamp = datetime.now().strftime("%Y-%m-%d")
+        resp.headers["Content-Disposition"] = (
+            f'attachment; filename="clementine-memory-{stamp}.json"')
+        return resp
+
+    @app.post("/api/import")
+    def import_memory():
+        """Restore from an exported bundle. Replaces the current profile's
+        memory — the UI confirms before calling this.
+
+        Deliberately writes the files and then calls load() rather than
+        constructing dataclasses here: load() is the tolerant path (unknown
+        fields ignored, corrupt files preserved under .corrupt-*), and a
+        bundle from a newer version deserves those same protections.
+        """
+        data = request.get_json(silent=True) or {}
+        if (data.get("format") != "crystalcore-memory-bundle"
+                or data.get("version") != 1):
+            return jsonify({"ok": False,
+                            "error": "not a Clementine memory bundle"}), 400
+        c = holder["c"]
+        c.memory_dir.mkdir(parents=True, exist_ok=True)
+        (c.memory_dir / "config.json").write_text(
+            json.dumps(data.get("config") or {}, indent=2))
+        (c.memory_dir / "memory.json").write_text(
+            json.dumps(data.get("memory") or {}, indent=2))
+        c.load()
+        return jsonify({"ok": True, "name": c.personality.name})
 
     @app.get("/api/profile")
     def profile_get():

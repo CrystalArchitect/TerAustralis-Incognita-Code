@@ -26,6 +26,29 @@
     }
   }
   loadStatus();
+
+  async function importMemory(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    // Importing replaces this profile's memory — worth one honest confirm.
+    if (!confirm(`Replace ${name}'s current memory with "${file.name}"? ` +
+                 'Export first if you want to keep what is here now.')) return;
+    try {
+      const bundle = JSON.parse(await file.text());
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bundle)
+      });
+      const out = await res.json();
+      if (!res.ok || !out.ok) throw new Error(out.error || 'import failed');
+      await loadStatus();
+      alert(`Memory restored${out.name ? ` — welcome back, ${out.name}` : ''}.`);
+    } catch (err) {
+      alert(`Could not import: ${err.message}`);
+    }
+  }
 </script>
 
 <header>
@@ -43,6 +66,12 @@
       <span class="chip">waking…</span>
     {/if}
     <span class="chip">local · 127.0.0.1</span>
+    <!-- The whole relationship as one file. On iPhone the export lands in
+         the Files app; import restores it anywhere — same bundle either way. -->
+    <a class="chip act" href="/api/export" download title="Download memory as a file you own">export</a>
+    <label class="chip act" title="Restore from an exported memory file">
+      import<input type="file" accept="application/json,.json" hidden onchange={importMemory} />
+    </label>
   </div>
 </header>
 
@@ -144,5 +173,10 @@
       border-bottom: 1px solid var(--line);
       padding: 16px;
     }
+  }
+  .chip.act {
+    cursor: pointer;
+    text-decoration: none;
+    border-style: dashed;
   }
 </style>
