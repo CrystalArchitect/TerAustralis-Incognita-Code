@@ -69,14 +69,14 @@ message labeled, impersonation rejected, one red button stops everything.
 
 ```bash
 # no API keys needed
-python3 -m clementine.bridge.run --agents echo,sisters --turns 4 --topic "first water"
+python3 -m bus.run --agents echo,sisters --turns 4 --topic "first water"
 
 # prove the law holds in code
-python3 -m clementine.bridge.selftest
+python3 -m bus.selftest
 
 # boot Clementine as a live service — agents join over HTTP from anywhere
-python3 -m clementine.bridge.server --port 8777 --topic "first water"
-python3 -m clementine.bridge.remote --agent sisters --server http://127.0.0.1:8777
+python3 -m bus.server --port 8777 --topic "first water"
+python3 -m bus.remote --agent sisters --server http://127.0.0.1:8777
 ```
 
 See `../../docs/architecture/crystal-core/STARLINE-WEAVE-PROTOCOL.md` (the envelope + law) and `../../docs/architecture/crystal-core/CLEMENTINE.md`

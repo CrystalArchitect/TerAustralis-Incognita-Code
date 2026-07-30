@@ -29,9 +29,9 @@ jobs:
       # repository red without this repository changing.
       - name: Canon mirror is faithful
         run: python3 .github/scripts/check-canon-mirror.py
-      - name: Bridge self-test
+      - name: CrystalBus self-test
         working-directory: core/crystal-core
-        run: python -m bridge.selftest
+        run: python -m bus.selftest
       - name: Pipeline self-test
         working-directory: core/crystal-core
         run: python -m services.selftest

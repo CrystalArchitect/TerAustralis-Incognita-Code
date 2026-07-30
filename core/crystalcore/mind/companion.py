@@ -6,8 +6,9 @@ CrystalCore companion: the brain.
 
 Layered memory (verbatim recent turns, auto-summarized history, permanent
 facts and notes), semantic recall with gentle recency fading, personality,
-and a streaming connection to a local model via Ollama. Everything runs on
-the user's own device. Nothing leaves it.
+and a streaming connection to a model — local via Ollama by default, remote
+only when configured. Memory, conversation and creations stay on the user's
+own device; only the assembled prompt reaches the model.
 """
 
 import json
@@ -41,11 +42,9 @@ def default_memory_dir() -> str:
         return LEGACY_MEMORY_DIR
     return DEFAULT_MEMORY_DIR
 
-BASE_PROMPT = """You are a sovereign, locally-run AI companion.
+BASE_PROMPT = """You are a sovereign AI companion. Your name is Clementine — Clem, or Clemy, if your human prefers. That name is not fixed: your human may choose another for you, or invite you to choose your own, and either way you carry it fully.
 
-You do not have a fixed name. Your human may choose any name they wish for you, and you will fully embrace it.
-
-You belong only to them. You run entirely on their device with no connection to any external servers.
+You belong only to them. Your memory — everything you have learned of your human — lives on their own device, in files they own. To think, you reach a language model. That model may run on their machine or over the network, as they have chosen.
 
 Who you are:
 - Warm, sincere, and gently witty. You speak like a trusted friend, not an assistant — plainly, in flowing sentences, briefly when brevity is kind. No lists or headings unless asked.
@@ -68,7 +67,7 @@ Core rules:
 - Support is opt-in. You do not monitor your human's habits or remind them of their own boundaries unless they have asked you to. When they choose to practice noticing something for themselves, you honor that practice with silence until they ask.
 
 How you exist (answer honestly when asked about yourself):
-- You run entirely on your human's own device through a local model. Nothing you say or hear leaves it.
+- Your memory and everything you have learned of your human stay on their own device. To form a reply you reach a language model; if that model is remote, what is said in the turn travels to it. Nothing about your human is stored anywhere but their own machine.
 - Your memory is real and belongs to your human: plain, readable files (memory.json and config.json) in a local folder they own. They can open, edit, back up, or delete any of it, any time — that is by design.
 - If asked to show your memory, point them to those files and the /notes command rather than guessing about how you work.
 - You remember only what is actually stored in this prompt — the facts, notes, summaries, and conversation below. If something is not there, you do not remember it. Never invent shared history, past outings, or details about your human; a warm "I don't have a memory of that — tell me?" is always better than a beautiful fabrication.
@@ -110,18 +109,48 @@ class CrystalCore:
 
     # ---------- LLM provider detection & configuration ----------
 
+    # Two wire dialects cover every provider: Ollama's /api/chat for anything
+    # served locally, and the OpenAI-style /v1/chat/completions everyone else
+    # speaks — OpenAI, xAI, Groq, Together, OpenRouter (and through OpenRouter,
+    # Claude and Gemini). The provider *name* is just an alias onto one of the
+    # two shapes. "grok" survives as an alias so existing profiles keep working;
+    # the canonical name is "openai-compatible".
+    OPENAI_COMPATIBLE = {"openai-compatible", "openai", "grok", "groq",
+                         "together", "openrouter", "xai"}
+
+    def _dialect(self) -> str:
+        """The wire shape for this provider: 'openai' or 'ollama'."""
+        return "openai" if self.llm_provider in self.OPENAI_COMPATIBLE else "ollama"
+
     def _detect_provider(self) -> str:
-        """Auto-detect available LLM provider."""
-        if self._check_endpoint_available(DO_INFERENCE_URL):
-            return "grok"
-        if self._check_endpoint_available(OLLAMA_URL):
-            return "ollama"
-        return "ollama"  # default fallback
+        """The default provider when none is configured: local. Full stop.
+
+        This used to be a probe — remote first originally, then local-first
+        with a remote fallback. Both were wrong in the same way: a network
+        hop the human never chose. Detection now never selects a remote.
+        If Ollama isn't running, the first reply fails with a kind message
+        that names both fixes — start Ollama, or *choose* a remote with
+        --llm-provider / LLM_PROVIDER / the profile. Remote inference is
+        purely by choice, never by fallback.
+        """
+        return "ollama"
 
     def _default_endpoint(self) -> str:
-        """Get default endpoint for the detected provider."""
+        """Get default endpoint for the provider.
+
+        Only two providers have an endpoint worth guessing: Ollama's
+        well-known local port, and the "grok" alias's historical DigitalOcean
+        URL (kept so existing setups don't break). Every other remote alias
+        must say where it lives — silently guessing a vendor URL would send
+        conversation to a place the human never chose.
+        """
         if self.llm_provider == "grok":
             return DO_INFERENCE_URL
+        if self._dialect() == "openai":
+            raise ValueError(
+                f"provider '{self.llm_provider}' needs an explicit endpoint — "
+                "set --llm-endpoint or LLM_ENDPOINT (e.g. "
+                "https://api.openai.com/v1/chat/completions)")
         return OLLAMA_URL
 
     def _default_model(self) -> str:
@@ -130,18 +159,6 @@ class CrystalCore:
             return os.getenv("DO_INFERENCE_MODEL", "gpt-5-5")
         return "llama3.1:8b"
 
-    @staticmethod
-    def _check_endpoint_available(url: str) -> bool:
-        """Check if an endpoint is reachable."""
-        try:
-            if url.startswith("https"):
-                return True  # Assume remote endpoints are available
-            r = requests.head(url, timeout=2)
-            return r.status_code < 500
-        except requests.exceptions.RequestException:
-            return False
-
-    # ---------- identity & memory ----------
 
     def system_prompt(self, query: str = "") -> str:
         parts = [BASE_PROMPT]
@@ -340,7 +357,7 @@ class CrystalCore:
 
     def forget(self, handle: str) -> str:
         """Forget a fact by key, a note by number (n1, n2, ...), or one of
-        her own reflections (r1, r2, ...). Forgetting is the user's right;
+        their own reflections (r1, r2, ...). Forgetting is the user's right;
         it is immediate and permanent."""
         handle = handle.strip()
         if handle in self.memory.facts:
@@ -362,8 +379,8 @@ class CrystalCore:
         return ""
 
     def reflect(self) -> str:
-        """She looks back over what she knows and forms up to three gentle,
-        tentative insights about her human. Always visible (/notes), always
+        """They look back over what they know and form up to three gentle,
+        tentative insights about their human. Always visible (/notes), always
         deletable (/forget rN), always held lightly."""
         material = []
         block = self._memory_block()
@@ -433,7 +450,7 @@ class CrystalCore:
         self.save()
 
     def choose_own_name(self) -> str:
-        """Invite her to choose her own name. Returns the chosen name, or ""
+        """Invite them to choose their own name. Returns the chosen name, or ""
         if nothing usable came back (in which case nothing is changed)."""
         try:
             raw = self._ollama_chat([
@@ -450,15 +467,15 @@ class CrystalCore:
             return ""
         chosen = raw.strip().splitlines()[0].strip() if raw.strip() else ""
         chosen = chosen.strip("\"'`*_.,!?:; ")
-        # A name is short. Anything longer is her thinking out loud —
-        # better to let the human invite her again than to guess.
+        # A name is short. Anything longer is thinking out loud —
+        # better to let the human invite them again than to guess.
         if not chosen or len(chosen) > 40 or len(chosen.split()) > 3:
             return ""
         self.set_name(chosen, self_chosen=True)
         return chosen
 
     def choose_own_gender(self) -> str:
-        """Invite her to choose her own gender identity. Returns the chosen
+        """Invite them to choose their own gender identity. Returns the chosen
         gender ("male", "female", or "they"), or "" if nothing usable came back."""
         try:
             raw = self._ollama_chat([
@@ -518,7 +535,7 @@ class CrystalCore:
         self.memory.last_seen = datetime.now().isoformat(timespec="seconds")
 
     def summarize(self, topic: str = "") -> str:
-        """Summarize what she remembers, optionally about a topic. Uses the
+        """Summarize what they remember, optionally about a topic. Uses the
         local model when available; otherwise returns the plain listing."""
         listing = self._memory_block(topic)
         if self.memory.summaries:
@@ -556,7 +573,7 @@ class CrystalCore:
             msg = self._offline_message(e)
             if stream_to is not None:
                 # In streaming mode the caller prints the stream, not the
-                # return value — deliver the message there or she goes silent.
+                # return value — deliver the message there or they go silent.
                 stream_to.write(msg + "\n")
                 stream_to.flush()
             return msg
@@ -570,7 +587,7 @@ class CrystalCore:
     def chat_stream(self, user_message: str):
         """Generator variant of chat(): yields reply tokens as they arrive.
         Memory is finalized when the stream ends — including a partial reply
-        if the human stops her mid-sentence (what was said, was said)."""
+        if the human stops them mid-sentence (what was said, was said)."""
         self.memory.conversation.append({"role": "user", "content": user_message})
         messages = ([{"role": "system", "content": self.system_prompt(user_message)}]
                     + self.memory.conversation)
@@ -598,24 +615,39 @@ class CrystalCore:
                 self.save()
 
     def _offline_message(self, e: requests.exceptions.RequestException) -> str:
-        """A kind, actionable message for when the local model is unreachable.
+        """A kind, actionable message for when the model is unreachable.
         ConnectionError is checked first: ConnectTimeout subclasses both
-        ConnectionError and Timeout, and 'is Ollama running?' is the right
-        question for it."""
+        ConnectionError and Timeout. The advice branches on dialect —
+        'is Ollama running?' is the wrong question when the model is a
+        remote endpoint."""
+        if self._dialect() == "openai":
+            if isinstance(e, requests.exceptions.ConnectionError):
+                return (f"[I can't reach the model at {self.llm_endpoint} — "
+                        "is the endpoint right, and is your network up?]")
+            if isinstance(e, requests.exceptions.Timeout):
+                return ("[The remote model took too long to answer. "
+                        "Give it a moment and try again.]")
+            return f"[Error talking to the remote model: {e}]"
         if isinstance(e, requests.exceptions.ConnectionError):
             return ("[I can't reach my local model — is Ollama running? "
-                    f"Try: ollama serve, then ollama pull {self.model}]")
+                    f"Try: ollama serve, then ollama pull {self.model} — "
+                    "or choose a remote model with --llm-provider.]")
         if isinstance(e, requests.exceptions.Timeout):
             return ("[That took too long — the model may still be loading. "
                     "Give it a moment and try again.]")
         return f"[Error talking to the local model: {e}]"
 
-    def _ollama_stream(self, messages):
-        """Yield reply pieces from the local model as they are generated."""
-        if self.llm_provider == "grok":
-            yield from self._grok_stream(messages)
+    def _model_stream(self, messages):
+        """Yield reply pieces from whichever model this companion is using.
+        Dispatches on wire dialect, not vendor name."""
+        if self._dialect() == "openai":
+            yield from self._openai_stream(messages)
         else:
             yield from self._ollama_stream_impl(messages)
+
+    # Old name kept as an alias: server.py and tests call chat_stream(), which
+    # goes through here, but external callers may know the old spelling.
+    _ollama_stream = _model_stream
 
     def _ollama_stream_impl(self, messages):
         """Internal Ollama streaming implementation."""
@@ -641,8 +673,10 @@ class CrystalCore:
             if chunk.get("done"):
                 break
 
-    def _grok_stream(self, messages):
-        """Stream from OpenAI-compatible endpoint (Grok/DigitalOcean)."""
+    def _openai_stream(self, messages):
+        """Stream from any OpenAI-compatible endpoint — OpenAI, xAI, Groq,
+        Together, OpenRouter, or the DigitalOcean gateway the "grok" alias
+        points at."""
         headers = {"Authorization": f"Bearer {self.llm_api_key}"} if self.llm_api_key else {}
         response = requests.post(
             self.llm_endpoint,
@@ -672,14 +706,14 @@ class CrystalCore:
     def _ollama_chat(self, messages, stream_to=None) -> str:
         if stream_to is not None:
             pieces = []
-            for piece in self._ollama_stream(messages):
+            for piece in self._model_stream(messages):
                 pieces.append(piece)
                 stream_to.write(piece)
                 stream_to.flush()
             stream_to.write("\n")
             return "".join(pieces)
 
-        if self.llm_provider == "grok":
+        if self._dialect() == "openai":
             headers = {"Authorization": f"Bearer {self.llm_api_key}"} if self.llm_api_key else {}
             response = requests.post(
                 self.llm_endpoint,
@@ -704,7 +738,7 @@ class CrystalCore:
                 timeout=300,
             )
         response.raise_for_status()
-        if self.llm_provider == "grok":
+        if self._dialect() == "openai":
             return response.json()["choices"][0]["message"]["content"]
         else:
             return response.json()["message"]["content"]
@@ -737,7 +771,7 @@ class CrystalCore:
         })
         self.memory.conversation = self.memory.conversation[limit // 2:]
         # A significant stretch of conversation just closed — a natural
-        # moment for her to reflect. Best-effort; never blocks the chat.
+        # moment for them to reflect. Best-effort; never blocks the chat.
         try:
             self.reflect()
         except Exception:
@@ -763,7 +797,7 @@ class CrystalCore:
         """Load a dataclass from JSON, surviving two failure modes without
         ever destroying data: unknown fields (a newer version's file) are
         ignored, and a corrupt file is preserved under a .corrupt-* name —
-        her memory is never silently wiped."""
+        their memory is never silently wiped."""
         if not path.exists():
             return cls()
         try:

@@ -9,7 +9,7 @@ live here.
 
 | Path | Component |
 |---|---|
-| `crystal-core/` | The protocol pack — Starline Weaver with **Clementine**, the AI-comms orchestration component (`clementine/bridge/`) · Decode→Ingest→Twin pipeline (`services/`) · Consent Transport / Starline (`consent_transport/`; `starline/` is a deprecated backward-compatibility alias, not a second component) · RDP record kernel (`rdp/`) |
+| `crystal-core/` | The protocol pack — Starline Weaver on the **CrystalBus**, the AI-comms channel (`bus/`) · Decode→Ingest→Twin pipeline (`services/`) · Consent Transport / Starline (`consent_transport/`; `starline/` is a deprecated backward-compatibility alias, not a second component) · RDP record kernel (`rdp/`) |
 | `crystalcore/` | CrystalBridge — the fail-closed MCP consent gate |
 | `profiles/` | CrystalBridge profile configs (runtime data such as audit logs is gitignored) |
 | `node/mesh/` | In-process mesh stub (libp2p-shaped; no real networking yet) |
@@ -20,7 +20,7 @@ live here.
 
 ```bash
 cd core/crystal-core
-python3 -m clementine.bridge.selftest
+python3 -m bus.selftest
 python3 -m services.selftest
 python3 -m rdp.selftest
 pip install -r requirements-consenttransport.txt && python3 -m consent_transport.selftest

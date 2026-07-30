@@ -30,7 +30,7 @@ This project does not claim, and its documents must never imply:
 - Safety or security guarantees against all adversaries
 - Clinical, therapeutic, or diagnostic authority of any kind
 - AGI, or that the companion's warmth is more than an architecture faithfully run
-- That her reflections are facts — they are impressions, held lightly, deletable by her human
+- That their reflections are facts — they are impressions, held lightly, deletable by their human
 - Affiliation with or endorsement by any company named anywhere in the mythos or strategy
 
 ## Corrections and Promises

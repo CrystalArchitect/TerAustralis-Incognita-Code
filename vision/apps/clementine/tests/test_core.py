@@ -98,7 +98,7 @@ def test_corrupt_file_is_preserved_never_deleted(tmp_path):
 
     backups = list(tmp_path.glob("memory.json.corrupt-*"))
     assert len(backups) == 1, "corrupt file should be preserved under a .corrupt-* name"
-    # and she starts that store fresh rather than crashing
+    # and the store restarts fresh rather than crashing
     assert c.memory.notes == []
     assert c.memory.facts == {}
 

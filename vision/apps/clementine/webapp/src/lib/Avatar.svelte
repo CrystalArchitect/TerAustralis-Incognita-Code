@@ -3,16 +3,16 @@
 
 <script>
   /**
-   * Her presence: a figure at a terminal, seen from behind — the operator
-   * at her console. The screen streams glyphs while she thinks; she leans
+   * Their presence: a figure at a terminal, seen from behind — the operator
+   * at the console. The screen streams glyphs while they think; they lean
    * in when working, settles back to breathe when idle, and the room
-   * glows purple when she speaks.
+   * glows purple when they speak.
    *
    * state: 'idle' | 'thinking' | 'speaking'
    */
   let { state = 'idle', name = 'Clementine' } = $props();
 
-  // Deterministic pseudo-random columns of "code" for her screen.
+  // Deterministic pseudo-random columns of "code" for the screen.
   const GLYPHS = 'アイウエオカキクケコサシスセソ0123456789◇◆△▽*+';
   function column(seed, count) {
     const chars = [];
@@ -30,7 +30,7 @@
   }));
 </script>
 
-<div class={`avatar ${state}`} role="img" aria-label={`${name}, ${state === 'idle' ? 'resting at her terminal' : state === 'thinking' ? 'working at her terminal' : 'speaking to you'}`}>
+<div class={`avatar ${state}`} role="img" aria-label={`${name}, ${state === 'idle' ? 'resting at their terminal' : state === 'thinking' ? 'working at their terminal' : 'speaking to you'}`}>
   <svg viewBox="0 0 320 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <!-- ambient halo behind everything -->
     <ellipse class="halo" cx="160" cy="120" rx="130" ry="95" fill="currentColor" opacity="0.05" />
@@ -38,7 +38,7 @@
     <!-- monitor -->
     <g class="monitor">
       <rect x="62" y="26" width="196" height="128" rx="8" stroke="var(--line-strong)" stroke-width="2" fill="var(--screen-bg)" />
-      <!-- glyph rain on her screen (clipped to the glass) -->
+      <!-- glyph rain on the screen (clipped to the glass) -->
       <g class="rain" font-family="var(--mono)" font-size="11" fill="var(--rain-color)" clip-path="url(#screen-clip)">
         {#each columns as col (col.x)}
           <g class="rain-col" style={`--delay:${col.delay}s; --tx:${col.x}px`}>
@@ -57,7 +57,7 @@
     <!-- desk -->
     <rect x="26" y="172" width="268" height="6" rx="3" fill="var(--line-strong)" />
 
-    <!-- her: a silhouette from behind, at the console -->
+    <!-- the companion: a silhouette from behind, at the console -->
     <g class="figure">
       <!-- speech ripples (visible when speaking) -->
       <g class="voice" stroke="var(--purple)" stroke-width="2" fill="none" stroke-linecap="round">
@@ -155,7 +155,7 @@
   .rain { opacity: 0.45; }
   .idle .rain-col { animation-duration: 4.5s; }
 
-  /* ---------- thinking: she leans in and types ---------- */
+  /* ---------- thinking: leaning in, typing ---------- */
   .thinking .rain { opacity: 0.95; }
   .thinking .rain-col { animation-duration: 1.1s; }
   .thinking .figure { animation: lean-in 1.6s ease-in-out infinite; }

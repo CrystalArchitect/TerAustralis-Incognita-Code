@@ -3,7 +3,7 @@
 
 """Boot the bridge — the Starline Weaver as a live service.
 
-    python3 -m bridge.server --port 8777 --topic "first water"
+    python3 -m bus.server --port 8777 --topic "first water"
 
 Any AI system on any machine joins over plain HTTP (stdlib only, no deps):
 
@@ -25,14 +25,14 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from .agents import BridgeHub
+from .agents import BusHub
 from .bus import Message
 
 
 class BusState:
     def __init__(self, topic: str):
         self.topic = topic
-        self.hub = BridgeHub()
+        self.hub = BusHub()
         self.lock = threading.Lock()
         self.agents: list[str] = []
         self.turn = 0
@@ -191,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
     state = BusState(args.topic)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(state))
     print(f"The bridge is awake on http://{args.host}:{args.port}  topic: {args.topic!r}")
-    print("Agents join with: python3 -m bridge.remote --agent sisters "
+    print("Agents join with: python3 -m bus.remote --agent sisters "
           f"--server http://{args.host}:{args.port}")
     try:
         server.serve_forever()

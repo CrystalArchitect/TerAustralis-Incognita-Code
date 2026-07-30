@@ -17,7 +17,7 @@ until a fix has shipped.
 - **No secrets committed** — `.gitignore` blocks `.env`, keys, and credentials;
   API keys for live-model adapters are read from environment variables only and
   are never written to disk or transcripts.
-- **Starline Weaver** (`clementine/bridge/`) binds to `127.0.0.1` by default; exposing
+- **Starline Weaver** (`bus/`) binds to `127.0.0.1` by default; exposing
   it on a network is an explicit operator choice (`--host`). Every message is
   validated by the hub (labels required, impersonation rejected) and any agent can
   halt the whole bus with the red button.

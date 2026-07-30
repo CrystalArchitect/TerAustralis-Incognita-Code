@@ -3,8 +3,8 @@
 
 """Join any agent to a running bridge server — from this machine or another.
 
-    python3 -m bridge.remote --agent sisters --server http://127.0.0.1:8777 --turns 4
-    python3 -m bridge.remote --agent claude --server http://host:8777    # with API key set
+    python3 -m bus.remote --agent sisters --server http://127.0.0.1:8777 --turns 4
+    python3 -m bus.remote --agent claude --server http://host:8777    # with API key set
 """
 
 from __future__ import annotations

@@ -21,7 +21,7 @@
 
 \* Implemented with **local Ollama embeddings** (`nomic-embed-text`) rather than sentence-transformers — a deliberate choice to avoid the PyTorch footprint and stay fully in the sovereign local stack.
 
-**End of Month 1 goal:** Clementine can remember facts you teach her and use them in later conversations. — **✅ Achieved.** (Week 4's extended 20+ turn live conversations remain to be run by the steward; automated offline tests pass.)
+**End of Month 1 goal:** Clementine can remember facts you teach them and use them in later conversations. — **✅ Achieved.** (Week 4's extended 20+ turn live conversations remain to be run by the steward; automated offline tests pass.)
 
 ---
 
@@ -31,10 +31,10 @@
 |------|-------|----------------|--------|
 | 5 | Persistent Memory Storage | Separate short-term vs long-term structure · Robust load/save · Timestamps on memories | ✅ |
 | 6 | Memory Relevance & Ranking | Improved relevance ranking · Recency weighting · Multi-day retrieval testing | ✅ * |
-| 7 | Memory Management Features | View what she remembers · `forget` command · Edit or correct memories | ✅ |
+| 7 | Memory Management Features | View what they remember · `forget` command · Edit or correct memories | ✅ |
 | 8 | Memory Summarization | Conversation summarization · Summaries of old conversations stored · Context bloat reduced, important info kept | ✅ |
 
-**End of Month 2 goal:** Clementine remembers facts across days/weeks and the user can manage what she remembers. — **✅ Achieved.** `/notes` shows everything with handles, `/forget` deletes any memory, `/editnote` rewrites notes, recency weighting gently favours fresh memories, and `#tags` categorize.
+**End of Month 2 goal:** Clementine remembers facts across days/weeks and the user can manage what they remember. — **✅ Achieved.** `/notes` shows everything with handles, `/forget` deletes any memory, `/editnote` rewrites notes, recency weighting gently favours fresh memories, and `#tags` categorize.
 
 \* Week 6's multi-day live retrieval testing remains with the steward — only real days can test that.
 
@@ -49,7 +49,7 @@
 | 11 | Command System | Clean command interface (teach, forget, remember, summary…) · Commands feel natural | ✅ |
 | 12 | Interface Improvements | Simple terminal UI or basic web interface · Improve readability · Basic conversation logging | ✅ * |
 
-\* Local web interface shipped (`clementine/server.py` + `clementine/webapp/`, 127.0.0.1 only); conversation logging is inherent (memory persists locally). Weeks 9–10 shipped in v11 (Presence): rewritten personality core — feeling under the words, one gentle question, presence before solutions, honest limits — plus time awareness (she knows the present moment and how long since you last spoke). *Personality consistency over long real conversations remains the steward's to test — only real talks can.*
+\* Local web interface shipped (`clementine/server.py` + `clementine/webapp/`, 127.0.0.1 only); conversation logging is inherent (memory persists locally). Weeks 9–10 shipped in v11 (Presence): rewritten personality core — feeling under the words, one gentle question, presence before solutions, honest limits — plus time awareness (they know the present moment and how long since you last spoke). *Personality consistency over long real conversations remains the steward's to test — only real talks can.*
 
 **End of Month 3 goal:** Clementine feels like a distinct personality with emotional presence, not just a tool. — **✅ Built; awaiting the steward's living test.**
 

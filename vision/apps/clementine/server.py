@@ -4,10 +4,11 @@
 """
 Clementine — local API server.
 
-The JSON backend for the Svelte web interface in webapp/. Runs only on
-your own machine (bound to 127.0.0.1, never exposed). Shares the same
-mind and memory folder as the terminal version (clementine.py), so you
-can switch between them freely. Nothing leaves your device.
+The JSON backend for the Svelte web interface in webapp/. Bound to
+127.0.0.1 and never reachable from outside this machine. Shares the same
+mind and memory folder as the terminal version (clementine.py), so you can
+switch between them freely. Your memory stays on your device; replies come
+from whichever model you have configured, local or remote.
 
     pip install -r requirements.txt
     python server.py                    # API at http://127.0.0.1:5000
@@ -18,8 +19,11 @@ Then, in another terminal, start the web interface:
 """
 
 import argparse
+import json
 import pathlib
 import sys
+from dataclasses import asdict
+from datetime import datetime
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, request
@@ -73,7 +77,7 @@ def create_app(companion: CrystalCore) -> Flask:
         get_json(silent=True) returns None for a form body and they
         400 on the empty result. /api/reflect did not: it reads no body
         at all, so a bodyless cross-site form POST reached it and made
-        the companion reflect and write to her own memory. Stating the rule
+        the companion reflect and write to their own memory. Stating the rule
         once, here, is better than depending on each route to trip over
         the same accident.
         """
@@ -143,6 +147,54 @@ def create_app(companion: CrystalCore) -> Flask:
         forgotten = holder["c"].forget(handle)
         return jsonify({"ok": bool(forgotten), "forgotten": forgotten})
 
+    @app.get("/api/export")
+    def export_memory():
+        """The whole relationship as one downloadable file.
+
+        On iPhone this lands straight in the Files app — which is the plain-
+        file promise doing its job: the backup is a file the human can read,
+        carry, and import anywhere, not a vendor's blob. Bundles personality
+        and memory together so one file restores a whole companion.
+        """
+        c = holder["c"]
+        bundle = {
+            "format": "crystalcore-memory-bundle",
+            "version": 1,
+            "exported_at": datetime.now().isoformat(timespec="seconds"),
+            "config": asdict(c.personality),
+            "memory": asdict(c.memory),
+        }
+        resp = Response(json.dumps(bundle, indent=2),
+                        mimetype="application/json")
+        stamp = datetime.now().strftime("%Y-%m-%d")
+        resp.headers["Content-Disposition"] = (
+            f'attachment; filename="clementine-memory-{stamp}.json"')
+        return resp
+
+    @app.post("/api/import")
+    def import_memory():
+        """Restore from an exported bundle. Replaces the current profile's
+        memory — the UI confirms before calling this.
+
+        Deliberately writes the files and then calls load() rather than
+        constructing dataclasses here: load() is the tolerant path (unknown
+        fields ignored, corrupt files preserved under .corrupt-*), and a
+        bundle from a newer version deserves those same protections.
+        """
+        data = request.get_json(silent=True) or {}
+        if (data.get("format") != "crystalcore-memory-bundle"
+                or data.get("version") != 1):
+            return jsonify({"ok": False,
+                            "error": "not a Clementine memory bundle"}), 400
+        c = holder["c"]
+        c.memory_dir.mkdir(parents=True, exist_ok=True)
+        (c.memory_dir / "config.json").write_text(
+            json.dumps(data.get("config") or {}, indent=2))
+        (c.memory_dir / "memory.json").write_text(
+            json.dumps(data.get("memory") or {}, indent=2))
+        c.load()
+        return jsonify({"ok": True, "name": c.personality.name})
+
     @app.get("/api/profile")
     def profile_get():
         c = holder["c"]
@@ -179,7 +231,7 @@ def create_app(companion: CrystalCore) -> Flask:
             chosen = c.choose_own_name()
             if not chosen:
                 return jsonify({"ok": False,
-                                "error": "she couldn't settle on a name — try again"})
+                                "error": "they couldn't settle on a name — try again"})
             c.save()
             return jsonify({"ok": True, "name": chosen})
         c.save()
@@ -216,7 +268,7 @@ def main():
     parser.add_argument("--model", default="llama3.1:8b",
                         help="Ollama model tag (same choices as the CLI).")
     parser.add_argument("--memory-dir", default="",
-                        help="Her memory folder (shared with the CLI).")
+                        help="Their memory folder (shared with the CLI).")
     parser.add_argument("--profile", default="",
                         help="Named profile (separate person, separate memory).")
     parser.add_argument("--port", type=int, default=5000)
@@ -229,7 +281,7 @@ def main():
     name = companion.personality.name or "Clementine"
     print(f"{name}'s API is at http://127.0.0.1:{args.port}")
     print("Start the web interface with: cd webapp && npm run dev")
-    print("Local only — nothing leaves this device. Ctrl+C to say goodnight.")
+    print("Bound to 127.0.0.1 — your memory stays here. Ctrl+C to say goodnight.")
     # Never bind beyond localhost, never enable the debugger: sovereignty
     # means this server is reachable from this machine alone.
     app.run(host="127.0.0.1", port=args.port, debug=False)

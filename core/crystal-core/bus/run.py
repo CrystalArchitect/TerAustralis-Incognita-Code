@@ -3,12 +3,12 @@
 
 """Run a conversation on the Starline Weaver.
 
-    python3 -m bridge.run --agents echo,sisters --turns 4 --topic "first water"
-    python3 -m bridge.run --agents claude,grok --turns 3 --topic "water care"  # needs API keys
+    python3 -m bus.run --agents echo,sisters --turns 4 --topic "first water"
+    python3 -m bus.run --agents claude,grok --turns 3 --topic "water care"  # needs API keys
 
 Or fan one question out to every agent independently and cross-compare:
 
-    python3 -m bridge.run --mode matrix --agents claude,gpt,grok --topic "what is the Starline Weaver?"
+    python3 -m bus.run --mode matrix --agents claude,gpt,grok --topic "what is the Starline Weaver?"
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import argparse
 from pathlib import Path
 
 from .adapters import AnthropicAdapter, OpenAIAdapter, XAIAdapter
-from .agents import BridgeHub, EchoAgent, RedButtonAgent, SevenSistersAgent, UnlabeledAgent
+from .agents import BusHub, EchoAgent, RedButtonAgent, SevenSistersAgent, UnlabeledAgent
 from .bus import StarlineWeaver
 
 REGISTRY = {
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--turns", type=int, default=4, help="conversation mode only")
     parser.add_argument("--topic", default="first water", help="topic (conversation) or question (matrix)")
     parser.add_argument("--out", default="",
-                        help="transcript path (default: bridge/transcripts/<slug>.md)")
+                        help="transcript path (default: bus/transcripts/<slug>.md)")
     args = parser.parse_args(argv)
 
     try:
@@ -49,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
     except KeyError as bad:
         parser.error(f"unknown agent {bad}; choose from: {', '.join(REGISTRY)}")
 
-    hub = BridgeHub()
+    hub = BusHub()
     bus = StarlineWeaver(hub, agents)
     matrix = args.mode == "matrix"
     transcript = bus.run_matrix(args.topic) if matrix else bus.run(args.topic, args.turns)
