@@ -201,17 +201,26 @@ class CrystalCore:
                 "your human corrects one, let it go gracefully:\n" + insights)
         return "\n\n".join(parts)
 
-    def _memory_block(self, query: str = "") -> str:
+    def _memory_block(self, query: str = "", visible: set | None = None) -> str:
         """Render facts and notes for the prompt. When there are only a few,
         show them all (grouped). When memory grows large, recall the most
         relevant ones by meaning using local embeddings — no data leaves the
         device, and if the embedding model isn't available it simply falls
-        back to showing everything."""
+        back to showing everything.
+
+        `visible` scopes the store to those visibility classes before
+        anything else runs — including semantic ranking, so out-of-scope
+        memories can't shape even the candidate set. None (the human's own
+        view) means no filter. Entries without a visibility field are
+        `private`: everything remembered before scoping existed stays
+        guest-invisible until deliberately shared."""
         # #tags in the query filter candidates before semantic ranking,
         # e.g. "what do you remember? #family" or /summary #family
         query, qtags = self._split_tags(query)
 
         def keep(store):
+            if visible is not None and store.get("visibility", "private") not in visible:
+                return False
             return not qtags or set(qtags) & set(store.get("tags") or [])
 
         fact_items = [(self._display(f"{k}: {v['value']}", v), v)
@@ -332,24 +341,27 @@ class CrystalCore:
             return "they/them"
         return ""
 
-    def remember(self, text: str):
-        """Explicitly store something important, permanently."""
+    def remember(self, text: str, visibility: str = "private"):
+        """Explicitly store something important, permanently. Private unless
+        the caller says otherwise; the bridge passes a guest's write class."""
         text, tags = self._split_tags(text)
         self.memory.notes.append({
             "text": text,
             "tags": tags,
+            "visibility": visibility,
             "when": datetime.now().isoformat(timespec="seconds"),
             "embedding": self._embed(text),  # best-effort; None if offline
         })
         self.save()
 
-    def remember_fact(self, key: str, value: str):
+    def remember_fact(self, key: str, value: str, visibility: str = "private"):
         """Store a structured long-term fact; a new value updates the old one."""
         key = key.strip()
         value, tags = self._split_tags(value)
         self.memory.facts[key] = {
             "value": value,
             "tags": tags,
+            "visibility": visibility,
             "updated": datetime.now().isoformat(timespec="seconds"),
             "embedding": self._embed(value),  # best-effort; None if offline
         }

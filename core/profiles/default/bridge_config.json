@@ -5,19 +5,63 @@
   "guests": {
     "claude": {
       "approved": true,
-      "tools": ["status", "recall", "teach", "message"]
+      "tools": [
+        "status",
+        "recall",
+        "teach",
+        "message"
+      ],
+      "read_scope": [
+        "shared"
+      ],
+      "write_scope": [
+        "shared"
+      ],
+      "token_hash": ""
     },
     "grok": {
       "approved": true,
-      "tools": ["status", "recall", "teach", "message"]
+      "tools": [
+        "status",
+        "recall",
+        "teach",
+        "message"
+      ],
+      "read_scope": [
+        "shared"
+      ],
+      "write_scope": [
+        "shared"
+      ],
+      "token_hash": ""
     },
     "cursor": {
       "approved": true,
-      "tools": ["status", "recall", "teach", "message"]
+      "tools": [
+        "status",
+        "recall",
+        "teach",
+        "message"
+      ],
+      "read_scope": [
+        "shared"
+      ],
+      "write_scope": [
+        "shared"
+      ],
+      "token_hash": ""
     },
     "restricted": {
       "approved": true,
-      "tools": ["status", "recall"]
+      "tools": [
+        "status",
+        "recall"
+      ],
+      "read_scope": [
+        "shared"
+      ],
+      "write_scope": [],
+      "token_hash": ""
     }
   }
 }
