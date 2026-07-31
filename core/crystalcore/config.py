@@ -24,6 +24,15 @@ PROFILES_DIR = SRC_ROOT / "profiles"
 class GuestGrant:
     approved: bool
     tools: list[str] = field(default_factory=list)
+    # Scope: which memory visibility classes this guest may read, and which
+    # single class its teachings land in (the first entry). Empty means none —
+    # absence of scope is absence of consent, not legacy full access.
+    read_scope: list[str] = field(default_factory=list)
+    write_scope: list[str] = field(default_factory=list)
+    # Provenance: SHA-256 hex of this guest's minted secret. Empty means no
+    # provenance is configured, and the gate refuses — mint one with
+    # `python -m crystalcore.bridge --mint-token <guest>`.
+    token_hash: str = ""
 
 
 @dataclass
@@ -56,6 +65,9 @@ class BridgeConfig:
             name.strip().lower(): GuestGrant(
                 approved=bool(grant.get("approved", False)),
                 tools=list(grant.get("tools", [])),
+                read_scope=list(grant.get("read_scope", [])),
+                write_scope=list(grant.get("write_scope", [])),
+                token_hash=str(grant.get("token_hash", "")),
             )
             for name, grant in raw.get("guests", {}).items()
         }

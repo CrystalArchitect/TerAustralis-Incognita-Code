@@ -65,14 +65,20 @@ class Bridge:
     """Holds the one companion instance this bridge process gives guests
     limited, gated access to."""
 
-    def __init__(self, config: BridgeConfig, guest: str):
+    def __init__(self, config: BridgeConfig, guest: str, token: str = ""):
         self.config = config
         self.guest = guest
+        self.token = token
         self.gate = ConsentGate(config)
         self._companion = None
 
     def refuse(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
-        result = self.gate.check(self.guest, tool, arguments)
+        result = self.gate.check(self.guest, tool, arguments, token=self.token)
+        return None if result.allowed else result.as_refusal_payload()
+
+    def refuse_scope(self, tool: str, kind: str,
+                     arguments: dict[str, Any]) -> dict[str, Any]:
+        result = self.gate.require_scope(self.guest, tool, kind, arguments)
         return None if result.allowed else result.as_refusal_payload()
 
     @property
@@ -121,8 +127,13 @@ def build_server(bridge: Bridge) -> FastMCP:
         refusal = bridge.refuse("recall", {"query": query})
         if refusal:
             return refusal
-        memory_text = bridge.companion._memory_block(query)
-        return {"ok": True, "memory": memory_text or "(nothing remembered yet)"}
+        refusal = bridge.refuse_scope("recall", "read", {"query": query})
+        if refusal:
+            return refusal
+        grant = bridge.config.guest(bridge.guest)
+        memory_text = bridge.companion._memory_block(
+            query, visible=set(grant.read_scope))
+        return {"ok": True, "memory": memory_text or "(nothing shared with you yet)"}
 
     @mcp.tool()
     def teach(text: str) -> dict[str, Any]:
@@ -130,8 +141,13 @@ def build_server(bridge: Bridge) -> FastMCP:
         refusal = bridge.refuse("teach", {"text": text})
         if refusal:
             return refusal
-        bridge.companion.remember(text)
-        return {"ok": True, "remembered": text}
+        refusal = bridge.refuse_scope("teach", "write", {"text": text})
+        if refusal:
+            return refusal
+        grant = bridge.config.guest(bridge.guest)
+        bridge.companion.remember(text, visibility=grant.write_scope[0])
+        return {"ok": True, "remembered": text,
+                "visibility": grant.write_scope[0]}
 
     @mcp.tool()
     def message(text: str) -> dict[str, Any]:
@@ -154,14 +170,86 @@ def build_server(bridge: Bridge) -> FastMCP:
     return mcp
 
 
+def mint_token(profile: str, guest: str) -> None:
+    """Mint a per-guest secret, store only its hash in bridge_config.json,
+    and print the secret once. The secret goes in the guest launcher's
+    CRYSTALBRIDGE_TOKEN; it is never stored here."""
+    import json
+    import secrets
+
+    from crystalcore.config import PROFILES_DIR
+    from crystalcore.gate import token_hash
+
+    guest = guest.strip().lower()
+    config_path = PROFILES_DIR / profile / "bridge_config.json"
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    if guest not in raw.get("guests", {}):
+        raise SystemExit(f"no guest '{guest}' in {config_path} — add the "
+                         "grant first, then mint its token")
+    secret = secrets.token_urlsafe(32)
+    raw["guests"][guest]["token_hash"] = token_hash(secret)
+    config_path.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
+    print(f"Minted for '{guest}' (hash stored in {config_path.name}).")
+    print("Give this secret to that guest's launcher config only — it is")
+    print("shown once and not stored:\n")
+    print(f"  CRYSTALBRIDGE_TOKEN={secret}")
+
+
+def review_memories(profile: str) -> None:
+    """One-time migration helper: walk private memories and let the human
+    mark chosen ones shared. Everything stays private unless marked."""
+    config = BridgeConfig.load(profile)
+    from crystalcore.mind import CrystalCore
+
+    safe_name = "".join(
+        c for c in config.profile if c.isalnum() or c in "-_ "
+    ).strip()
+    companion = CrystalCore(memory_dir=str(_profiles_root() / safe_name))
+    entries = [("note", n["text"], n) for n in companion.memory.notes] + [
+        ("fact", f"{k}: {v['value']}", v) for k, v in companion.memory.facts.items()
+    ]
+    private = [(kind, text, store) for kind, text, store in entries
+               if store.get("visibility", "private") != "shared"]
+    if not private:
+        print("Nothing private to review — all memories are already shared "
+              "or there are none.")
+        return
+    print(f"{len(private)} private memories. 's' shares one with guests, "
+          "Enter keeps it private, 'q' stops:\n")
+    changed = 0
+    for kind, text, store in private:
+        answer = input(f"[{kind}] {text}\n  share? [s/Enter/q] ").strip().lower()
+        if answer == "q":
+            break
+        if answer == "s":
+            store["visibility"] = "shared"
+            changed += 1
+        else:
+            store["visibility"] = "private"
+    companion.save()
+    print(f"\n{changed} shared; everything else stays private.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="crystalcore.bridge")
     parser.add_argument("--profile", default="default")
+    parser.add_argument("--mint-token", metavar="GUEST",
+                        help="mint a provenance secret for GUEST and exit")
+    parser.add_argument("--review-memories", action="store_true",
+                        help="interactively mark private memories as shared")
     args = parser.parse_args()
 
+    if args.mint_token:
+        mint_token(args.profile, args.mint_token)
+        return
+    if args.review_memories:
+        review_memories(args.profile)
+        return
+
     guest = os.environ.get("CRYSTALBRIDGE_GUEST", "")
+    token = os.environ.get("CRYSTALBRIDGE_TOKEN", "")
     config = BridgeConfig.load(args.profile)
-    bridge = Bridge(config, guest)
+    bridge = Bridge(config, guest, token)
     server = build_server(bridge)
     server.run(transport="stdio")
 

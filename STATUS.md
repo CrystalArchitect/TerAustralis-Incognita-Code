@@ -1,6 +1,6 @@
 # STATUS
 
-Last updated: 2026-07-29
+Last updated: 2026-07-31
 
 Full knowledge-base reconstruction: `knowledge-base/00-INDEX.md` in
 CrystalCore.OS-the-Crystal-Architecture-Archive.
@@ -52,10 +52,17 @@ Executes, or can be opened and used by someone other than me.
   ordinary subpackage, so there is no path to get wrong and no
   `importlib` alias to maintain. Its two regression tests were rewritten
   accordingly and both now pass outright instead of skipping. Honest
-  scope, unchanged: `ConsentGate` enforces two checks (approval,
-  tool-permission), not the four its docstring once claimed —
-  `scope`/`provenance` were documented as intended but never built (no
-  surviving spec for what either should mean); the docstring says two.
+  scope, updated 2026-07-31: `ConsentGate` now enforces all four checks.
+  Scope and provenance were specified first (docs/CONSENT-GATE-SPEC.md,
+  merged for review before any code) and then built: provenance as
+  per-guest minted tokens checked fail-closed before every other check,
+  scope as memory visibility classes (`private`/`shared`) bound to
+  read/write grants. Fail-closed defaults throughout — an unminted guest
+  refuses, an empty scope refuses, and memories without a visibility
+  field are private, so everything remembered before scoping existed is
+  guest-invisible until deliberately shared (`--review-memories`).
+  Provenance is launcher authentication (possession of the secret),
+  stated as exactly that. Self-test grew 7 → 13, all passing.
 - Demo shells render in a headless browser, verified 2026-07-24:
   `vision/apps/crystal-interface/`, `vision/apps/vision-web/`, and the
   engine's own `core/crystal-core/index.html`. Simulated data,
