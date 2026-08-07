@@ -84,6 +84,39 @@ cd webapp && npm install && npm run dev   # open 127.0.0.1:5174`;
     </p>
   </section>
 
+  <section class="chapter node" style="--node:var(--silver)">
+    <h2>The gate and the record</h2>
+    <p>
+      Since July 2026 the companion carries two pieces of working accountability, built in the
+      <a href="https://github.com/CrystalArchitect/The-Crystal-Vision" target="_blank" rel="noopener noreferrer"
+        >Crystal Vision repository</a
+      >:
+    </p>
+    <ul>
+      <li>
+        <strong>A consent gate that fails closed.</strong> Every outbound model call passes a gate.
+        A destination that isn't your own machine is refused unless you say yes, and a yes is
+        reversible. One rule admits no yes at all: sources under the mythos — Songline-adjacent
+        material — are refused into <em>any</em> model, local or remote, because the relevant
+        consent is not the user's to give. That boundary is code, not policy.
+      </li>
+      <li>
+        <strong>A record that can't be quietly edited.</strong> Every call, allowed or refused,
+        lands in an append-only audit log where each entry carries the hash of the one before. A
+        <a
+          href="https://github.com/CrystalArchitect/The-Crystal-Vision/blob/master/clementine/verify_audit.py"
+          target="_blank"
+          rel="noopener noreferrer">small verifier</a
+        > proves the chain — a broken link means something was altered, and the interface says so.
+      </li>
+      <li>
+        <strong>A home-screen app, honestly offline.</strong> Installable on a phone; the shell is
+        cached, replies never are. When the model can't be reached, they say so rather than
+        replaying an old answer.
+      </li>
+    </ul>
+  </section>
+
   <section class="chapter node" style="--node:var(--gold)">
     <h2>The framework beneath them</h2>
     <p>

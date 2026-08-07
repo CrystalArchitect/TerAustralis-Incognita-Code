@@ -10,7 +10,9 @@
     <a href="/stories">Stories</a>
     <a href="/clementine">Clementine</a>
     <a href="/gallery">Gallery</a>
+    <a href="/music">Music</a>
     <a href="/ordinals">Ordinals</a>
+    <a href="/provenance">Provenance</a>
     <a href="/starline">Consent Transport</a>
     <a href="/crystalcore-os">CrystalCore.OS</a>
     <a href="/docs">Archive</a>

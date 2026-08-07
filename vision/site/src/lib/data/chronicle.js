@@ -62,5 +62,17 @@ export const chronicle = [
     what: 'The name comes home',
     note: 'A retired name is removed across every repository, and the companion is Clementine again. The architecture is set right with it: CrystalMemory for what they remember, CrystalBus for what carries speech between models, CrystalBridge for the gate a guest comes through.',
     tl: 'var(--green)'
+  },
+  {
+    when: '2026-07-31',
+    what: 'The music comes home, and the work is anchored',
+    note: 'Every recording is preserved in the repository with honest labels — and the whole creative work is hashed into one manifest and anchored to Bitcoin. The consent gate learns the one rule with no override: mythos sources enter no model.',
+    tl: 'var(--pink)'
+  },
+  {
+    when: '2026-08-07',
+    what: 'The dates are settled, and the record grows',
+    note: "Apple's own receipts fix the subscription window, resolving every open rights question in the music catalogue. Four artworks join the canon, the manifest is re-anchored, and the archive files what arrives — as received, under reception records.",
+    tl: 'var(--gold)'
   }
 ];

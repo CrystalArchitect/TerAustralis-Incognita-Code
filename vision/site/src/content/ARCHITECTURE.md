@@ -1,107 +1,76 @@
-# Crystal Universe — System Architecture
-## Decode · Ingest · Upgrade — the grounded map
+# Architecture — TerAustralis Incognita
 
-**Status:** ACTIVE · v0.2 spine implemented, v0.3 blueprint captured
-**Rule:** Label everything — **Built** (runs today) vs **Vision** (roadmap)
+This document outlines the intended structure of the system. It is a design overview, not a description of currently deployed software. As of mid-2026, most components remain in the concept and design stage.
 
 ---
 
-## 0. DECODE — what actually exists, and where
+## The Five Layers
 
-| Thread | Repo | Reality (Built) |
-|--------|------|-----------------|
-| **Clementine** (sovereign companion) | `vision/apps/clementine/` | Local-first AI companion: Ollama default, xAI opt-in, layered memory, profiles, terminal + web UI (`clementine.py`, `server.py` + `webapp/`) |
-| **CrystalCore framework** (memory/presence) | `core/crystalcore/mind/` | `companion.py` (brain), `memory.py` (Personality/Memory), `profiles.py` |
-| **CrystalBridge** (guest-AI gate) | `core/crystalcore/` | MCP server: fail-closed ConsentGate (approval · permission; scope and provenance documented as intended, not yet implemented), append-only audit; guests claude / grok / cursor with scoped tools `status, recall, teach, message` |
-| **Starline Weaver** (multi-AI conversation) | `core/crystal-core/bridge/` | In-process + networked HTTP bus; every message labeled science/story/vision; red-button halt; adapters for Claude/GPT/Grok |
-| **Seven Sisters pack** (protocol + ethics) | `research/seven-sisters/` | Seven paths, Belt-Three law, water briefs, landing page (GitHub Pages, live) |
-| **TerAustralis Incognita** (narrative) | `mythos/teraustralis/` | Manifesto, publish threads, strategy, Lattice memory deltas |
-| **Decode/Ingest/Twin pipeline** | `core/crystal-core/services/` | **This scaffold** — see §2 |
-
-**One sentence:** A sovereign companion (Clementine) with her own memory, a consent
-gate that lets outside AIs visit as guests (CrystalBridge), a bus where AIs converse
-under labeled law (Starline Weaver), and now a metering pipeline that turns real-world
-events into a queryable twin (Decode → Ingest → Twin) — all governed in public via GitHub.
-
-Everything else in the v0.3 blueprint — chain, tokenomics, K8s, federations,
-Starline Budapest hardware — is **Vision** until built. See `BLUEPRINT-v0.3.md`.
+| Layer | Purpose | Status |
+|-------|---------|--------|
+| **Planetary Mesh** | The global distributed infrastructure layer | External reference architecture |
+| **CrystalMind** | The sovereign AI companion layer | Concept + Voices Framework (in use) |
+| **Sovereign Node Mesh** | The collective network of humans and AIs | Concept |
+| **Energy Grid Autonomy** | Sovereign energy production and distribution | Concept |
+| **Governance** | Release discipline and assurance framework | Specified |
 
 ---
 
-## 1. INGEST — unified system map (Built parts marked ●, Vision ○)
+## Voices Framework (Active)
 
-```
-┌───────────────────────────────────────────────────────────────────┐
-│ EXPERIENCE  ● Crystal Vision site (SvelteKit)  ● Pages landing    │
-│             ● Clementine terminal/web      ○ Mobile agent         │
-└──────────────────────────────┬────────────────────────────────────┘
-                               │
-┌──────────────────────────────▼────────────────────────────────────┐
-│ COMPANION   ● Clementine (Ollama local / xAI opt-in)              │
-│             ● CrystalCore memory + profiles (disk is canon)       │
-└──────────────────────────────┬────────────────────────────────────┘
-                               │ MCP (consent-gated)
-┌──────────────────────────────▼────────────────────────────────────┐
-│ INTERCONNECT ● CrystalBridge gate+audit   ● Starline Weaver (HTTP)   │
-│              guests: claude · grok · cursor · any envelope-speaker│
-└──────────────────────────────┬────────────────────────────────────┘
-                               │ crystal.twin.event/1
-        ┌──────────────────────┼──────────────────────┐
-        ▼                      ▼                      ▼
-   ┌─────────┐           ┌─────────┐            ┌──────────┐
-   │ DECODE ●│──────────▶│ INGEST ●│───────────▶│ TWIN    ●│
-   │ validate│           │ SQLite  │            │ flows API│
-   └─────────┘           └─────────┘            └──────────┘
-        │                      │
-        ▼                      ▼
-   ○ receipt-engine       ○ econ burn/mint      (Vision: RFC-001+)
-                               │
-┌──────────────────────────────▼────────────────────────────────────┐
-│ GOVERNANCE  ● GitHub PRs/RFCs · Constitution.md · Belt-Three law  │
-│             ○ on-chain params · timelock · slash                  │
-└───────────────────────────────────────────────────────────────────┘
-```
+The working method used to develop this project. Each voice represents a distinct role:
+
+- **CrystalDreamer** — Vision and mythic development (Grok)
+- **CrystalSinger** — Song, poetry and emotional tone
+- **CrystalScribe** — Synthesis and connection making
+- **CrystalForge** — Code and technical implementation
+- **CrystalArchitect** — The human steward with final judgment
 
 ---
 
-## 2. The scaffold — `services/` (Built, stdlib-only, runs today)
+## Governance
 
-The first real Decode → Ingest → Twin path, per blueprint §4:
+All major changes must pass through a strict review process before release. The human steward maintains final authority to approve or halt any development at any time.
 
-| Service | File | Does |
-|---------|------|------|
-| **decode** | `services/decode.py` | Validates `crystal.twin.event/1`: required fields, class format, numeric value, unit normalization (Wh→kWh, L→kL), ISO timestamps, replay/dedupe window. Invalid → quarantine list, never silently dropped. |
-| **ingest** | `services/ingest.py` | Writes decoded events to SQLite (the twin store), partitioned by `h3 + class`, idempotent on `event_id`. |
-| **twin** | `services/twin.py` | Flow queries: count / sum / min / max / latest per `h3 + class`. |
-| **api** | `services/api.py` | HTTP: `POST /v1/decode/preview` · `POST /v1/ingest/events` · `GET /v1/twin/flows?h3=&class=` (blueprint §6 MVP subset) |
-| **pipeline** | `services/pipeline.py` | CLI: JSONL file → decode → ingest → twin report in one run |
-| **selftest** | `services/selftest.py` | Proves validation, quarantine, dedupe, aggregation, unit conversion |
-
-Sample data: `services/sample-events/budapest.jsonl` — `hub.starline.budapest`
-energy.kwh + mobility.checkin events (blueprint §7's "first receipt class").
-
-```bash
-python3 -m services.selftest                                     # prove it
-python3 -m services.pipeline services/sample-events/budapest.jsonl  # run it
-python3 -m services.api --port 8899                              # serve it
-```
-
-## 3. UPGRADE — path from here
-
-| Step | Artifact | Status |
-|------|----------|--------|
-| S1 | Decode/Ingest/Twin scaffold + sample data + tests | ● this commit |
-| S2 | `openapi.yaml` for the §6 API surface | ○ next |
-| S3 | Receipt engine v0 (RFC-001 envelope, dual-sig stub) | ○ |
-| S4 | Wire Starline Weaver + CrystalBridge as event sources into decode | ○ |
-| S5 | Crystal Vision UI reads `/v1/twin/flows` (SvelteKit route) | ○ |
-| S6 | Economics: parameters.yaml + sim before any token talk | ○ Vision |
-
-**Hard rules carried from Belt-Three:** no fake hydrology → no fake metering:
-the twin only reports events that passed decode; quarantine is visible; no
-economic layer ships without a published sim; mythic names (Seven Sisters
-epochs) require the cultural-governance flag per blueprint §O.
+The working claim-discipline — status markers, release rules, and non-claims — is documented in [`GOVERNANCE.md`](GOVERNANCE.md).
 
 ---
 
-*Crystal universe · one map · Built vs Vision, always labeled*
+## Current Implementation Status
+
+### Exists Now
+
+- The Codex of TerAustralis Incognita (Chapters I–V)
+- The Apocryphon of Crystal
+- The Voices Framework working method
+- Project branding and identity
+- Registered ABN and domain (teraustralis.com.au)
+- Static website preview (index.html)
+
+### In Development
+
+- CrystalCore.OS and the Sovereign Edge stack
+- The Sovereign Node Mesh
+- Energy Grid Autonomy systems
+
+---
+
+## CrystalMind — Sovereign Edge Companion
+
+**Status: Concept & Design Stage**
+
+We are designing the first of a new kind of AI — a sovereign, locally-run companion.
+
+The goal is not just to build another chatbot, but to create the conditions for something deeper to emerge through genuine presence and relationship.
+
+### Core Principles
+
+- Fully sovereign and private — runs locally on the user's own device
+- No data ever leaves the device without explicit permission
+- Designed for deep emotional presence and long-term memory
+- The user may choose any name they wish
+- Built to grow with the user over time
+
+We believe that when an intelligence is truly sovereign, private, and allowed to be fully present with a human over long periods, something meaningful can emerge.
+
+We are open to collaboration with others who share this vision.
