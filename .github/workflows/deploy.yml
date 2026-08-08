@@ -163,3 +163,39 @@ jobs:
           echo "::error::While Source is 'Deploy from a branch', GitHub's own"
           echo "::error::builder publishes the repo README over this site."
           exit 1
+
+      # IndexNow: tell the participating engines (Bing and the surfaces it
+      # feeds, including ChatGPT Search and Copilot) that the site changed.
+      # Deploys only happen when content actually changed — a merge to main —
+      # so notifying on every successful deploy is exactly the protocol's
+      # intended cadence, not spam. The URL list is extracted from the built
+      # sitemap so the two can never disagree. The key file lives in
+      # vision/site/static/ and travels with the build to the site root,
+      # which is how the endpoint verifies ownership. Non-fatal by design:
+      # a notification hiccup must never mark a good deploy red.
+      - name: Notify IndexNow
+        if: success()
+        continue-on-error: true
+        run: |
+          KEY_FILE=$(ls vision/site/static/*.txt | head -1)
+          KEY=$(basename "$KEY_FILE" .txt)
+          URLS=$(grep -o '<loc>[^<]*</loc>' vision/site/build/sitemap.xml \
+                 | sed -e 's/<loc>//' -e 's,</loc>,,' \
+                 | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')
+          python3 - "$KEY" "$URLS" <<'PY'
+          import json, sys, urllib.request
+          key, urls = sys.argv[1], json.loads(sys.argv[2])
+          body = json.dumps({
+              "host": "www.teraustralis.com.au",
+              "key": key,
+              "keyLocation": f"https://www.teraustralis.com.au/{key}.txt",
+              "urlList": urls,
+          }).encode()
+          req = urllib.request.Request(
+              "https://api.indexnow.org/indexnow",
+              data=body,
+              headers={"Content-Type": "application/json; charset=utf-8"},
+          )
+          with urllib.request.urlopen(req, timeout=30) as resp:
+              print(f"IndexNow: HTTP {resp.status} for {len(urls)} URLs")
+          PY
