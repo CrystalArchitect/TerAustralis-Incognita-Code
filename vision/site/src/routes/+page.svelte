@@ -126,6 +126,14 @@
       cta: '→ How the anchor works',
       status: 'Built · anchored and re-anchored',
       st: 'var(--green)'
+    },
+    {
+      href: '/docs/quantum-lattice-case-study',
+      title: 'The lattice case study',
+      body: 'Four AI-delivered code versions of one metaphor, each run exactly once — claim recorded against output until the two converged. Deterministic, dependency-free, reproducible by anyone with python3.',
+      cta: '→ Read the case study',
+      status: 'Science · every claim runnable',
+      st: 'var(--cyan)'
     }
   ];
 
