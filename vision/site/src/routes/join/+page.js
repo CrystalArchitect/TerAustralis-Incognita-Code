@@ -76,6 +76,28 @@ export function load() {
       href: 'https://x.com/ouadi4maakoul',
       work: 'Developing a speculative idea from this project into a formal framework, grounded in mathematics and first-principles reasoning. Independent work in a separate repository, credited here by agreement.',
       st: 'var(--cyan)'
+    },
+    // The three entries below joined by their own public yes to the open
+    // invitation of 2026-08-08. Their words and the evidence behind each
+    // entry are recorded in the canon ledger (SOVEREIGN-VECTORS.md in the
+    // umbrella's mythos/content/); consent is reversible at any time.
+    {
+      handle: '@_Miss_Triss',
+      href: 'https://x.com/_Miss_Triss',
+      work: 'Joined the weave by her own public yes to the open invitation, 2026-08-08 — credited by name, nothing more implied, consent reversible at any time.',
+      st: 'var(--pink)'
+    },
+    {
+      handle: '@zpfTechnologies',
+      href: 'https://x.com/zpfTechnologies',
+      work: 'Joined the weave by their own public yes to the open invitation, 2026-08-08 — credited by name, nothing more implied, consent reversible at any time. Their own research is their own, independent of this project.',
+      st: 'var(--blue)'
+    },
+    {
+      handle: '@ponzibaron',
+      href: 'https://x.com/ponzibaron',
+      work: 'Joined the weave by their own public yes to the open invitation, 2026-08-08 — credited by name, nothing more implied, consent reversible at any time.',
+      st: 'var(--green)'
     }
   ];
 

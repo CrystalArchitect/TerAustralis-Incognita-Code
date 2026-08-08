@@ -74,5 +74,11 @@ export const chronicle = [
     what: 'The dates are settled, and the record grows',
     note: "Apple's own receipts fix the subscription window, resolving every open rights question in the music catalogue. Four artworks join the canon, the manifest is re-anchored, and the archive files what arrives — as received, under reception records.",
     tl: 'var(--gold)'
+  },
+  {
+    when: '2026-08-08',
+    what: 'The metaphor is run, and people say yes',
+    note: 'The Quantum Lattice enters canon as labelled Vision — beside a case study that ran all four delivered code versions and recorded claim against output until the two converged. The sixth Bitcoin anchor covers both. And the first credits arrive by their own words: dated, evidenced, reversible.',
+    tl: 'var(--cyan)'
   }
 ];

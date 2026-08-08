@@ -99,9 +99,13 @@ function rewriteLinks(html, knownSlugs) {
         return `href="${GITHUB_BLOB}/${resolveRepoPath(rel)}${hash || ''}"`;
       }
     )
-    // Directory links (../tools/, ../art/) point at repository trees.
+    // Directory links (../tools/, ../art/, lattice-case-study/) point at
+    // repository trees. The prefix is optional: canon also writes sibling
+    // directory links bare. Absolute URLs never match — ':' is outside the
+    // character class — and app-absolute paths are excluded by the leading
+    // '/' guard.
     .replace(
-      /href="((?:\.{1,2}\/)+[A-Za-z0-9_./-]*\/)"/g,
+      /href="((?:\.{1,2}\/)*[A-Za-z0-9_.-][A-Za-z0-9_./-]*\/)"/g,
       (_m, rel) => `href="${GITHUB_TREE}/${resolveRepoPath(rel)}"`
     );
 }
