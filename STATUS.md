@@ -88,6 +88,17 @@ Executes, or can be opened and used by someone other than me.
   mode `deploy.yml` guards against. Verified by external probe, not by
   reading the repo setting (the checking token could not read
   Settings → Pages); content evidence only.
+- Fabrication tooling — `tools/fab/` (added 2026-08-08). The Node One
+  Vessel generator runs headless (`pip install bpy`) and emits printable
+  geometry: a parametric enclosure for the single-board machine the
+  first companion will boot on, Raspberry Pi 5 dimensions by default.
+  Its independent checker (`validate_vessel.py`, trimesh — a different
+  library on purpose) passes on the committed artifacts: both parts
+  watertight, single-body, stated dimensions, mark engraved; output
+  quoted in `tools/fab/README.md`. Honest scope, load-bearing: what
+  passes is geometry. Fit, strength and airflow are dreamed until
+  someone prints the parts — the STLs are surveyed solids, not yet a
+  surveyed object.
 
 ## Built, not currently running
 Code exists and is complete enough to run. No runtime here exercises it.
