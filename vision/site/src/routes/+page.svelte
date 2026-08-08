@@ -423,7 +423,7 @@
   </p>
 </section>
 
-<Footer showVoices showCode />
+<Footer showVoices />
 
 <style>
   .directive {

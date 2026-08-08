@@ -91,7 +91,7 @@ founding laptop (pre-git)
   </p>
 </div>
 
-<Footer showCode />
+<Footer />
 
 <style>
   .lineage {

@@ -159,4 +159,4 @@ cd webapp && npm install && npm run dev   # open 127.0.0.1:5174`;
   </nav>
 </article>
 
-<Footer showCode />
+<Footer />

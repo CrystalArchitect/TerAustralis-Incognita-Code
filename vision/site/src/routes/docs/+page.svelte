@@ -46,4 +46,4 @@
   {/each}
 </section>
 
-<Footer showVoices showCode />
+<Footer showVoices />
