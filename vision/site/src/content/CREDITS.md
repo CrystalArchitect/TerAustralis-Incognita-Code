@@ -30,7 +30,7 @@ entries made under them.
 
 ## Code and technical spine
 
-- Local-first companion work (Clementine / Lumina lineage)
+- Local-first companion work (Clementine lineage)
 - Consent Transport and CrystalBridge
 - RDP record kernel
 - Starline Weaver
@@ -78,3 +78,8 @@ lattice expands.
 *Created 2026-08-08 at the maintainer's direction, from the maintainer's own
 draft. This page accretes: names and contributions are added with dates;
 history is never rewritten.*
+
+*Corrected 2026-08-09: a retired component name — recorded, unprinted, in
+[`NAMES.md`](../NAMES.md) — was removed from the lineage line above at the
+maintainer's direction. A component name, not a person's; the accretion
+promise concerns people.*
