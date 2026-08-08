@@ -27,7 +27,9 @@ export function load() {
     { file: 'wire-skull-memory-2026-08-07.mp3', work: 'Wire Skull Memory (Remaster take)', canon: 'standalone, in canon', length: '2:16', generated: '2026-08-07', plan: 'Pro — resumed plan', commercial: true },
     { file: 'dead-but-came-back-to-life-2026-08-07.mp3', work: 'Dead But Came Back to Life (Remaster take)', canon: 'not in canon', length: '3:19', generated: '2026-08-07', plan: 'Pro — resumed plan', commercial: true },
     { file: 'id-lay-it-all-down-2026-08-07.mp3', work: "I'd Lay It All Down (Remaster take)", canon: 'not in canon', length: '4:15', generated: '2026-08-07', plan: 'Pro — resumed plan', commercial: true },
-    { file: 'story-as-bridge.mp3', work: 'Story as Bridge', canon: 'not in canon', length: '4:22', generated: '2026-08-07', plan: 'Pro — resumed plan', commercial: true }
+    { file: 'story-as-bridge.mp3', work: 'Story as Bridge', canon: 'not in canon', length: '4:22', generated: '2026-08-07', plan: 'Pro — resumed plan', commercial: true },
+    { file: 'random-topic.mp3', work: 'Random Topic', canon: 'not in canon', length: '3:34', generated: '2026-08-08', plan: 'Pro — resumed plan', commercial: true },
+    { file: 'ferry-slip.mp3', work: 'Ferry Slip', canon: 'not in canon', length: '3:46', generated: '2026-08-08', plan: 'Pro — resumed plan', commercial: true }
   ];
 
   return {
