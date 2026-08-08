@@ -35,7 +35,7 @@
         target="_blank"
         rel="noopener noreferrer">the public repository</a
       >, hashed file by file, and covered by the project's
-      <a href="/provenance">Bitcoin-anchored manifest</a> — along with six recordings the canon does
+      <a href="/provenance">Bitcoin-anchored manifest</a> — along with ten recordings the canon does
       not name, kept for the same reason and labelled as exactly what they are.
     </p>
     <p>
