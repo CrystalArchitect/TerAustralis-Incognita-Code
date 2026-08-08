@@ -5,11 +5,10 @@
   /**
    * @typedef {Object} Props
    * @property {boolean} [showVoices] - Show the Voices Framework acknowledgement paragraph.
-   * @property {boolean} [showCode] - Show the Apache code-license note alongside the content license.
    */
 
   /** @type {Props} */
-  let { showVoices = false, showCode = false } = $props();
+  let { showVoices = false } = $props();
 </script>
 
 <footer class="site">
@@ -26,12 +25,10 @@
   {/if}
 
   <p>
-    {#if showCode}
-      Code licensed under <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a>.
-    {/if}
-    Content licensed under
+    Code and content licensed under
     <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/">CC BY-NC-ND 4.0</a>. ABN 70 741 068
-    059. © 2026 TerAustralis Incognita.
+    059. © 2026 TerAustralis Incognita. TerAustralis Incognita™ and CrystalCore™ are unregistered
+    trade marks; no licence here grants any trade mark right.
   </p>
 
   <p>
