@@ -335,7 +335,7 @@
     and produced alongside the Codex itself.
   </p>
   <p>
-    Since 31 July 2026 the recordings are preserved in the public repository — ten recordings,
+    Since 31 July 2026 the recordings are preserved in the public repository — fifteen recordings,
     catalogued with honest labels, hashed file by file, and covered by the Bitcoin-anchored
     manifest. The platform copy is a convenience; the repository copy is the record.
   </p>

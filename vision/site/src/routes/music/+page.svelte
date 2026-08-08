@@ -12,7 +12,7 @@
   <title>The Music — TerAustralis Incognita</title>
   <meta
     name="description"
-    content="The recordings of the TerAustralis Incognita mythos — preserved in the repository, catalogued with honest labels, and anchored to Bitcoin. Ten recordings; four canon works."
+    content="The recordings of the TerAustralis Incognita mythos — preserved in the repository, catalogued with honest labels, and anchored to Bitcoin. Fifteen recordings; four canon works."
   />
 </svelte:head>
 
@@ -100,10 +100,13 @@
       <strong>6 June 2026</strong>.
     </p>
     <p>
-      That splits the ten recordings cleanly: <strong>three are Pro</strong> (Wire Skull Memory,
-      Fermi's Silent Line, Safari Chains) and <strong>eight are non-commercial</strong> — the two
-      earliest recordings predate the plan, and everything from July was generated after it ended.
-      Nothing about preservation changes; what changes is what may be done with them.
+      The subscription later resumed, and the renewal receipt of 8 August 2026 precedes the five
+      recordings generated that evening (UTC) in any Australian timezone. That splits the fifteen
+      recordings cleanly: <strong>eight carry commercial rights</strong> — three from the first Pro
+      period (Wire Skull Memory, Fermi's Silent Line, Safari Chains) and the five August
+      recordings from the resumed plan — and <strong>seven are non-commercial</strong>: the two
+      earliest recordings predate the first plan, and everything from July was generated after it
+      ended. Nothing about preservation changes; what changes is what may be done with them.
     </p>
     <p>
       Beneath all of it sits a plainer fact the catalogue states outright: model-generated audio may
