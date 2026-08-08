@@ -45,6 +45,20 @@
     The people whose work is woven in — credited by their own handle, for what they actually made.
     Listed with permission; being here implies no affiliation or endorsement, only credit.
   </p>
+  <blockquote style="border-left:2px solid var(--gold);padding-left:20px;margin:18px 0;font-style:italic;opacity:.9">
+    <p>
+      "I'm running an open public-build project called CrystalCore.OS. It's a collaborative list
+      and story where I invite people whose posts or work I respect and give them proper public
+      credit by including their name. Everything stays fully theirs, consent is reversible at any
+      time, and there is no money, work, or control involved."
+    </p>
+    <p style="font-style:normal;font-size:.9rem;opacity:.75">
+      — the open invitation these credits answer, posted 2026-08-08. Each entry's dated yes and
+      its evidence are recorded in the
+      <a href="https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/mythos/content/SOVEREIGN-VECTORS.md"
+         target="_blank" rel="noopener noreferrer">canon credit ledger</a>.
+    </p>
+  </blockquote>
   <div class="cards">
     {#each data.vectors as v (v.handle)}
       <a class="card" href={v.href} style="--st:{v.st}" target="_blank" rel="noopener noreferrer">
