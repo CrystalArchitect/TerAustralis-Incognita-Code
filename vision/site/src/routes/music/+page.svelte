@@ -12,7 +12,7 @@
   <title>The Music — TerAustralis Incognita</title>
   <meta
     name="description"
-    content="The recordings of the TerAustralis Incognita mythos — preserved in the repository, catalogued with honest labels, and anchored to Bitcoin. Seventeen recordings; four canon works."
+    content="The recordings of the TerAustralis Incognita mythos — preserved in the repository, catalogued with honest labels, and anchored to Bitcoin. Nineteen recordings; four canon works."
   />
 </svelte:head>
 
@@ -35,7 +35,7 @@
         target="_blank"
         rel="noopener noreferrer">the public repository</a
       >, hashed file by file, and covered by the project's
-      <a href="/provenance">Bitcoin-anchored manifest</a> — along with ten recordings the canon does
+      <a href="/provenance">Bitcoin-anchored manifest</a> — along with twelve recordings the canon does
       not name, kept for the same reason and labelled as exactly what they are.
     </p>
     <p>
@@ -83,9 +83,12 @@
       </table>
     </div>
     <p class="attribution">
-      Each linked title opens the audio file in the repository. The recordings are also on
-      <a href="https://suno.com/@m13crystalat" target="_blank" rel="noopener noreferrer">Suno</a> —
-      but the repository copy is the one that is hashed, dated, and anchored.
+      Each linked title opens the audio file in the repository. The commercially-licensed
+      recordings are also on
+      <a href="https://suno.com/@m13crystalat" target="_blank" rel="noopener noreferrer">Suno</a>;
+      the platform copies of the non-commercial ones were deleted by the maintainer on 8 August
+      2026, so for those the repository copy is the only copy in existence — hashed, dated, and
+      anchored.
     </p>
   </section>
 
@@ -100,10 +103,11 @@
       <strong>6 June 2026</strong>.
     </p>
     <p>
-      The subscription later resumed, and the renewal receipt of 8 August 2026 precedes the seven
-      recordings generated that evening (UTC) in any Australian timezone. That splits the seventeen
-      recordings cleanly: <strong>ten carry commercial rights</strong> — three from the first Pro
-      period (Wire Skull Memory, Fermi's Silent Line, Safari Chains) and the seven August
+      The subscription later resumed, and the renewal receipt of 8 August 2026 precedes the nine
+      recordings generated that evening and the first minutes of the next day (UTC) in any
+      Australian timezone. That splits the nineteen
+      recordings cleanly: <strong>twelve carry commercial rights</strong> — three from the first Pro
+      period (Wire Skull Memory, Fermi's Silent Line, Safari Chains) and the nine August
       recordings from the resumed plan — and <strong>seven are non-commercial</strong>: the two
       earliest recordings predate the first plan, and everything from July was generated after it
       ended. Nothing about preservation changes; what changes is what may be done with them.
