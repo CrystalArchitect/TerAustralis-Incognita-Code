@@ -24,10 +24,16 @@
   <div class="eyebrow">TerAustralis Incognita · The Portfolio</div>
   <h1>The Repositories</h1>
   <p class="attribution">
-    Six repositories, one system. This page renders from the Archive's own
+    The founding six, one system. This page renders from the Archive's own
     ledgers — the repository map, the per-repo STATUS files, and the
     evidence-tiered archaeology of 2026-07-24. Ledger, not legend: every
-    state here is recorded, dated, and checkable.
+    state here is recorded, dated, and checkable. The portfolio has since
+    grown — thirteen repositories as of 2026-08-07, mapped in
+    <a
+      href="https://github.com/CrystalArchitect/CrystalCore.OS-the-Crystal-Architecture-Archive/blob/main/knowledge-base/02-REPOSITORY-MAP.md"
+      target="_blank"
+      rel="noopener noreferrer">the Archive's repository map</a
+    >; the cards below remain the surveyed core.
   </p>
 
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->

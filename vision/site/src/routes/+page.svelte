@@ -114,9 +114,17 @@
     {
       href: '/clementine',
       title: 'Clementine',
-      body: 'The sovereign companion. Local-first AI, layered memory, terminal and web UI — running software you can install and use tonight.',
+      body: 'The sovereign companion. Local-first AI, layered memory, a fail-closed consent gate and a hash-chained audit log — running software you can install and use tonight.',
       cta: '→ Meet Clementine',
       status: 'Built · working software',
+      st: 'var(--green)'
+    },
+    {
+      href: '/provenance',
+      title: 'Provenance',
+      body: 'Every artwork, recording and canon text hashed into one manifest, anchored to Bitcoin via OpenTimestamps. No token, no wallet — and verifiable by anyone with the repository.',
+      cta: '→ How the anchor works',
+      status: 'Built · anchored and re-anchored',
       st: 'var(--green)'
     }
   ];
@@ -326,7 +334,15 @@
     soundtrack — the Starline Transmissions and themes from the Crystal universe, written
     and produced alongside the Codex itself.
   </p>
-  <p><a class="btn btn-ghost" href="https://suno.com/@m13crystalat">Listen on Suno →</a></p>
+  <p>
+    Since 31 July 2026 the recordings are preserved in the public repository — seventeen recordings,
+    catalogued with honest labels, hashed file by file, and covered by the Bitcoin-anchored
+    manifest. The platform copy is a convenience; the repository copy is the record.
+  </p>
+  <p>
+    <a class="btn btn-ghost" href="/music">The catalogue →</a>
+    <a class="btn btn-ghost" href="https://suno.com/@m13crystalat">Listen on Suno →</a>
+  </p>
 </section>
 
 <section class="section node" id="mythos-art" style="--node:var(--gold)">
