@@ -110,6 +110,32 @@ python3 -m consent_transport.selftest   # prove it — real TCP sockets, real ha
 python3 -m consent_transport.run demo   # watch it: pair, deny, grant, exchange, revoke, deny
 ```
 
+## Receipts — tamper-evident records of what a companion said
+
+**Vision:** the substrate of a "same someone" continuity metric. **Science (v0):** a
+hash-chained SHA-256 receipt log over text artifacts, stdlib only. Two questions the
+module refuses to conflate: `verify` is byte-exact (has this stored artifact changed? —
+even a trailing-whitespace edit fails), `match` is canonical (does fresh text equal the
+recorded return, ignoring line endings and blank-run noise?). Every receipt carries the
+hash of the previous one, so history cannot be quietly rewritten; the exported `HEAD`
+line is what to anchor with the umbrella's OpenTimestamps flow for witnessed time.
+
+A receipt proves the bytes and their order — never that their content is true. Hashing
+a claim does not make the claim so.
+
+```bash
+python3 -m receipts.selftest   # prove it — 15/15, including the whitespace attack
+```
+
+```python
+from receipts import ReceiptStore
+store = ReceiptStore("receipts-data")
+r = store.capture(model_reply, label="continuity")
+store.verify(r.filename)   # (ok, expected, actual) — byte-exact
+store.match(fresh, r.filename)  # (ok, expected, actual) — canonical
+store.head()               # the one line to anchor
+```
+
 ## Paths (1–7)
 
 1. **Spring** — first water; begin  
