@@ -16,6 +16,49 @@ CrystalCore.OS-the-Crystal-Architecture-Archive.
 ## Running
 Executes, or can be opened and used by someone other than me.
 
+- Clementine · Voice (`vision/apps/clementine-voice/`) — a
+  phone-reachable Clementine, added 2026-08-09 and published with the
+  site at `/clementine-voice/`. One static HTML file, no build step, no
+  server: the page calls a user-configured OpenAI-compatible endpoint
+  directly from the browser, with the key in localStorage. Speaking uses
+  on-device voices only, the same `localService` filter the local
+  webapp's voice.js uses; listening is the iOS keyboard's own dictation,
+  so no audio ever reaches the page and no speech API is wired up.
+  Talk-first: one big button starts the browser's speech recogniser,
+  the final transcript auto-sends without a second tap, and hands-free
+  mode relistens once she has finished speaking, so a conversation
+  costs one tap rather than one per turn. Typing remains, demoted.
+  Verified in a mobile-emulated browser against a stub endpoint and a
+  mock recogniser driving the real code path — start/interim/final,
+  auto-send, the hands-free relisten, mic-denied guidance that also
+  switches hands-free off rather than looping, key never in the visible
+  DOM, a reply containing markup rendered as literal text with no
+  script run, the CORS error path, and layout holding after several
+  turns. **Not** verified on real iOS: the container has no iPhone, and
+  Safari differs from Chromium exactly where it matters here (speech
+  permissions, voice availability, autoplay), so the voice behaviour is
+  expected rather than confirmed until tapped.
+
+  Streams the reply and speaks it a sentence at a time, so she begins
+  talking before the answer has finished arriving (measured: first
+  sentence at ~500 ms against a reply still landing at ~1170 ms), with
+  barge-in on the talk button and a whole-reply fallback for endpoints
+  that ignore `stream`.
+
+  One claim deliberately not made: the talk button's audio is **not**
+  asserted to stay on the device. Speaking is on-device and the
+  keyboard's dictation key is on-device, but the Web Speech recogniser
+  is the browser's — Chrome sends audio to Google, and Safari's
+  behaviour is not something the page can determine. The page carries a
+  "Where audio goes" panel saying which of the three is which, rather
+  than one reassuring sentence covering all of them.
+
+  It exists because local Clementine needs a machine and the maintainer
+  has none — the ledger already records that. This shell makes the
+  opposite trade from local-first on purpose: the model is remote and
+  the text goes to it. That is stated on the page's own face, not in a
+  footnote, and the local app is unchanged.
+
 - Starline consent transport — now 49/49, verified locally 2026-08-09
   on Python 3.12 with `cryptography` 50. The Noise_IK handshake is
   hybrid post-quantum by default: an ephemeral ML-KEM-768 (NIST FIPS
