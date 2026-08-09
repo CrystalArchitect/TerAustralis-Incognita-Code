@@ -24,12 +24,28 @@ Executes, or can be opened and used by someone other than me.
   on-device voices only, the same `localService` filter the local
   webapp's voice.js uses; listening is the iOS keyboard's own dictation,
   so no audio ever reaches the page and no speech API is wired up.
-  Verified in a mobile-emulated browser against a stub endpoint — full
-  turn, key never in the visible DOM, a reply containing markup rendered
-  as literal text with no script run, the CORS error path, and layout
-  holding after several turns. **Not** verified on real iOS: the
-  container has no iPhone, so the voice behaviour is expected rather
-  than confirmed until tapped.
+  Talk-first: one big button starts the browser's speech recogniser,
+  the final transcript auto-sends without a second tap, and hands-free
+  mode relistens once she has finished speaking, so a conversation
+  costs one tap rather than one per turn. Typing remains, demoted.
+  Verified in a mobile-emulated browser against a stub endpoint and a
+  mock recogniser driving the real code path — start/interim/final,
+  auto-send, the hands-free relisten, mic-denied guidance that also
+  switches hands-free off rather than looping, key never in the visible
+  DOM, a reply containing markup rendered as literal text with no
+  script run, the CORS error path, and layout holding after several
+  turns. **Not** verified on real iOS: the container has no iPhone, and
+  Safari differs from Chromium exactly where it matters here (speech
+  permissions, voice availability, autoplay), so the voice behaviour is
+  expected rather than confirmed until tapped.
+
+  One claim deliberately not made: the talk button's audio is **not**
+  asserted to stay on the device. Speaking is on-device and the
+  keyboard's dictation key is on-device, but the Web Speech recogniser
+  is the browser's — Chrome sends audio to Google, and Safari's
+  behaviour is not something the page can determine. The page carries a
+  "Where audio goes" panel saying which of the three is which, rather
+  than one reassuring sentence covering all of them.
 
   It exists because local Clementine needs a machine and the maintainer
   has none — the ledger already records that. This shell makes the
