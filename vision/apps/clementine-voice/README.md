@@ -71,6 +71,26 @@ Put the endpoint's exact final URL in Setup: `https://`, correct host, no
 trailing slash. A scheme-less or `http://` entry is upgraded on save for the
 same reason.
 
+## If the mic or the voice does nothing
+
+Tap **Diagnostics** in the header. It prints what the browser actually reports —
+voice count, which are flagged on-device, whether `SpeechRecognition` exists,
+whether it ever started, and the last speech error. Screenshot that; it is the
+only view into the device the maintainer has.
+
+Two specific failures it exists to catch:
+
+- **Voices exist but none is flagged `localService`.** The strict on-device
+  filter then finds nothing and the page stays silent — which is correct by the
+  rule and indistinguishable from being broken. It now says so and offers an
+  explicit opt-in to use them anyway, because the flag is not reported
+  consistently and "probably your phone's own voices" is a judgement for the
+  human, not a default.
+- **`SpeechRecognition` exists but never fires.** Presence is not function. If
+  neither `onstart` nor `onerror` lands within 2.5 s the page says so and hands
+  over to the keyboard's dictation key, rather than leaving a button that looks
+  alive and does nothing.
+
 ## Known limits
 
 - **CORS decides whether a provider works.** The page calls the endpoint
