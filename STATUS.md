@@ -53,6 +53,22 @@ Executes, or can be opened and used by someone other than me.
   /api/import` restores it, rejecting non-bundles without touching
   existing memory. Round-trip covered by tests; the same bundle format
   is the contract for the public web build.
+- Claim scoring — `bus/claims.py`, added 2026-08-08, 16/16 passing
+  (`cd core/crystal-core && python -m bus.claims_selftest`, stdlib-only).
+  The graded layer above `BusHub.validate`: that answers whether a
+  message is labelled at all and does not grade; this scores a labelled
+  claim's confidence (E-E-A-T discounted by authority provenance and by
+  needs-met), its YMYL stakes, and `risk = probability-of-being-wrong ×
+  impact`. Design proposed by Chris D Wilson from the rater *General
+  Guidelines* v10.1.1 (9 September 2025). Two departures from the sketch
+  as sent, both tested: stakes take the **maximum** across YMYL domains
+  rather than the product — the sketch's own worked example
+  (`health 0, safety 3, financial 2`) multiplies to zero, presenting a
+  safety-3 claim as harmless — and only **revocation** may zero a score,
+  because that is the consent gate failing closed rather than an
+  arithmetic accident. The Incognita Rule is checked before the numbers:
+  story and vision never carry weight however well they score. Kept as
+  its own suite so the bus's 7/7 keeps meaning what it meant.
 - CrystalBridge self-test — 7/7 pass (`cd core && python -m
   crystalcore.selftest`; needs `pip install -r
   core/crystalcore/requirements-bridge.txt` for the `mcp` SDK), added
