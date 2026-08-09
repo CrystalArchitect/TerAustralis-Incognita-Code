@@ -49,6 +49,32 @@ Both interfaces share the same memory folder (`crystalcore_memory/` by
 default), so you can move between terminal and browser freely. Use
 `--profile <name>` on either to keep separate people separate.
 
+## Building something of your own against it
+
+`server.py` is a plain HTTP API, and the Svelte interface is only one
+client of it. Start the server and ask it what it has:
+
+```bash
+curl http://127.0.0.1:5000/api                 # every route, described
+curl http://127.0.0.1:5000/api/openapi.json    # the same, as OpenAPI 3.1
+```
+
+[`API.md`](API.md) is the same surface as a page you can read in one sitting.
+
+All three come from one table in `api_surface.py`, and `tests/test_api_surface.py`
+holds that table against Flask's own routing map in both directions — a route
+that exists but is undocumented fails the suite, and so does a documented route
+nothing serves. That is the Incognita Rule pointed at our own API: a promised
+endpoint with nothing behind it is a line someone drew pretending it was
+surveyed, and the person who pays for it is whoever built a client from the
+document.
+
+The API binds to `127.0.0.1` and there is no way to change that from the
+command line. It is reachable from this machine and no other — no tokens, no
+accounts, no rate limiting, because a localhost server needs none of them.
+That is the property that makes this the sovereign version, and exposing it
+would mean building an auth story that does not exist yet.
+
 ## Any model, two dialects
 
 Clementine speaks two wire shapes, and between them nearly every model:

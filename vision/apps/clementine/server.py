@@ -31,8 +31,11 @@ from flask import Flask, Response, jsonify, request
 # The mind lives under core/, which is not a package root on its own.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[3] / "core"))
 
-from crystalcore.mind import (CrystalCore, delete_profile,  # noqa: E402
-                              list_profiles, profile_dir, profile_meta)
+import api_surface  # noqa: E402
+
+from crystalcore.mind import (MEMORY_SCHEMA_VERSION, SYSTEM_VERSION,  # noqa: E402
+                              CrystalCore, delete_profile, list_profiles,
+                              profile_dir, profile_meta)
 from crystalcore.mind import profiles as _profiles  # noqa: E402
 
 
@@ -88,6 +91,53 @@ def create_app(companion: CrystalCore) -> Flask:
                             "error": "this endpoint requires "
                                      "Content-Type: application/json"}), 415
         return None
+
+    @app.errorhandler(404)
+    @app.errorhandler(405)
+    def unknown_route(err):
+        """A JSON API should not answer with an HTML page.
+
+        Flask's default 404/405 body is HTML, which a client parsing JSON
+        chokes on and a person reading `curl` output has to squint at. Two
+        specifics make this worth handling rather than leaving:
+
+        - a mistyped path under `/api/` matches the OPTIONS preflight
+          catch-all, so Werkzeug rejects the *method* and returns **405**,
+          not the 404 anyone would expect from a typo;
+        - either way the reply is the one place a caller is already lost,
+          so it is the best possible place to name the index.
+        """
+        return jsonify({
+            "error": err.name.lower(),
+            "detail": f"nothing here answers {request.method} {request.path}",
+            "hint": "GET /api lists every route this server has",
+        }), err.code
+
+    @app.get("/")
+    @app.get("/api")
+    def api_index():
+        """What is here, answerable with curl before reading any source.
+
+        A newcomer's first move against an unfamiliar local server is to
+        hit its root. Answering that with a 404 sends them to the source
+        to find out what the routes are; answering it with the route list
+        does not. Generated from `api_surface.ROUTES`, which the test
+        suite holds against Flask's own url_map.
+        """
+        c = holder["c"]
+        return jsonify(api_surface.index(
+            name=c.personality.name or "Clementine",
+            version=SYSTEM_VERSION,
+            memory_schema=MEMORY_SCHEMA_VERSION,
+        ))
+
+    @app.get("/api/openapi.json")
+    def api_openapi():
+        c = holder["c"]
+        return jsonify(api_surface.openapi(
+            name=c.personality.name or "Clementine",
+            version=SYSTEM_VERSION,
+        ))
 
     @app.get("/api/status")
     def status():
