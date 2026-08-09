@@ -49,6 +49,23 @@ Both interfaces share the same memory folder (`crystalcore_memory/` by
 default), so you can move between terminal and browser freely. Use
 `--profile <name>` on either to keep separate people separate.
 
+## Reaching her from a phone
+
+[`DISCORD.md`](DISCORD.md) — a bot that connects outward to Discord, so
+the machine at home needs no open port and the phone in your pocket needs
+no API key. The model and the memory stay on your machine; your messages
+pass through Discord to get there, which is a real cost and is stated
+plainly there rather than glossed.
+
+```bash
+pip install -r requirements-discord.txt
+export DISCORD_TOKEN=... CLEMENTINE_DISCORD_OWNERS=your_user_id
+python discord_bot.py            # with server.py already running
+```
+
+It refuses to start without an allowlist. The bot can write to her memory,
+and a bot that answers anyone who can see it hands that to strangers.
+
 ## Building something of your own against it
 
 `server.py` is a plain HTTP API, and the Svelte interface is only one
@@ -59,7 +76,12 @@ curl http://127.0.0.1:5000/api                 # every route, described
 curl http://127.0.0.1:5000/api/openapi.json    # the same, as OpenAPI 3.1
 ```
 
-[`API.md`](API.md) is the same surface as a page you can read in one sitting.
+[`API.md`](API.md) is the same surface as a page you can read in one sitting,
+and [`clementine_api.py`](clementine_api.py) is a small Python client for it —
+`Clementine().chat("hello")`, and a named `ClementineOffline` for the failure
+you will actually hit. The Discord bot is written against it, which is the
+point: a second interface should be a few lines, not a pile of re-derived
+`requests` boilerplate.
 
 All three come from one table in `api_surface.py`, and `tests/test_api_surface.py`
 holds that table against Flask's own routing map in both directions — a route
