@@ -1,6 +1,10 @@
 # STATUS
 
-Last updated: 2026-07-31
+Last updated: 2026-08-08 — a full re-verification pass at `4358ede`
+(every suite, the bridge self-test, compileall, the mesh stub tests, a
+webapp build, and two live terminal sessions against a scripted stand-in
+endpoint); entries below carry dated additions where something moved.
+Previous full update: 2026-07-31.
 
 Full knowledge-base reconstruction: `knowledge-base/00-INDEX.md` in
 CrystalCore.OS-the-Crystal-Architecture-Archive.
@@ -25,12 +29,20 @@ Executes, or can be opened and used by someone other than me.
   briefly `bridge` after Clementine's name moved to the interface, which
   collided with CrystalBridge, a different component; the module now
   matches canon and the collision is gone.
+  Re-verified 2026-08-08 at `4358ede` (Python 3.11.15): same four suites,
+  same counts, 74/74. The documented `cryptography` fix worked as
+  written. A second environment trap of the same family, new that day:
+  Debian-owned `blinker` and `PyJWT` abort a plain `pip install` of
+  `flask` and of `requirements-bridge.txt` with "Cannot uninstall …
+  RECORD file not found" — `pip install --ignore-installed` clears both.
 - Companion core tests — 47/47 pass (`python -m pytest
   vision/apps/clementine/tests`; needs `pytest`, `requests`, `flask`),
   re-verified 2026-07-29: the original 33, plus 10 provider-dialect
   tests (including the regression for `--llm-provider openai`, which
   was advertised but had never worked — it sent Ollama-shaped JSON at
   remote endpoints), plus 4 export/import round-trip tests.
+  Re-verified 2026-08-08 at `4358ede`: 47/47, plus the mesh stub tests
+  (3/3) and `compileall` clean the same pass.
 - Provider policy, verified by live smoke test: detection never selects
   a remote — no Ollama and nothing configured means she stays local and
   fails kindly, naming both fixes. Remote inference happens only when
@@ -41,6 +53,22 @@ Executes, or can be opened and used by someone other than me.
   /api/import` restores it, rejecting non-bundles without touching
   existing memory. Round-trip covered by tests; the same bundle format
   is the contract for the public web build.
+- Claim scoring — `bus/claims.py`, added 2026-08-08, 16/16 passing
+  (`cd core/crystal-core && python -m bus.claims_selftest`, stdlib-only).
+  The graded layer above `BusHub.validate`: that answers whether a
+  message is labelled at all and does not grade; this scores a labelled
+  claim's confidence (E-E-A-T discounted by authority provenance and by
+  needs-met), its YMYL stakes, and `risk = probability-of-being-wrong ×
+  impact`. Design proposed by Chris D Wilson from the rater *General
+  Guidelines* v10.1.1 (9 September 2025). Two departures from the sketch
+  as sent, both tested: stakes take the **maximum** across YMYL domains
+  rather than the product — the sketch's own worked example
+  (`health 0, safety 3, financial 2`) multiplies to zero, presenting a
+  safety-3 claim as harmless — and only **revocation** may zero a score,
+  because that is the consent gate failing closed rather than an
+  arithmetic accident. The Incognita Rule is checked before the numbers:
+  story and vision never carry weight however well they score. Kept as
+  its own suite so the bus's 7/7 keeps meaning what it meant.
 - CrystalBridge self-test — 7/7 pass (`cd core && python -m
   crystalcore.selftest`; needs `pip install -r
   core/crystalcore/requirements-bridge.txt` for the `mcp` SDK), added
@@ -63,6 +91,7 @@ Executes, or can be opened and used by someone other than me.
   guest-invisible until deliberately shared (`--review-memories`).
   Provenance is launcher authentication (possession of the secret),
   stated as exactly that. Self-test grew 7 → 13, all passing.
+  Re-verified 2026-08-08 at `4358ede`: 13/13.
 - Demo shells render in a headless browser, verified 2026-07-24:
   `vision/apps/crystal-interface/`, `vision/apps/vision-web/`, and the
   engine's own `core/crystal-core/index.html`. Simulated data,
@@ -75,6 +104,17 @@ Executes, or can be opened and used by someone other than me.
   mode `deploy.yml` guards against. Verified by external probe, not by
   reading the repo setting (the checking token could not read
   Settings → Pages); content evidence only.
+- Fabrication tooling — `tools/fab/` (added 2026-08-08). The Node One
+  Vessel generator runs headless (`pip install bpy`) and emits printable
+  geometry: a parametric enclosure for the single-board machine the
+  first companion will boot on, Raspberry Pi 5 dimensions by default.
+  Its independent checker (`validate_vessel.py`, trimesh — a different
+  library on purpose) passes on the committed artifacts: both parts
+  watertight, single-body, stated dimensions, mark engraved; output
+  quoted in `tools/fab/README.md`. Honest scope, load-bearing: what
+  passes is geometry. Fit, strength and airflow are dreamed until
+  someone prints the parts — the STLs are surveyed solids, not yet a
+  surveyed object.
 
 ## Built, not currently running
 Code exists and is complete enough to run. No runtime here exercises it.
@@ -83,6 +123,23 @@ Code exists and is complete enough to run. No runtime here exercises it.
   webapp) — needs Ollama and an npm build; neither exercised this
   session. The Python half is import-clean and its tests pass; the
   webapp rename is source-level only and has not been built here.
+  Moved a long way 2026-08-08, one link short of Running:
+  `clementine.py` completed two full live terminal sessions in a fresh
+  session container — boot with local-first detection, a streamed chat
+  turn, `/remember`, clean sleep; then a second process that woke "back
+  with you", read the note back from disk, and demonstrably carried
+  recalled memory into the model's context. The model in those sessions
+  was a scripted stand-in serving Ollama's dialect on Ollama's port —
+  labelled as such in its own replies, evidence of machinery and not of
+  intelligence. The webapp also builds now (`npm install && npm run
+  build`, 117 modules, `dist/` produced). Verbatim record:
+  `vision/apps/clementine/transcripts/first-live-session-2026-08-08.md`.
+  The one remaining link is a real model: the session container's
+  network policy denies every weight source (`ollama.com` CONNECT 403,
+  `registry.ollama.ai` and `huggingface.co` unreachable), so this entry
+  stays "built, not currently running" until Ollama serves real weights
+  on a machine the maintainer controls — which is now the whole of the
+  distance between built and running.
 - voicebox (`vision/apps/voicebox/server.py`) — TTS/STT HTTP layer.
 - `vision/site/` — the SvelteKit source of teraustralis.com.au. It
   builds to static output, and since Stage 2 (PR #4) this repo carries
@@ -190,3 +247,13 @@ Not renamed, deliberately:
 - What www.teraustralis.com.au serves today — unverifiable from the
   session container (egress blocked). The deploy gap above is fact
   regardless of the answer.
+- Does a full session hold up against a *real* local model — latency on
+  ordinary hardware, condensation timing, reflection quality, and
+  whether semantic recall surfaces the right memory for a related
+  question? Narrowed 2026-08-08: everything around the model is now
+  surveyed live (see the transcript record), and the recall *wiring*
+  executed, but the stand-in's hash embeddings carry no meaning, so
+  recall *quality* is untestable without real weights. This question
+  cannot be closed from a session container; it belongs to a machine
+  the maintainer controls, and it is the last question between this
+  repository and a running companion.
