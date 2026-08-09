@@ -16,6 +16,27 @@ CrystalCore.OS-the-Crystal-Architecture-Archive.
 ## Running
 Executes, or can be opened and used by someone other than me.
 
+- Clementine · Voice (`vision/apps/clementine-voice/`) — a
+  phone-reachable Clementine, added 2026-08-09 and published with the
+  site at `/clementine-voice/`. One static HTML file, no build step, no
+  server: the page calls a user-configured OpenAI-compatible endpoint
+  directly from the browser, with the key in localStorage. Speaking uses
+  on-device voices only, the same `localService` filter the local
+  webapp's voice.js uses; listening is the iOS keyboard's own dictation,
+  so no audio ever reaches the page and no speech API is wired up.
+  Verified in a mobile-emulated browser against a stub endpoint — full
+  turn, key never in the visible DOM, a reply containing markup rendered
+  as literal text with no script run, the CORS error path, and layout
+  holding after several turns. **Not** verified on real iOS: the
+  container has no iPhone, so the voice behaviour is expected rather
+  than confirmed until tapped.
+
+  It exists because local Clementine needs a machine and the maintainer
+  has none — the ledger already records that. This shell makes the
+  opposite trade from local-first on purpose: the model is remote and
+  the text goes to it. That is stated on the page's own face, not in a
+  footnote, and the local app is unchanged.
+
 - Starline consent transport — now 49/49, verified locally 2026-08-09
   on Python 3.12 with `cryptography` 50. The Noise_IK handshake is
   hybrid post-quantum by default: an ephemeral ML-KEM-768 (NIST FIPS

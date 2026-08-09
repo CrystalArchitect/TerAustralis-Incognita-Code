@@ -52,6 +52,7 @@ jobs:
         run: |
           cp -r vision/apps/crystal-interface vision/site/build/crystal-interface
           cp -r vision/apps/vision-web vision/site/build/vision-web
+          cp -r vision/apps/clementine-voice vision/site/build/clementine-voice
 
       # vision/site/static/CNAME is copied into the build by SvelteKit, so the
       # custom domain travels with the artifact as well as living in settings.

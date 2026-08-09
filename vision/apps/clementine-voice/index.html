@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0a0e17" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Clementine · Voice</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --panel: rgba(18, 28, 48, 0.88);
+    --line: rgba(0, 229, 255, 0.22);
+    --ink: #e0f7ff;
+    --dim: #9fb8c6;
+    --cyan: #00e5ff;
+    --them: #7dffb3;
+    --warn: #ffcf6b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    /* Fixed height with the page itself unscrollable, so only #log moves.
+       min-height lets the whole body scroll once the transcript grows, which
+       drags the header and the banner off-screen. */
+    height: 100svh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* The iPhone notch and home indicator. Without these the composer sits
+       under the gesture bar and the header under the status bar. */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  header {
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; background: var(--bg); z-index: 5;
+  }
+  .mark { width: 22px; height: 22px; flex: none;
+    background: linear-gradient(135deg, #00e5ff, #7b2ff7);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+  h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.5px; }
+  header button {
+    margin-left: auto; background: none; border: 1px solid var(--line);
+    color: var(--dim); border-radius: 8px; padding: 7px 11px; font-size: 13px;
+    min-height: 38px;
+  }
+
+  /* Belt-Three, on the face of the thing. This shell is not local: saying so
+     where it can be read is the whole point, not a disclaimer to bury. */
+  .belt {
+    margin: 10px 16px 0; padding: 10px 12px;
+    border: 1px solid rgba(255, 207, 107, 0.4); border-radius: 10px;
+    background: rgba(255, 207, 107, 0.07);
+    color: var(--warn); font-size: 12.5px; line-height: 1.5;
+  }
+  .belt b { color: #ffe0a3; }
+
+  #log { flex: 1; overflow-y: auto; padding: 14px 16px 8px; -webkit-overflow-scrolling: touch; }
+  .turn { margin-bottom: 14px; max-width: 92%; }
+  .turn.you { margin-left: auto; }
+  .who { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .turn.you .who { text-align: right; }
+  .bubble {
+    padding: 10px 13px; border-radius: 13px; white-space: pre-wrap;
+    overflow-wrap: anywhere; border: 1px solid var(--line);
+  }
+  .turn.you .bubble { background: rgba(0, 229, 255, 0.09); }
+  .turn.them .bubble { background: var(--panel); color: var(--them); }
+  .turn.err .bubble { border-color: rgba(255, 120, 120, 0.5); color: #ff9d9d; background: rgba(255,90,90,0.07); }
+  .hint { color: var(--dim); font-size: 13px; padding: 6px 2px 0; }
+
+  #composer { border-top: 1px solid var(--line); padding: 10px 12px 12px; background: var(--bg); }
+  .row { display: flex; gap: 8px; align-items: flex-end; }
+  textarea {
+    flex: 1; resize: none; background: rgba(255,255,255,0.05); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px;
+    font: inherit; min-height: 46px; max-height: 40svh;
+  }
+  textarea:focus { outline: 2px solid rgba(0,229,255,0.45); outline-offset: -1px; }
+  button.go, button.stop {
+    flex: none; min-width: 52px; min-height: 46px; border-radius: 12px;
+    border: 1px solid var(--line); background: rgba(0,229,255,0.14);
+    color: var(--cyan); font-size: 17px; font-weight: 600;
+  }
+  button.stop { background: rgba(255,120,120,0.14); border-color: rgba(255,120,120,0.45); color: #ff9d9d; }
+  button[disabled] { opacity: 0.45; }
+  .tools { display: flex; gap: 14px; align-items: center; margin-top: 9px; font-size: 13px; color: var(--dim); flex-wrap: wrap; }
+  .tools label { display: flex; gap: 6px; align-items: center; }
+  input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--cyan); }
+
+  dialog {
+    border: 1px solid var(--line); background: #0d1526; color: var(--ink);
+    border-radius: 14px; padding: 0; width: min(94vw, 460px);
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.66); }
+  .sheet { padding: 16px; }
+  .sheet h2 { font-size: 15px; margin-bottom: 4px; }
+  .sheet p.note { font-size: 12.5px; color: var(--dim); margin-bottom: 14px; line-height: 1.5; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--dim); margin-bottom: 4px; }
+  .field input, .field select {
+    width: 100%; background: rgba(255,255,255,0.05); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px; padding: 10px; font: inherit;
+    min-height: 44px;
+  }
+  .sheet .actions { display: flex; gap: 8px; margin-top: 4px; }
+  .sheet .actions button { flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--line);
+    background: rgba(0,229,255,0.13); color: var(--cyan); font: inherit; font-weight: 600; }
+  .sheet .actions button.ghost { background: none; color: var(--dim); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="mark" aria-hidden="true"></div>
+    <h1>Clementine</h1>
+    <button id="settings-btn" type="button">Setup</button>
+  </header>
+
+  <div class="belt" id="belt">
+    <b>Voice is on-device. The model is not.</b> Speech uses your phone's own
+    installed voices, so no audio leaves it — but what you type goes to
+    whatever endpoint you set up. Opposite trade from local Clementine, said
+    here rather than left to be discovered.
+  </div>
+
+  <main id="log" role="log" aria-live="polite" aria-label="Conversation"></main>
+
+  <div id="composer">
+    <div class="row">
+      <textarea id="input" rows="1" placeholder="Type, or tap the 🎤 on your keyboard to speak…"
+                enterkeyhint="send" autocapitalize="sentences"></textarea>
+      <button class="go" id="send" type="button" aria-label="Send">↑</button>
+    </div>
+    <div class="tools">
+      <label><input type="checkbox" id="speak-toggle" checked /> Speak replies</label>
+      <select id="voice-pick" aria-label="Voice" style="background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:6px;min-height:36px;max-width:46%"></select>
+      <button class="stop" id="hush" type="button" style="min-width:auto;min-height:36px;padding:0 12px;font-size:13px">Hush</button>
+    </div>
+  </div>
+
+  <dialog id="settings">
+    <form method="dialog" class="sheet">
+      <h2>Setup</h2>
+      <p class="note">
+        Anything OpenAI-compatible. Your key is kept in this browser's
+        localStorage on this device and is sent only to the endpoint below —
+        there is no server of ours in the path. Clearing Safari's data clears it.
+        A shared or public phone is the wrong place to store a key.
+      </p>
+      <div class="field">
+        <label for="f-base">Endpoint (base URL)</label>
+        <input id="f-base" type="url" inputmode="url" autocomplete="off"
+               placeholder="https://openrouter.ai/api/v1" />
+      </div>
+      <div class="field">
+        <label for="f-key">API key</label>
+        <input id="f-key" type="password" autocomplete="off" placeholder="sk-…" />
+      </div>
+      <div class="field">
+        <label for="f-model">Model</label>
+        <input id="f-model" type="text" autocomplete="off" placeholder="e.g. anthropic/claude-sonnet-4.5" />
+      </div>
+      <div class="actions">
+        <button value="save" id="save">Save</button>
+        <button value="cancel" class="ghost" type="submit" formnovalidate>Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  var KEY = "clementine.voice.v1";
+  var log = document.getElementById("log");
+  var input = document.getElementById("input");
+  var sendBtn = document.getElementById("send");
+  var speakToggle = document.getElementById("speak-toggle");
+  var voicePick = document.getElementById("voice-pick");
+  var dlg = document.getElementById("settings");
+
+  var cfg = load();
+  var history = [];
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) { /* private mode */ }
+  }
+
+  // ---- transcript ---------------------------------------------------------
+  // textContent everywhere: a model reply is untrusted text and must never
+  // reach innerHTML, or a reply containing markup becomes markup.
+  function say(who, text, cls) {
+    var wrap = document.createElement("div");
+    wrap.className = "turn " + (cls || (who === "You" ? "you" : "them"));
+    var label = document.createElement("div");
+    label.className = "who";
+    label.textContent = who;
+    var bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    wrap.append(label, bubble);
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+    return bubble;
+  }
+
+  // ---- voice --------------------------------------------------------------
+  // Same promise as vision/apps/clementine/webapp/src/lib/voice.js: on-device
+  // voices only. A network voice would ship the reply text to a TTS server,
+  // which is exactly what the banner says does not happen.
+  var speechOK = "speechSynthesis" in window;
+
+  function localVoices() {
+    if (!speechOK) return [];
+    return window.speechSynthesis.getVoices().filter(function (v) { return v.localService; });
+  }
+
+  function fillVoices() {
+    var vs = localVoices();
+    voicePick.textContent = "";
+    if (!vs.length) {
+      var o = document.createElement("option");
+      o.textContent = speechOK ? "no on-device voice" : "no speech support";
+      voicePick.appendChild(o);
+      voicePick.disabled = true;
+      return;
+    }
+    voicePick.disabled = false;
+    vs.forEach(function (v) {
+      var o = document.createElement("option");
+      o.value = v.name;
+      o.textContent = v.name;
+      if (v.name === cfg.voice) o.selected = true;
+      voicePick.appendChild(o);
+    });
+  }
+
+  function speak(text) {
+    if (!speechOK || !speakToggle.checked) return;
+    var vs = localVoices();
+    var voice = vs.filter(function (v) { return v.name === cfg.voice; })[0] || vs[0];
+    if (!voice) return;  // silence beats a cloud voice
+    var clean = String(text).replace(/\s+/g, " ").trim();
+    if (!clean) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(clean);
+    u.voice = voice;
+    window.speechSynthesis.speak(u);
+  }
+
+  if (speechOK) {
+    fillVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", fillVoices);
+  } else {
+    fillVoices();
+  }
+  voicePick.addEventListener("change", function () { cfg.voice = voicePick.value; save(); });
+  document.getElementById("hush").addEventListener("click", function () {
+    if (speechOK) window.speechSynthesis.cancel();
+  });
+
+  // iOS will not speak until speech is started inside a user gesture. Priming
+  // with an empty utterance on the first tap makes later replies audible;
+  // without it the first reply is silently swallowed.
+  var primed = false;
+  function primeSpeech() {
+    if (primed || !speechOK) return;
+    primed = true;
+    try { window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (e) {}
+  }
+
+  // ---- settings -----------------------------------------------------------
+  var fBase = document.getElementById("f-base");
+  var fKey = document.getElementById("f-key");
+  var fModel = document.getElementById("f-model");
+
+  function openSettings() {
+    fBase.value = cfg.base || "";
+    fKey.value = cfg.key || "";
+    fModel.value = cfg.model || "";
+    dlg.showModal();
+  }
+  document.getElementById("settings-btn").addEventListener("click", openSettings);
+  dlg.addEventListener("close", function () {
+    if (dlg.returnValue !== "save") return;
+    cfg.base = fBase.value.trim().replace(/\/+$/, "");
+    cfg.key = fKey.value.trim();
+    cfg.model = fModel.value.trim();
+    save();
+  });
+
+  // ---- the turn -----------------------------------------------------------
+  function ready() { return cfg.base && cfg.key && cfg.model; }
+
+  async function send() {
+    var text = input.value.trim();
+    if (!text) return;
+    primeSpeech();
+    if (!ready()) {
+      say("Clementine", "I need an endpoint, a key and a model first — tap Setup.", "err");
+      openSettings();
+      return;
+    }
+    input.value = "";
+    input.style.height = "auto";
+    say("You", text);
+    history.push({ role: "user", content: text });
+
+    sendBtn.disabled = true;
+    var waiting = say("Clementine", "…", "them");
+
+    try {
+      var res = await fetch(cfg.base + "/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.key },
+        body: JSON.stringify({ model: cfg.model, messages: history })
+      });
+      if (!res.ok) {
+        var detail = await res.text();
+        throw new Error("HTTP " + res.status + " — " + detail.slice(0, 300));
+      }
+      var data = await res.json();
+      var reply = data && data.choices && data.choices[0] &&
+                  data.choices[0].message && data.choices[0].message.content;
+      if (!reply) throw new Error("The endpoint replied without a message. Raw: " +
+                                  JSON.stringify(data).slice(0, 300));
+      waiting.textContent = reply;
+      history.push({ role: "assistant", content: reply });
+      speak(reply);
+    } catch (err) {
+      // Shown in full rather than reduced to "something went wrong": on a phone
+      // this text is the only diagnostic there is. A bare "Load failed" here is
+      // almost always the endpoint refusing a browser origin (CORS).
+      waiting.parentElement.className = "turn err";
+      waiting.textContent = String(err && err.message ? err.message : err) +
+        "\n\nIf that says \"Load failed\" or \"NetworkError\", the endpoint is " +
+        "probably refusing browser requests (CORS). Providers differ: some allow " +
+        "calls straight from a page, some require a server in between.";
+    } finally {
+      sendBtn.disabled = false;
+      log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  sendBtn.addEventListener("click", send);
+  input.addEventListener("input", function () {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, window.innerHeight * 0.4) + "px";
+  });
+  input.addEventListener("keydown", function (e) {
+    // Enter sends on a hardware keyboard; on iOS the on-screen return key
+    // inserts a newline, which is what you want mid-dictation.
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && window.innerWidth > 700) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  say("Clementine",
+      speechOK
+        ? "I'm here. Type, or tap the microphone key on your keyboard and talk — that dictation happens on your phone, not here.\n\nTap Setup once to point me at a model."
+        : "I'm here. This browser has no speech synthesis, so I can't speak aloud — I'll still answer in text.\n\nTap Setup once to point me at a model.",
+      "them");
+  if (!ready()) { /* wait for a tap; showModal() before a gesture is refused on iOS */ }
+})();
+</script>
+</body>
+</html>
