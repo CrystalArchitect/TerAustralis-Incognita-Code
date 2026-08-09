@@ -16,6 +16,23 @@ CrystalCore.OS-the-Crystal-Architecture-Archive.
 ## Running
 Executes, or can be opened and used by someone other than me.
 
+- Starline consent transport — now 41/41, verified locally 2026-08-09
+  on Python 3.12 with `cryptography` 50. The Noise_IK handshake is
+  hybrid post-quantum by default: an ephemeral ML-KEM-768 (NIST FIPS
+  203) secret is mixed into the same chaining key as the X25519 DHs, so
+  a session key requires breaking both. Nine new tests, written to
+  attack the KEM leg specifically rather than only prove it connects —
+  they tamper the encapsulation ciphertext and the public key, count
+  mix_key calls to prove the KEM secret reaches the session key at all,
+  confirm two sessions under one identity never share a key, and prove
+  a hybrid peer and a classical peer fail loudly instead of negotiating
+  down. Scope, stated: this closes harvest-now-decrypt-later on
+  confidentiality. Authentication stays classical, so a future quantum
+  adversary could not read a recorded session but could impersonate a
+  peer in a live one; post-quantum identity would be ML-DSA in
+  `identity.py` and is not done. Needs `cryptography>=47` (the floor was
+  bisected, not guessed: 46 has no `mlkem` module, 47 does).
+
 - Receipts self-test — 15/15, verified locally 2026-08-09 on Python
   3.12 and wired into CI the same day. `receipts/` in core/crystal-core:
   a hash-chained SHA-256 receipt log over text artifacts, stdlib only,

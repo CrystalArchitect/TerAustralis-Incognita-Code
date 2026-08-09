@@ -625,6 +625,177 @@ def test_byte_budget_stops_a_batch_midway_on_the_wire():
         b.stop_serving()
 
 
+# --- hybrid post-quantum handshake -----------------------------------------
+#
+# The point of these is that the ML-KEM leg must be load-bearing, not
+# decorative. A key exchange that *mentions* a post-quantum primitive while
+# deriving its session key entirely from X25519 would pass a naive "does it
+# connect" test and protect nothing. Each test below tries to break the
+# handshake through the KEM specifically.
+
+
+def _noise_statics():
+    from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    from .noise import StaticKeypair
+
+    def one():
+        k = X25519PrivateKey.generate()
+        return StaticKeypair(k, k.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw))
+
+    return one(), one()
+
+
+def _handshake(hybrid_initiator=True, hybrid_responder=True):
+    from .noise import HandshakeState
+
+    i_s, r_s = _noise_statics()
+    i = HandshakeState(True, i_s, r_s.public_bytes, hybrid=hybrid_initiator)
+    r = HandshakeState(False, r_s, None, hybrid=hybrid_responder)
+    return i, r
+
+
+def test_hybrid_handshake_agrees_on_keys_and_transcript():
+    i, r = _handshake()
+    assert r.read_message(i.write_message(b"hello")) == b"hello"
+    assert i.read_message(r.write_message(b"world")) == b"world"
+    assert i.handshake_hash == r.handshake_hash, "both sides must see one transcript"
+    ci, cr = i.split(), r.split()
+    assert ci[0].k == cr[0].k and ci[1].k == cr[1].k, "session keys must match"
+    assert ci[0].k != ci[1].k, "the two directions must never share a key"
+
+
+def test_hybrid_is_the_default():
+    from .noise import HandshakeState, PROTOCOL_NAME_HYBRID
+
+    i_s, r_s = _noise_statics()
+    hs = HandshakeState(True, i_s, r_s.public_bytes)
+    assert hs.hybrid is True, "post-quantum protection must not be opt-in"
+    assert PROTOCOL_NAME_HYBRID != b"Noise_IK_25519_ChaChaPoly_SHA256"
+
+
+def test_kem_secret_actually_reaches_the_session_key():
+    """Strip the KEM mix and the key must change — otherwise it is theatre."""
+    from . import noise as N
+
+    i_s, r_s = _noise_statics()
+
+    def run_counting():
+        calls = {"n": 0}
+        original = N.SymmetricState.mix_key
+
+        def counted(self, ikm):
+            calls["n"] += 1
+            return original(self, ikm)
+
+        N.SymmetricState.mix_key = counted
+        try:
+            a = N.HandshakeState(True, i_s, r_s.public_bytes, hybrid=True)
+            b = N.HandshakeState(False, r_s, None, hybrid=True)
+            b.read_message(a.write_message(b""))
+            a.read_message(b.write_message(b""))
+            hybrid_calls = calls["n"]
+
+            calls["n"] = 0
+            c = N.HandshakeState(True, i_s, r_s.public_bytes, hybrid=False)
+            d = N.HandshakeState(False, r_s, None, hybrid=False)
+            d.read_message(c.write_message(b""))
+            c.read_message(d.write_message(b""))
+            return hybrid_calls, calls["n"]
+        finally:
+            N.SymmetricState.mix_key = original
+
+    hybrid_calls, classical_calls = run_counting()
+    assert hybrid_calls - classical_calls == 2, (
+        f"hybrid must add exactly one mix_key per side, got "
+        f"{hybrid_calls} vs {classical_calls}"
+    )
+
+
+def test_two_hybrid_sessions_never_share_a_key():
+    """Same static identities, fresh KEM ephemerals — forward secrecy."""
+    i_s, r_s = _noise_statics()
+    from .noise import HandshakeState
+
+    keys = []
+    for _ in range(2):
+        a = HandshakeState(True, i_s, r_s.public_bytes)
+        b = HandshakeState(False, r_s, None)
+        b.read_message(a.write_message(b""))
+        a.read_message(b.write_message(b""))
+        keys.append(a.split()[0].k)
+    assert keys[0] != keys[1], "a reused session key would break forward secrecy"
+
+
+def test_tampered_kem_ciphertext_fails_the_handshake():
+    from .noise import DHLEN, HandshakeFailed
+
+    i, r = _handshake()
+    r.read_message(i.write_message(b""))
+    msg2 = bytearray(r.write_message(b""))
+    msg2[DHLEN + 5] ^= 0xFF  # a bit inside the ML-KEM ciphertext
+    try:
+        i.read_message(bytes(msg2))
+        assert False, "a tampered KEM ciphertext must never be accepted"
+    except HandshakeFailed:
+        pass
+
+
+def test_tampered_kem_public_key_fails_the_handshake():
+    from .noise import DHLEN, HandshakeFailed
+
+    i, r = _handshake()
+    msg1 = bytearray(i.write_message(b""))
+    msg1[DHLEN + 10] ^= 0xFF  # a bit inside the ML-KEM public key
+    try:
+        r.read_message(bytes(msg1))
+        i.read_message(r.write_message(b""))
+        assert False, "a tampered KEM public key must never be accepted"
+    except HandshakeFailed:
+        pass
+
+
+def test_hybrid_and_classical_peers_cannot_talk():
+    """No silent downgrade: mismatched modes must fail, loudly, both ways."""
+    from .noise import HandshakeFailed
+
+    for hi, hr in ((True, False), (False, True)):
+        i, r = _handshake(hi, hr)
+        try:
+            r.read_message(i.write_message(b""))
+            i.read_message(r.write_message(b""))
+            assert False, f"mismatch (initiator={hi}, responder={hr}) must not succeed"
+        except HandshakeFailed:
+            pass
+
+
+def test_hybrid_messages_fit_the_handshake_frame_limit():
+    from . import transport
+    from .noise import KEM_CTLEN, KEM_PUBLEN
+
+    i, r = _handshake()
+    msg1 = i.write_message(b"")
+    r.read_message(msg1)
+    msg2 = r.write_message(b"")
+    assert len(msg1) < transport.MAX_HANDSHAKE_LEN, "msg1 must fit the server's frame cap"
+    assert len(msg2) < transport.MAX_HANDSHAKE_LEN, "msg2 must fit the server's frame cap"
+    # The overhead is exactly the two ML-KEM values and nothing else.
+    ci, cr = _handshake(False, False)
+    c_msg1 = ci.write_message(b"")
+    cr.read_message(c_msg1)
+    c_msg2 = cr.write_message(b"")
+    assert len(msg1) - len(c_msg1) == KEM_PUBLEN
+    assert len(msg2) - len(c_msg2) == KEM_CTLEN
+
+
+def test_classical_mode_still_works():
+    """Kept available and kept correct — the escape hatch must not rot."""
+    i, r = _handshake(False, False)
+    assert r.read_message(i.write_message(b"ping")) == b"ping"
+    assert i.read_message(r.write_message(b"pong")) == b"pong"
+    assert i.split()[0].k == r.split()[0].k
+
+
 def main() -> int:
     tests = [
         test_identity_roundtrip,
@@ -659,6 +830,15 @@ def main() -> int:
         test_fragment_kind_and_since_filtering,
         test_forged_fragment_is_rejected_by_receiver,
         test_discovery_via_unicast_loopback,
+        test_hybrid_handshake_agrees_on_keys_and_transcript,
+        test_hybrid_is_the_default,
+        test_kem_secret_actually_reaches_the_session_key,
+        test_two_hybrid_sessions_never_share_a_key,
+        test_tampered_kem_ciphertext_fails_the_handshake,
+        test_tampered_kem_public_key_fails_the_handshake,
+        test_hybrid_and_classical_peers_cannot_talk,
+        test_hybrid_messages_fit_the_handshake_frame_limit,
+        test_classical_mode_still_works,
     ]
     for t in tests:
         t()
