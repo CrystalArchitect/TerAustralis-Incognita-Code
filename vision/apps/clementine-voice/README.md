@@ -54,6 +54,23 @@ The key lives in this browser's `localStorage` and goes only to that endpoint �
 no server of ours is in the path. `companion.py` already abstracts the same
 dialect, so nothing here locks you to a provider.
 
+## If it says 401 "Missing Authentication header"
+
+That is usually not a wrong key. Browsers **strip the `Authorization` header
+across a redirect to another origin**, so if the endpoint you configured
+redirects — `http://` upgrading to `https://`, a bare host resolving to `www.`,
+a shortened path — the provider receives the request with no key at all and
+says the header is missing rather than invalid.
+
+The page now reports this itself: an error shows the endpoint, the model, the
+key's length and first/last three characters, the request's **final URL**, and
+whether it was redirected. Enough to tell "no key", "that's a URL in the key
+box" and "a redirect ate the header" apart, without printing the secret.
+
+Put the endpoint's exact final URL in Setup: `https://`, correct host, no
+trailing slash. A scheme-less or `http://` entry is upgraded on save for the
+same reason.
+
 ## Known limits
 
 - **CORS decides whether a provider works.** The page calls the endpoint

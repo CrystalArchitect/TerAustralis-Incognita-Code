@@ -171,11 +171,21 @@
         is in the path. A shared phone is the wrong place to keep a key.
       </p>
       <div class="field"><label for="f-base">Endpoint (base URL)</label>
-        <input id="f-base" type="url" inputmode="url" autocomplete="off" placeholder="https://openrouter.ai/api/v1" /></div>
+        <!-- text, not url: type="url" makes the browser reject a scheme-less
+             value on submit, so the dialog silently refuses to close and the
+             normalisation below never gets to add the https:// itself. -->
+        <input id="f-base" type="text" inputmode="url" autocomplete="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="tap and type — e.g. openrouter.ai/api/v1" /></div>
       <div class="field"><label for="f-key">API key</label>
-        <input id="f-key" type="password" autocomplete="off" placeholder="sk-…" /></div>
+        <input id="f-key" type="password" autocomplete="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="tap and paste your key" /></div>
       <div class="field"><label for="f-model">Model</label>
-        <input id="f-model" type="text" autocomplete="off" placeholder="e.g. anthropic/claude-sonnet-4.5" /></div>
+        <input id="f-model" type="text" autocomplete="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="tap and type a model id" /></div>
+      <p class="note" id="stored" style="margin-bottom:10px"></p>
       <div class="field"><label for="f-voice">Voice (on-device only)</label>
         <select id="f-voice"></select></div>
       <div class="actions">
@@ -487,19 +497,68 @@
   function openSettings() {
     fBase.value = cfg.base || ""; fKey.value = cfg.key || ""; fModel.value = cfg.model || "";
     fillVoices();
+    var stored = document.getElementById("stored");
+    stored.textContent = ready()
+      ? "Currently stored — endpoint: " + cfg.base + " · model: " + cfg.model +
+        " · key: " + keyShape()
+      : "Nothing stored yet. Grey text in the boxes below is a hint, not a value — " +
+        "each box has to be typed into.";
     settingsDlg.showModal();
   }
   document.getElementById("settings-btn").addEventListener("click", function () { prime(); openSettings(); });
   document.getElementById("privacy-btn").addEventListener("click", function () { privacyDlg.showModal(); });
   settingsDlg.addEventListener("close", function () {
     if (settingsDlg.returnValue !== "save") return;
-    cfg.base = fBase.value.trim().replace(/\/+$/, "");
+    var base = fBase.value.trim().replace(/\/+$/, "");
+    // Upgrade http -> https and add a missing scheme. Both otherwise cause a
+    // redirect, and a redirect is exactly what strips Authorization.
+    if (/^http:\/\//i.test(base)) base = base.replace(/^http:\/\//i, "https://");
+    else if (base && !/^https:\/\//i.test(base)) base = "https://" + base;
+    cfg.base = base;
     cfg.key = fKey.value.trim();
     cfg.model = fModel.value.trim();
     if (!fVoice.disabled) cfg.voice = fVoice.value;
     save();
     setState("Tap to talk");
   });
+
+  // ---- diagnostics --------------------------------------------------------
+  // On a phone there is no devtools, so the page has to be able to say what it
+  // actually sent. The key is shown only as a length and its first/last three
+  // characters — enough to tell "empty", "that's my endpoint URL" and "looks
+  // like a key" apart, without printing a secret on screen.
+  function keyShape() {
+    var k = cfg.key || "";
+    if (!k) return "no key stored";
+    var shape = k.length + " chars, " + k.slice(0, 3) + "…" + k.slice(-3);
+    if (/\s/.test(k)) shape += " — CONTAINS WHITESPACE, likely a bad paste";
+    if (/^https?:/i.test(k)) shape += " — that looks like a URL, not a key";
+    return shape;
+  }
+
+  function diagnose(res, body) {
+    var lines = ["What was sent:",
+                 "  endpoint  " + cfg.base + "/chat/completions",
+                 "  model     " + cfg.model,
+                 "  key       " + keyShape()];
+    if (res) {
+      lines.push("  final URL " + res.url);
+      if (res.redirected) {
+        lines.push("",
+          "THE REQUEST WAS REDIRECTED. Browsers strip the Authorization header",
+          "across a redirect to another origin, so the endpoint sees no key.",
+          "Fix: put the endpoint's exact final URL in Setup — https, no",
+          "trailing slash, and the same host it ends up on.");
+      }
+    }
+    if (/missing.*auth|no auth|unauthor/i.test(body || "") && !(res && res.redirected)) {
+      lines.push("",
+        "The endpoint says the auth header was missing rather than wrong.",
+        "If the key above looks right, check the endpoint URL — a redirect",
+        "or a proxy in front of it will drop the header.");
+    }
+    return lines.join("\n");
+  }
 
   // ---- the turn -----------------------------------------------------------
   async function send(text) {
@@ -521,7 +580,15 @@
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.key },
         body: JSON.stringify({ model: cfg.model, messages: history, stream: true })
       });
-      if (!res.ok) throw new Error("HTTP " + res.status + " — " + (await res.text()).slice(0, 300));
+      if (!res.ok) {
+        var body = (await res.text()).slice(0, 300);
+        // A 401 that says the header is *missing* (rather than invalid) is
+        // usually not a wrong key. Browsers drop Authorization when a request
+        // is redirected to another origin, so the endpoint receives none —
+        // which is why res.redirected and the final URL are reported here.
+        var why = "HTTP " + res.status + " — " + body + "\n\n" + diagnose(res, body);
+        throw new Error(why);
+      }
 
       var reply = "";
       var ctype = res.headers.get("content-type") || "";
