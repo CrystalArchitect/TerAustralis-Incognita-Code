@@ -62,6 +62,41 @@ python discord_bot.py
 
 Then DM the bot. That is the whole thing.
 
+## Confirming it works
+
+```bash
+python discord_bot.py --check
+```
+
+Four independent things have to be true, and one pass/fail would hide
+which one isn't. So it checks them separately and each failure says what
+to do:
+
+```
+Clementine · Discord — check
+
+[  ok  ] the companion
+          Clementine at http://127.0.0.1:5000, model llama3.1:8b
+[  ok  ] DISCORD_TOKEN
+[  ok  ] allowlist
+          1 allowed: 123456789012345678
+[  ok  ] Discord gateway
+          connected as Clementine#1234, in 1 server(s);
+          message-content intent granted
+
+All four green — DM the bot and she'll answer.
+```
+
+It logs in, waits to become ready, then disconnects. Going all the way to
+ready is the point: **logging in validates the token, but the intents are
+only checked during the gateway handshake.** A missing MESSAGE CONTENT
+INTENT lets the bot connect happily and then appear deaf, and that is the
+failure this exists to catch before you spend an evening on it.
+
+`--check` runs before the bot's own refusals, so it works when nothing is
+set up yet — that is when you need it most. Exit code is 0 only when all
+four pass.
+
 ## The allowlist is not optional
 
 `CLEMENTINE_DISCORD_OWNERS` has no default and the bot **refuses to
@@ -122,12 +157,14 @@ and you are on your own.
   it never drops a character — but it does not know about Markdown, so a
   fenced block broken across the 2000-character line renders as plain
   text in the second half.
-- **Not tested against a live Discord gateway.** The splitting, pacing,
-  allowlist, error text and the API client are covered by tests and the
-  client is exercised against a real running server. Nobody has yet
-  pointed it at a real bot token — there is no Discord account in the
-  build container. Treat the gateway glue as expected, not confirmed,
-  until it has been run once.
+- **Not tested against a live Discord gateway.** Everything below the
+  socket is covered: the `on_message` handler is driven end to end by
+  `tests/test_discord_handlers.py` — real `discord.Client`, real handler,
+  real HTTP client, real Flask app, with only Discord's `Message` and
+  `Channel` standing in — and the API client is also exercised against a
+  live server. What nobody has done is point it at a real bot token;
+  there is no Discord account in the build container. `--check` exists
+  precisely because that last step can only be taken on your machine.
 - **Voice notes are not transcribed.** Sending an audio message does
   nothing. Use the keyboard's dictation key, which is the phone's own
   speech-to-text and never reaches this code.

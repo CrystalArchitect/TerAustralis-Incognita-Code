@@ -157,6 +157,20 @@ def should_answer(*, author_id: int, is_dm: bool, mentioned: bool,
     return is_dm or mentioned
 
 
+def strip_mentions(text: str, user_id: int | None) -> str:
+    """Remove our own @-mention so the model isn't handed `<@1234> hello`.
+
+    `user_id` is optional because `client.user` is `None` until the
+    gateway says we are ready, and a message can in principle reach the
+    handler before then. Dereferencing it unguarded is a crash in the one
+    situation nobody tests by hand — the first seconds of a connection.
+    """
+    if user_id is not None:
+        for mention in (f"<@{user_id}>", f"<@!{user_id}>"):
+            text = text.replace(mention, "")
+    return text.strip()
+
+
 def format_status(status: dict) -> str:
     """The `!status` line.
 
@@ -310,10 +324,8 @@ def build_client(clem: Clementine, owners: set[int]):  # pragma: no cover
                 owners=owners):
             return
 
-        text = message.content
-        for mention in (f"<@{client.user.id}>", f"<@!{client.user.id}>"):
-            text = text.replace(mention, "")
-        text = text.strip()
+        text = strip_mentions(message.content,
+                              client.user.id if client.user else None)
 
         async with message.channel.typing():
             try:
@@ -368,10 +380,139 @@ def _explain(exc: Exception, clem: Clementine) -> str:
     return f"Something went wrong: {exc}"
 
 
+def check_report(*, api_ok: bool, api_detail: str, token_present: bool,
+                 owners: set[int], gateway: str, gateway_detail: str) -> str:
+    """The `--check` output, assembled where it can be tested.
+
+    Written as a checklist because the question it answers — "is this
+    working?" — has four independent parts, and a single pass/fail hides
+    which one is broken. Each line says what to do about a failure, since
+    the person reading it is usually mid-setup rather than debugging.
+    """
+    def mark(ok):
+        return "  ok  " if ok else " FAIL "
+
+    lines = ["Clementine · Discord — check", ""]
+
+    lines.append(f"[{mark(api_ok)}] the companion")
+    lines.append(f"          {api_detail}")
+    if not api_ok:
+        lines.append("          → run `python server.py` on that machine first")
+
+    lines.append(f"[{mark(token_present)}] DISCORD_TOKEN")
+    if not token_present:
+        lines.append("          → not set. Developer portal → Bot → Reset Token")
+
+    lines.append(f"[{mark(bool(owners))}] allowlist")
+    if owners:
+        lines.append(f"          {len(owners)} allowed: "
+                     + ", ".join(str(o) for o in sorted(owners)))
+    else:
+        lines.append("          → CLEMENTINE_DISCORD_OWNERS is empty. Discord "
+                     "→ Settings → Advanced → Developer Mode,")
+        lines.append("            then right-click your name → Copy User ID")
+
+    lines.append(f"[{mark(gateway == 'ok')}] Discord gateway")
+    lines.append(f"          {gateway_detail}")
+    if gateway == "intent":
+        lines.append("          → Developer portal → your app → Bot →")
+        lines.append("            turn on MESSAGE CONTENT INTENT, then re-run")
+    elif gateway == "token":
+        lines.append("          → the token was rejected. Reset it and copy "
+                     "the whole thing")
+    elif gateway == "network":
+        lines.append("          → could not reach Discord. Check the "
+                     "machine's connection")
+    elif gateway == "skipped":
+        # Distinct from a rejected token: nothing was tried, so telling
+        # someone to reset a token they never made is a wrong instruction
+        # at the exact moment they are following instructions.
+        lines.append("          → set DISCORD_TOKEN and run --check again")
+
+    everything = api_ok and token_present and bool(owners) and gateway == "ok"
+    lines.append("")
+    lines.append("All four green — DM the bot and she'll answer." if everything
+                 else "Fix the lines marked FAIL above, then run --check again.")
+    return "\n".join(lines)
+
+
+async def _probe_gateway(token: str) -> tuple[str, str]:  # pragma: no cover
+    """Log in, become ready, and disconnect. Returns (code, detail).
+
+    Logging in alone would validate the token but not the intents —
+    privileged intents are only rejected during the gateway handshake, and
+    a missing MESSAGE CONTENT INTENT is by far the most confusing failure
+    (the bot connects happily and then appears deaf). So this goes all the
+    way to ready and then closes.
+    """
+    import discord
+
+    intents = discord.Intents.default()
+    intents.message_content = True
+    client = discord.Client(intents=intents)
+    seen: dict = {}
+
+    @client.event
+    async def on_ready():
+        seen["user"] = str(client.user)
+        seen["guilds"] = len(client.guilds)
+        await client.close()
+
+    try:
+        await asyncio.wait_for(client.start(token), timeout=45)
+    except discord.PrivilegedIntentsRequired:
+        return "intent", ("connected, but Discord refused the message-content "
+                          "intent — the bot would see your messages with the "
+                          "text stripped out")
+    except discord.LoginFailure:
+        return "token", "Discord rejected the token"
+    except asyncio.TimeoutError:
+        return "network", "timed out after 45s without becoming ready"
+    except Exception as exc:                              # noqa: BLE001
+        return "network", f"{type(exc).__name__}: {exc}"
+    finally:
+        if not client.is_closed():
+            await client.close()
+
+    if "user" not in seen:
+        return "network", "the connection closed before becoming ready"
+    return "ok", (f"connected as {seen['user']}, in {seen['guilds']} server(s); "
+                  "message-content intent granted")
+
+
+def run_check(token: str, owners: set[int], base: str) -> int:  # pragma: no cover
+    clem = Clementine(base=base)
+    try:
+        who = clem.status()
+        api_ok, api_detail = True, (
+            f"{who.get('name') or 'Clementine'} at {base}, "
+            f"model {who.get('model')}")
+    except ClementineOffline:
+        api_ok, api_detail = False, f"nothing answering at {base}"
+    except ClementineAPIError as exc:
+        api_ok, api_detail = False, f"{base} answered {exc.status}"
+
+    if token:
+        gateway, gateway_detail = asyncio.run(_probe_gateway(token))
+    else:
+        gateway, gateway_detail = "skipped", "not attempted — no token set"
+
+    print(check_report(api_ok=api_ok, api_detail=api_detail,
+                       token_present=bool(token), owners=owners,
+                       gateway=gateway, gateway_detail=gateway_detail))
+    return 0 if (api_ok and token and owners and gateway == "ok") else 1
+
+
 def main() -> int:  # pragma: no cover - entry point
     token = os.environ.get("DISCORD_TOKEN", "").strip()
     owners = parse_owner_ids(os.environ.get("CLEMENTINE_DISCORD_OWNERS", ""))
     base = os.environ.get("CLEMENTINE_API", "http://127.0.0.1:5000")
+
+    if "--check" in sys.argv[1:]:
+        # Deliberately runs before the refusals below: --check exists to
+        # tell you what is missing, so it must not itself refuse to run
+        # because something is missing.
+        return run_check(token, owners, base)
 
     if not token:
         print("DISCORD_TOKEN is not set. See DISCORD.md.", file=sys.stderr)
