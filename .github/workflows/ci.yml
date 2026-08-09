@@ -44,6 +44,9 @@ jobs:
       - name: RDP self-test
         working-directory: core/crystal-core
         run: python -m rdp.selftest
+      - name: Receipts self-test
+        working-directory: core/crystal-core
+        run: python -m receipts.selftest
       - name: Install CrystalBridge dependencies
         working-directory: core/crystalcore
         run: pip install -r requirements-bridge.txt

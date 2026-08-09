@@ -16,6 +16,17 @@ CrystalCore.OS-the-Crystal-Architecture-Archive.
 ## Running
 Executes, or can be opened and used by someone other than me.
 
+- Receipts self-test — 15/15, verified locally 2026-08-09 on Python
+  3.12 and wired into CI the same day. `receipts/` in core/crystal-core:
+  a hash-chained SHA-256 receipt log over text artifacts, stdlib only,
+  with byte-exact `verify` kept separate from canonical `match` (the
+  suite includes the trailing-whitespace attack that separation exists
+  to stop, and chain-edit, chain-delete and forged-HEAD attacks). Born
+  from a received implementation sketch whose six defects are each a
+  test here. The chain HEAD is one anchorable line for the umbrella's
+  OpenTimestamps flow. A receipt proves bytes and order, never truth
+  of content; the module docstring says so in provenance.py's register.
+
 - Crystal Core self-tests — all four suites pass on a fresh clone,
   re-verified 2026-07-29 (Python 3.11): `bus` 7/7, `services` 4/4,
   `rdp` 31/31, `consent_transport` 32/32 (the suite the old `starline`
