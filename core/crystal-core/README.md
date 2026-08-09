@@ -106,7 +106,7 @@ revocable consent. Spec: `../../docs/architecture/crystal-core/STARLINE.md`. Nee
 (`pip install -r requirements-consenttransport.txt`) — the only non-stdlib code in this repo.
 
 ```bash
-python3 -m consent_transport.selftest   # prove it — real TCP sockets, real handshake, 41/41
+python3 -m consent_transport.selftest   # prove it — real TCP sockets, real handshake, 49/49
 python3 -m consent_transport.run demo   # watch it: pair, deny, grant, exchange, revoke, deny
 ```
 
@@ -124,10 +124,22 @@ secret, so an attacker has to break both. A flaw in ML-KEM leaves X25519 holding
 quantum computer leaves ML-KEM holding. Costs 1184 bytes on the first message and 1088
 on the second, and needs `cryptography>=47`.
 
-**What it does not buy:** authentication is still classical (X25519/Ed25519 identities).
-A future quantum adversary could not decrypt a recorded session but could impersonate a
-peer in a live one. This closes harvest-now-decrypt-later on confidentiality only;
-post-quantum *identity* would mean ML-DSA signatures in `identity.py`, a separate change.
+**Identity is hybrid post-quantum too.** Every signature — fragments, consent receipts,
+tokens, revocations — is Ed25519 ++ ML-DSA-65 (NIST FIPS 204), and verification requires
+**both** halves. One good half and one bad half is a forgery, and an Ed25519-only
+signature never verifies, so there is no downgrade to strip down to.
+
+The fingerprint hashes the *whole* hybrid public key, and that part is load-bearing
+rather than cosmetic. A quantum adversary can recover an Ed25519 private key from its
+public key; if the fingerprint committed only to Ed25519, they could pair using the
+victim's genuine Ed25519 key alongside their own ML-DSA key and every signature would
+check out against what the peer stored. Hashing both closes that substitution.
+
+**Known limitation, not fixed here:** the discovery beacon carries the signing key, so
+it grew from ~330 bytes to ~4.2 KB and now exceeds a 1500-byte MTU. Loopback never shows
+this; on a real LAN the datagram IP-fragments and discovery gets flaky. The fix is to
+move the signing key out of the beacon and deliver it over TCP at pairing — a new
+protocol frame, recorded as follow-up rather than half-done.
 
 The two modes use different Noise protocol names, and the name is mixed into the
 handshake hash, so a hybrid peer and a classical peer fail loudly rather than
