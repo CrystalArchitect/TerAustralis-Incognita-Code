@@ -23,6 +23,24 @@ from .identity import Identity
 DISCOVERY_PORT = 8891
 ANNOUNCE_TYPE = "starline-hello"
 
+# A beacon carrying a hybrid signing key is ~4.2 KB, up from ~330 bytes when
+# the signing key was Ed25519 alone. Two consequences, and the second is not
+# fixed here:
+#
+#   * the read buffer has to be bigger than the beacon, or the datagram is
+#     silently truncated and every announcement is discarded as bad JSON;
+#   * 4.2 KB exceeds a 1500-byte MTU, so the datagram is IP-fragmented on a
+#     real LAN. Loopback (MTU 65536) never shows this, so the self-test
+#     passes either way — fragment loss would make LAN discovery flaky in a
+#     way no test here would catch.
+#
+# The real fix is to stop putting the signing key in the beacon at all:
+# announce fingerprint, address, port and the small X25519 key, then carry
+# the signing key over the TCP connection at pairing. That needs a new
+# protocol frame, so it is recorded as known follow-up work rather than
+# half-done here. Discovery grants no trust in either design.
+ANNOUNCE_BUFFER = 16384
+
 
 @dataclass
 class Announcement:
@@ -79,7 +97,7 @@ def listen_for_peers(
     try:
         while time.monotonic() < deadline:
             try:
-                data, addr = sock.recvfrom(4096)
+                data, addr = sock.recvfrom(ANNOUNCE_BUFFER)
             except socket.timeout:
                 continue
             try:

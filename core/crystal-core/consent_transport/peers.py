@@ -15,13 +15,15 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from .identity import fingerprint_for
+
 DEFAULT_PEERS_PATH = Path("starline_peers.json")
 
 
 @dataclass
 class Peer:
-    fingerprint: str          # Ed25519 public key, hex, truncated — display id
-    sign_public_hex: str      # full Ed25519 public key, hex
+    fingerprint: str          # hash of the hybrid public key, truncated — display id
+    sign_public_hex: str      # full hybrid public key (Ed25519 ++ ML-DSA-65), hex
     dh_public_hex: str        # full X25519 public key, hex
     label: str = ""           # human-given name, e.g. "Sam's companion"
     consented: bool = False   # has the human approved fragment exchange with this peer?
@@ -43,7 +45,11 @@ class PeerStore:
         self.path.write_text(json.dumps({fp: asdict(p) for fp, p in self.peers.items()}, indent=2))
 
     def add(self, sign_public_hex: str, dh_public_hex: str, label: str = "") -> Peer:
-        fingerprint = sign_public_hex[:16]
+        # Must be the same derivation Identity.fingerprint uses — hence the
+        # shared function rather than a second copy of the rule here. A
+        # truncation of the key hex (the old rule) would not commit to the
+        # ML-DSA half, which is the whole point of the change.
+        fingerprint = fingerprint_for(bytes.fromhex(sign_public_hex))
         peer = self.peers.get(fingerprint)
         if peer is None:
             peer = Peer(fingerprint, sign_public_hex, dh_public_hex, label)

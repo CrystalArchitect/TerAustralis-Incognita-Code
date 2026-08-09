@@ -16,7 +16,7 @@ CrystalCore.OS-the-Crystal-Architecture-Archive.
 ## Running
 Executes, or can be opened and used by someone other than me.
 
-- Starline consent transport — now 41/41, verified locally 2026-08-09
+- Starline consent transport — now 49/49, verified locally 2026-08-09
   on Python 3.12 with `cryptography` 50. The Noise_IK handshake is
   hybrid post-quantum by default: an ephemeral ML-KEM-768 (NIST FIPS
   203) secret is mixed into the same chaining key as the X25519 DHs, so
@@ -29,9 +29,29 @@ Executes, or can be opened and used by someone other than me.
   down. Scope, stated: this closes harvest-now-decrypt-later on
   confidentiality. Authentication stays classical, so a future quantum
   adversary could not read a recorded session but could impersonate a
-  peer in a live one; post-quantum identity would be ML-DSA in
-  `identity.py` and is not done. Needs `cryptography>=47` (the floor was
-  bisected, not guessed: 46 has no `mlkem` module, 47 does).
+  peer in a live one. That gap is now closed as well: identities are
+  hybrid Ed25519 ++ ML-DSA-65 (FIPS 204), verification requires both
+  halves, and the fingerprint hashes the whole hybrid key so a genuine
+  Ed25519 key cannot be paired with a substituted ML-DSA one. Eight
+  further tests, again written to attack the new half rather than
+  exercise it — stripped and zero-padded classical-only signatures,
+  each half corrupted alone, the key-substitution attack, and a
+  pre-quantum identity file which is refused rather than silently
+  upgraded (minting a new fingerprint under an old file's name would
+  break every peer relationship invisibly). Needs `cryptography>=47`
+  (the floor was bisected, not guessed: 46 has no `mlkem` module, 47
+  does).
+
+  Known limitation, recorded rather than hidden: the discovery beacon
+  carries the signing key, so it grew to ~4.2 KB and now exceeds a
+  1500-byte MTU. Loopback does not show it and the self-test passes
+  either way; on a real LAN the datagram IP-fragments and discovery
+  becomes unreliable. Moving the signing key out of the beacon needs a
+  new protocol frame and is not done.
+
+  This is a breaking change for identity, not only for the wire:
+  fingerprints are derived differently, so existing identities and
+  peer relationships do not carry over and peers must re-pair.
 
 - Receipts self-test — 15/15, verified locally 2026-08-09 on Python
   3.12 and wired into CI the same day. `receipts/` in core/crystal-core:

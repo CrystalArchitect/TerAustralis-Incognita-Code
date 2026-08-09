@@ -625,6 +625,145 @@ def test_byte_budget_stops_a_batch_midway_on_the_wire():
         b.stop_serving()
 
 
+# --- hybrid post-quantum identity ------------------------------------------
+#
+# Same discipline as the handshake tests: prove the ML-DSA half is
+# load-bearing. An identity that signs with both keys but verifies only the
+# Ed25519 one would pass every functional test in this file and provide no
+# post-quantum authentication whatsoever.
+
+
+def test_hybrid_identity_shape():
+    from .identity import (
+        ED25519_PUBLEN, HYBRID_PUBLEN, HYBRID_SIGLEN, Identity,
+    )
+
+    i = Identity.generate()
+    assert len(i.sign_public_bytes) == HYBRID_PUBLEN
+    assert i.sign_public_bytes[:ED25519_PUBLEN] == i.ed25519_public_bytes
+    assert i.sign_public_bytes[ED25519_PUBLEN:] == i.mldsa_public_bytes
+    assert len(i.sign(b"x")) == HYBRID_SIGLEN
+
+
+def test_both_signature_halves_are_required():
+    """Corrupt either half alone and verification must fail."""
+    from .identity import ED25519_SIGLEN, Identity, verify
+
+    i = Identity.generate()
+    data = b"one memory fragment"
+    good = i.sign(data)
+    assert verify(i.sign_public_bytes, data, good)
+
+    ed_broken = bytearray(good)
+    ed_broken[5] ^= 0xFF
+    assert not verify(i.sign_public_bytes, data, bytes(ed_broken)), \
+        "a broken Ed25519 half must fail even though ML-DSA is intact"
+
+    mldsa_broken = bytearray(good)
+    mldsa_broken[ED25519_SIGLEN + 5] ^= 0xFF
+    assert not verify(i.sign_public_bytes, data, bytes(mldsa_broken)), \
+        "a broken ML-DSA half must fail even though Ed25519 is intact"
+
+
+def test_classical_only_signature_is_refused():
+    """The downgrade: strip the ML-DSA half and present the Ed25519 one."""
+    from .identity import ED25519_SIGLEN, Identity, verify
+
+    i = Identity.generate()
+    data = b"downgrade me"
+    stripped = i.sign(data)[:ED25519_SIGLEN]
+    assert not verify(i.sign_public_bytes, data, stripped), \
+        "an Ed25519-only signature must never verify"
+    padded = stripped + b"\x00" * (len(i.sign(data)) - ED25519_SIGLEN)
+    assert not verify(i.sign_public_bytes, data, padded), \
+        "zero-padding to the right length must not buy a pass either"
+
+
+def test_substituted_mldsa_key_changes_the_fingerprint():
+    """The pairing-boundary attack this design exists to close.
+
+    A quantum adversary can recover an Ed25519 private key from its public
+    key. If the fingerprint committed only to Ed25519, they could pair using
+    the victim's genuine Ed25519 key alongside their own ML-DSA key, and both
+    signatures would verify against what the peer stored. Because the
+    fingerprint hashes the whole hybrid key, the substitution shows up as a
+    different identity instead.
+    """
+    from .identity import Identity, fingerprint_for
+
+    victim = Identity.generate()
+    attacker = Identity.generate()
+    forged_pub = victim.ed25519_public_bytes + attacker.mldsa_public_bytes
+    assert forged_pub[:32] == victim.sign_public_bytes[:32], "same Ed25519 half"
+    assert fingerprint_for(forged_pub) != victim.fingerprint, \
+        "swapping the ML-DSA half must not preserve the fingerprint"
+
+
+def test_fingerprint_derivation_is_shared_with_the_peer_store():
+    """Two definitions would file a peer under an id its owner never uses."""
+    import tempfile
+    from pathlib import Path
+    from .identity import Identity
+    from .peers import PeerStore
+
+    i = Identity.generate()
+    store = PeerStore(Path(tempfile.mkdtemp()) / "peers.json")
+    peer = store.add(i.sign_public_bytes.hex(), i.dh_public_bytes.hex(), "them")
+    assert peer.fingerprint == i.fingerprint
+
+
+def test_identity_survives_save_and_load_with_all_three_keys():
+    import tempfile
+    from pathlib import Path
+    from .identity import Identity, verify
+
+    path = Path(tempfile.mkdtemp()) / "id.json"
+    original = Identity.generate()
+    original.save(path)
+    loaded = Identity.load(path)
+    assert loaded.fingerprint == original.fingerprint
+    assert loaded.sign_public_bytes == original.sign_public_bytes
+    # The ML-DSA seed must restore the *same* keypair, not merely a valid one.
+    assert verify(original.sign_public_bytes, b"after reload", loaded.sign(b"after reload"))
+
+
+def test_pre_quantum_identity_file_is_refused_not_silently_upgraded():
+    """Minting a new fingerprint under an old file's name would break every
+    peer relationship invisibly. Fail loudly and leave the file alone."""
+    import json
+    import tempfile
+    from pathlib import Path
+    from .identity import Identity
+
+    path = Path(tempfile.mkdtemp()) / "old.json"
+    i = Identity.generate()
+    i.save(path)
+    payload = json.loads(path.read_text())
+    del payload["mldsa_key"]  # what a pre-quantum file looks like
+    path.write_text(json.dumps(payload))
+    before = path.read_text()
+    try:
+        Identity.load(path)
+        assert False, "a pre-quantum identity file must not load"
+    except ValueError as e:
+        assert "re-pair" in str(e), "the error must say what to actually do"
+    assert path.read_text() == before, "the old identity file must be left untouched"
+
+
+def test_tokens_and_fragments_carry_hybrid_signatures_end_to_end():
+    """The whole point: real artifacts, not just the primitive."""
+    from .identity import HYBRID_SIGLEN, Identity
+    from .fragment import MemoryFragment
+
+    i = Identity.generate()
+    frag = MemoryFragment(kind="episodic", content="red dust", sender_fingerprint=i.fingerprint)
+    frag.sign(i)
+    assert len(bytes.fromhex(frag.signature)) == HYBRID_SIGLEN
+    assert frag.verify(i.sign_public_bytes)
+    frag.content = "tampered"
+    assert not frag.verify(i.sign_public_bytes)
+
+
 # --- hybrid post-quantum handshake -----------------------------------------
 #
 # The point of these is that the ML-KEM leg must be load-bearing, not
@@ -830,6 +969,14 @@ def main() -> int:
         test_fragment_kind_and_since_filtering,
         test_forged_fragment_is_rejected_by_receiver,
         test_discovery_via_unicast_loopback,
+        test_hybrid_identity_shape,
+        test_both_signature_halves_are_required,
+        test_classical_only_signature_is_refused,
+        test_substituted_mldsa_key_changes_the_fingerprint,
+        test_fingerprint_derivation_is_shared_with_the_peer_store,
+        test_identity_survives_save_and_load_with_all_three_keys,
+        test_pre_quantum_identity_file_is_refused_not_silently_upgraded,
+        test_tokens_and_fragments_carry_hybrid_signatures_end_to_end,
         test_hybrid_handshake_agrees_on_keys_and_transcript,
         test_hybrid_is_the_default,
         test_kem_secret_actually_reaches_the_session_key,
