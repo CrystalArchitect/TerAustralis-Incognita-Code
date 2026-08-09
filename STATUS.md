@@ -39,6 +39,12 @@ Executes, or can be opened and used by someone other than me.
   permissions, voice availability, autoplay), so the voice behaviour is
   expected rather than confirmed until tapped.
 
+  Streams the reply and speaks it a sentence at a time, so she begins
+  talking before the answer has finished arriving (measured: first
+  sentence at ~500 ms against a reply still landing at ~1170 ms), with
+  barge-in on the talk button and a whole-reply fallback for endpoints
+  that ignore `stream`.
+
   One claim deliberately not made: the talk button's audio is **not**
   asserted to stay on the device. Speaking is on-device and the
   keyboard's dictation key is on-device, but the Web Speech recogniser

@@ -7,6 +7,16 @@ Tap the big button, talk, and she answers out loud. Turn on **Hands-free** and
 she listens again after each reply, so a conversation costs one tap total
 rather than one per turn. Typing is still there, demoted to a button.
 
+It is meant to feel like a call rather than a walkie-talkie, which needs two
+things beyond talk-and-listen:
+
+- **She speaks while the reply is still arriving.** The response is streamed
+  and handed to the voice a sentence at a time, so the gap after you stop
+  talking is one sentence's worth of model latency, not the whole answer's.
+- **You can cut her off.** Tapping the button mid-sentence stops her and
+  starts listening. Waiting out a long answer before replying is the thing
+  that makes a voice assistant feel like a form.
+
 It exists because the local Clementine webapp cannot be reached from a phone
 with no machine to run it on. That is not a defect in the local app — it is
 what local-first means. This shell makes the opposite trade deliberately.
@@ -59,7 +69,11 @@ dialect, so nothing here locks you to a provider.
   expected, not confirmed, until it has been tapped once.
 - Hands-free turns itself off when a request fails, so a broken endpoint
   cannot put it in a listen/fail loop.
-- No streaming: a reply arrives complete, then is spoken.
+- **Streaming depends on the provider.** The request asks for it; an endpoint
+  that ignores it and returns one JSON body is handled by falling back to
+  speaking the whole reply at once. You lose the early start, not the feature.
+- How soon she starts speaking is the model's time-to-first-sentence, which is
+  not something this page controls.
 
 ## Verified
 
@@ -77,3 +91,15 @@ mock recogniser driving the real code path:
   element created, no script run
 - no horizontal overflow; header and talk button stay in view; only the
   transcript scrolls
+- against an endpoint dripping a three-sentence reply, speech was queued
+  **before the reply finished arriving** — first sentence at ~500 ms, last
+  text at ~1170 ms — and the transcript still ended complete and correct
+- tapping mid-reply cancels speech and starts listening (barge-in)
+- an endpoint that ignores `stream` still works, via the whole-reply fallback
+
+One note on that suite: the first version of the speech mock assigned to
+`window.speechSynthesis`, which is a read-only getter, so the assignment was
+silently ignored and the test ran against the real, voiceless headless engine —
+reporting zero utterances and looking like a page bug. It was a test bug. The
+mock now uses `Object.defineProperty`. Worth recording because a mock that
+fails open is worse than no mock: it reports green while measuring nothing.

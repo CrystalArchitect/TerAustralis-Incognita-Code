@@ -288,18 +288,42 @@
   if (speechOK) window.speechSynthesis.addEventListener("voiceschanged", fillVoices);
   fillVoices();
 
-  function speak(text, done) {
-    if (!speechOK) { if (done) done(); return; }
+  // Speech is queued a sentence at a time while the reply is still arriving,
+  // which is what makes this feel like a call rather than a walkie-talkie:
+  // she starts talking after the first sentence instead of after the last.
+  var pending = 0;        // utterances queued and not yet finished
+  var streamOver = true;  // has the reply finished arriving?
+  var onAllSpoken = null;
+
+  function currentVoice() {
     var vs = localVoices();
-    var voice = vs.filter(function (v) { return v.name === cfg.voice; })[0] || vs[0];
+    return vs.filter(function (v) { return v.name === cfg.voice; })[0] || vs[0];
+  }
+
+  function settle() {
+    if (pending === 0 && streamOver) {
+      speaking = false;
+      var cb = onAllSpoken; onAllSpoken = null;
+      if (cb) cb();
+    }
+  }
+
+  /** Queue one fragment. Does not cancel what is already speaking. */
+  function speakChunk(text) {
     var clean = String(text).replace(/\s+/g, " ").trim();
-    if (!voice || !clean) { if (done) done(); return; }   // silence beats a cloud voice
-    window.speechSynthesis.cancel();
+    var voice = speechOK ? currentVoice() : null;
+    if (!clean || !voice) return;   // silence beats a cloud voice
     var u = new SpeechSynthesisUtterance(clean);
     u.voice = voice;
     speaking = true;
-    u.onend = u.onerror = function () { speaking = false; if (done) done(); };
+    pending++;
+    u.onend = u.onerror = function () { pending--; settle(); };
     window.speechSynthesis.speak(u);
+  }
+
+  function stopSpeaking() {
+    if (speechOK) window.speechSynthesis.cancel();
+    pending = 0; speaking = false; onAllSpoken = null;
   }
 
   // iOS refuses speech outside a user gesture; prime once on the first tap or
@@ -312,9 +336,9 @@
   }
 
   document.getElementById("hush").addEventListener("click", function () {
-    if (speechOK) window.speechSynthesis.cancel();
-    speaking = false;
+    stopSpeaking();
     cfg.handsfree = false; syncHandsfree();
+    setState("Tap to talk");
   });
   document.getElementById("voice-btn").addEventListener("click", function () {
     prime(); settingsDlg.showModal();
@@ -403,6 +427,9 @@
     prime();
     if (listening) { stopListening(); return; }
     if (!ready()) { needSetup(); return; }
+    // Barge-in: cutting her off mid-sentence is half of what makes a call a
+    // call. Without this you have to wait out a long answer before replying.
+    if (speaking) stopSpeaking();
     startListening();
   });
 
@@ -492,22 +519,91 @@
       var res = await fetch(cfg.base + "/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.key },
-        body: JSON.stringify({ model: cfg.model, messages: history })
+        body: JSON.stringify({ model: cfg.model, messages: history, stream: true })
       });
       if (!res.ok) throw new Error("HTTP " + res.status + " — " + (await res.text()).slice(0, 300));
-      var data = await res.json();
-      var reply = data && data.choices && data.choices[0] &&
-                  data.choices[0].message && data.choices[0].message.content;
-      if (!reply) throw new Error("The endpoint replied without a message. Raw: " +
-                                  JSON.stringify(data).slice(0, 300));
-      bubble.textContent = reply;
+
+      var reply = "";
+      var ctype = res.headers.get("content-type") || "";
+
+      if (ctype.indexOf("text/event-stream") === -1 || !res.body) {
+        // The endpoint ignored `stream` (or the browser gave no readable body).
+        // Take the whole thing at once rather than fail — some providers and
+        // proxies simply do not stream.
+        var data = await res.json();
+        reply = data && data.choices && data.choices[0] &&
+                data.choices[0].message && data.choices[0].message.content;
+        if (!reply) throw new Error("The endpoint replied without a message. Raw: " +
+                                    JSON.stringify(data).slice(0, 300));
+        bubble.textContent = reply;
+        streamOver = false;
+        setState("Speaking…");
+        speakChunk(reply);
+        streamOver = true;
+        settle();
+      } else {
+        streamOver = false;
+        pending = 0;
+        setState("Speaking…");
+        var reader = res.body.getReader();
+        var dec = new TextDecoder();
+        var buf = "";      // raw SSE bytes not yet split into lines
+        var unspoken = ""; // text received but not yet handed to the voice
+        var first = true;
+
+        // Speak on sentence ends so the phrasing is natural; the length floor
+        // stops "Dr." or "1." being read as a whole utterance on its own.
+        function drain(force) {
+          for (;;) {
+            var m = /[.!?…](\s|$)|\n/.exec(unspoken);
+            if (!m) break;
+            var cut = m.index + m[0].length;
+            var piece = unspoken.slice(0, cut);
+            if (!force && piece.trim().length < 12 && unspoken.length < 160) break;
+            unspoken = unspoken.slice(cut);
+            speakChunk(piece);
+          }
+          if (force && unspoken.trim()) { speakChunk(unspoken); unspoken = ""; }
+        }
+
+        for (;;) {
+          var step = await reader.read();
+          if (step.done) break;
+          buf += dec.decode(step.value, { stream: true });
+          var lines = buf.split("\n");
+          buf = lines.pop();  // last line may be a partial event
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line || line.indexOf("data:") !== 0) continue;
+            var payload = line.slice(5).trim();
+            if (payload === "[DONE]") continue;
+            var piece;
+            try { piece = JSON.parse(payload); } catch (e) { continue; }
+            var delta = piece.choices && piece.choices[0] &&
+                        (piece.choices[0].delta || piece.choices[0].message);
+            var bit = delta && delta.content;
+            if (!bit) continue;
+            if (first) { bubble.textContent = ""; first = false; }
+            reply += bit;
+            unspoken += bit;
+            bubble.textContent = reply;
+            log.scrollTop = log.scrollHeight;
+            drain(false);
+          }
+        }
+        drain(true);
+        streamOver = true;
+        if (!reply) throw new Error("The stream carried no content.");
+        settle();  // in case every utterance already finished
+      }
+
       history.push({ role: "assistant", content: reply });
       busy = false; talkBtn.disabled = false;
-      setState("Speaking…");
-      speak(reply, function () {
+      onAllSpoken = function () {
         if (cfg.handsfree) { setState("Your turn", "live"); startListening(); }
         else setState("Tap to talk");
-      });
+      };
+      settle();
     } catch (err) {
       holder.className = "turn err";
       bubble.textContent = String(err && err.message ? err.message : err) +
@@ -515,6 +611,7 @@
         "refusing browser requests (CORS). Providers differ: some allow calls straight " +
         "from a page, some need a server in between.";
       busy = false; talkBtn.disabled = false;
+      streamOver = true; stopSpeaking();        // never leave `speaking` stuck true
       cfg.handsfree = false; syncHandsfree();   // don't loop on a failing endpoint
       setState("Something went wrong — see above");
     } finally {
