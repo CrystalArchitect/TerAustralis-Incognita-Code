@@ -106,9 +106,32 @@ revocable consent. Spec: `../../docs/architecture/crystal-core/STARLINE.md`. Nee
 (`pip install -r requirements-consenttransport.txt`) — the only non-stdlib code in this repo.
 
 ```bash
-python3 -m consent_transport.selftest   # prove it — real TCP sockets, real handshake, 9/9
+python3 -m consent_transport.selftest   # prove it — real TCP sockets, real handshake, 41/41
 python3 -m consent_transport.run demo   # watch it: pair, deny, grant, exchange, revoke, deny
 ```
+
+**The handshake is hybrid post-quantum by default.** X25519 falls to a large enough
+quantum computer, and an adversary doesn't need one today to benefit later — they can
+record a session now and decrypt it when the hardware exists. Memory fragments are
+exactly the payload that stays sensitive for decades, so the handshake mixes a second,
+independent secret from ML-KEM-768 (NIST FIPS 203) into the same chaining key:
+
+    -> e, ekem, es, s, ss      ekem: an ephemeral ML-KEM-768 public key
+    <- e, ee, se, kem          kem:  the encapsulation against it
+
+Hybrid, never replacement — the session key needs *both* the X25519 DHs and the ML-KEM
+secret, so an attacker has to break both. A flaw in ML-KEM leaves X25519 holding; a
+quantum computer leaves ML-KEM holding. Costs 1184 bytes on the first message and 1088
+on the second, and needs `cryptography>=47`.
+
+**What it does not buy:** authentication is still classical (X25519/Ed25519 identities).
+A future quantum adversary could not decrypt a recorded session but could impersonate a
+peer in a live one. This closes harvest-now-decrypt-later on confidentiality only;
+post-quantum *identity* would mean ML-DSA signatures in `identity.py`, a separate change.
+
+The two modes use different Noise protocol names, and the name is mixed into the
+handshake hash, so a hybrid peer and a classical peer fail loudly rather than
+negotiating down. There is no downgrade path by design.
 
 ## Receipts — tamper-evident records of what a companion said
 

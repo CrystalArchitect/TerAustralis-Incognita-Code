@@ -1,7 +1,7 @@
 # Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
 # SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
-"""Noise Protocol handshake — Noise_IK_25519_ChaChaPoly_SHA256, IK pattern only.
+"""Noise Protocol handshake — IK pattern, classical or hybrid post-quantum.
 
 This is a direct, literal implementation of the published Noise Protocol
 Framework spec (noiseprotocol.org/noise.html), narrowed to exactly the one
@@ -21,7 +21,39 @@ After both messages, each side calls split() to get two independent
 ChaCha20-Poly1305 cipher states — one for each direction — with forward
 secrecy from the ephemeral keys and mutual authentication from the static
 keys. No custom crypto primitives are used anywhere: X25519, ChaCha20-
-Poly1305, and SHA256/HMAC all come from `cryptography` or the stdlib.
+Poly1305, SHA256/HMAC and ML-KEM all come from `cryptography` or the stdlib.
+
+Hybrid post-quantum mode (default)
+----------------------------------
+X25519 falls to a sufficiently large quantum computer. Nobody has one, but
+an adversary does not need one *today* to benefit from one later: they can
+record a Starline session now and decrypt it whenever the hardware arrives.
+Memory fragments are exactly the kind of payload that is still sensitive in
+twenty years, so the default handshake adds a second, independent shared
+secret from ML-KEM-768 (NIST FIPS 203) and mixes it into the same chaining
+key:
+
+    -> e, ekem, es, s, ss    (ekem: an ephemeral ML-KEM-768 public key)
+    <- e, ee, se, kem        (kem: the encapsulation against it)
+
+Hybrid, never replacement. The session key derives from *both* the X25519
+DHs and the ML-KEM secret, so an attacker must break both. If ML-KEM turns
+out to have a flaw nobody has found yet, X25519 still holds; if a quantum
+computer arrives, ML-KEM still holds. That is the standard migration shape
+(TLS 1.3 hybrid key exchange does the same thing) and it is the reason not
+to simply swap the primitive out.
+
+**What this does not buy, stated plainly.** Authentication is still
+classical: static identities are X25519 and Ed25519. A future quantum
+adversary could not decrypt a recorded session, but could impersonate a
+peer in a *live* handshake. This closes harvest-now-decrypt-later on
+confidentiality. It does not make identity post-quantum, and post-quantum
+signatures (ML-DSA) would be a separate change to `identity.py`.
+
+The protocol name differs between modes, and the name is mixed into the
+handshake hash, so a hybrid peer and a classical peer fail loudly instead
+of silently negotiating anything down. There is no downgrade path by
+design — fail-safe is isolation, never fail-open.
 """
 
 from __future__ import annotations
@@ -37,10 +69,26 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
+try:
+    from cryptography.hazmat.primitives.asymmetric.mlkem import (
+        MLKEM768PrivateKey,
+        MLKEM768PublicKey,
+    )
+    MLKEM_AVAILABLE = True
+except ImportError:  # cryptography < 47 has no ML-KEM
+    MLKEM768PrivateKey = MLKEM768PublicKey = None  # type: ignore[assignment]
+    MLKEM_AVAILABLE = False
+
 PROTOCOL_NAME = b"Noise_IK_25519_ChaChaPoly_SHA256"
+# Distinct name, deliberately: it is mixed into the initial handshake hash,
+# so a hybrid peer and a classical one diverge at the first message instead
+# of appearing to agree.
+PROTOCOL_NAME_HYBRID = b"Noise_IKhfs_25519+MLKEM768_ChaChaPoly_SHA256"
 DHLEN = 32   # X25519 public key length
 TAGLEN = 16  # ChaCha20-Poly1305 authentication tag length
 HASHLEN = 32  # SHA256 output length
+KEM_PUBLEN = 1184  # ML-KEM-768 encapsulation key
+KEM_CTLEN = 1088   # ML-KEM-768 ciphertext
 
 
 class HandshakeFailed(Exception):
@@ -142,6 +190,7 @@ class HandshakeState:
     message_patterns are consumed, then split()."""
 
     MESSAGE_PATTERNS = [["e", "es", "s", "ss"], ["e", "ee", "se"]]
+    MESSAGE_PATTERNS_HYBRID = [["e", "ekem", "es", "s", "ss"], ["e", "ee", "se", "kem"]]
 
     def __init__(
         self,
@@ -149,18 +198,35 @@ class HandshakeState:
         local_static: StaticKeypair,
         remote_static: bytes | None,
         prologue: bytes = b"",
+        hybrid: bool = True,
     ):
         if initiator and remote_static is None:
             raise ValueError("initiator must know the responder's static key (IK)")
+        if hybrid and not MLKEM_AVAILABLE:
+            raise HandshakeFailed(
+                "hybrid post-quantum handshake needs ML-KEM, which arrived in "
+                "cryptography 47. Upgrade (pip install -r "
+                "requirements-consenttransport.txt), or pass hybrid=False to use "
+                "the classical-only handshake — which does not protect recorded "
+                "sessions against a future quantum adversary."
+            )
         self.initiator = initiator
+        self.hybrid = hybrid
         self.s = local_static
         self.rs = remote_static
         self.e: X25519PrivateKey | None = None
         self.re: bytes | None = None
+        # Ephemeral per handshake, like `e`: the KEM secret is never reused,
+        # so the post-quantum leg carries forward secrecy too.
+        self.kem_sk = None
+        self.rkem_pub: bytes | None = None
+        self.message_patterns = (
+            self.MESSAGE_PATTERNS_HYBRID if hybrid else self.MESSAGE_PATTERNS
+        )
         self.pattern_index = 0
 
         self.sym = SymmetricState()
-        self.sym.initialize(PROTOCOL_NAME)
+        self.sym.initialize(PROTOCOL_NAME_HYBRID if hybrid else PROTOCOL_NAME)
         self.sym.mix_hash(prologue)
         # Pre-message "<- s": both sides mix in the responder's static key
         # at the same point — the initiator because it already knows it,
@@ -174,7 +240,7 @@ class HandshakeState:
         return priv.exchange(X25519PublicKey.from_public_bytes(pub_bytes))
 
     def write_message(self, payload: bytes = b"") -> bytes:
-        pattern = self.MESSAGE_PATTERNS[self.pattern_index]
+        pattern = self.message_patterns[self.pattern_index]
         self.pattern_index += 1
         buf = bytearray()
         for token in pattern:
@@ -183,6 +249,25 @@ class HandshakeState:
                 epub = self.e.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
                 buf += epub
                 self.sym.mix_hash(epub)
+            elif token == "ekem":
+                # Sent in the clear, like `e`. It needs no secrecy — only
+                # integrity, which mix_hash gives it: h is the AD for the
+                # final payload, so a tampered key breaks the handshake.
+                self.kem_sk = MLKEM768PrivateKey.generate()
+                kpub = self.kem_sk.public_key().public_bytes_raw()
+                buf += kpub
+                self.sym.mix_hash(kpub)
+            elif token == "kem":
+                # encapsulate() returns (shared_secret, ciphertext) — that
+                # order, not the reverse. Getting it backwards yields a
+                # 1088-byte "secret" and a 32-byte "ciphertext" that fails
+                # to decapsulate, so the tests below pin the round-trip.
+                shared, ct = MLKEM768PublicKey.from_public_bytes(
+                    self.rkem_pub
+                ).encapsulate()
+                buf += ct
+                self.sym.mix_hash(ct)
+                self.sym.mix_key(shared)
             elif token == "s":
                 buf += self.sym.encrypt_and_hash(self.s.public_bytes)
             elif token == "ee":
@@ -199,7 +284,7 @@ class HandshakeState:
         return bytes(buf)
 
     def read_message(self, message: bytes) -> bytes:
-        pattern = self.MESSAGE_PATTERNS[self.pattern_index]
+        pattern = self.message_patterns[self.pattern_index]
         self.pattern_index += 1
         ptr = 0
         try:
@@ -208,6 +293,23 @@ class HandshakeState:
                     self.re = message[ptr:ptr + DHLEN]
                     ptr += DHLEN
                     self.sym.mix_hash(self.re)
+                elif token == "ekem":
+                    self.rkem_pub = message[ptr:ptr + KEM_PUBLEN]
+                    ptr += KEM_PUBLEN
+                    if len(self.rkem_pub) != KEM_PUBLEN:
+                        raise HandshakeFailed("truncated ML-KEM public key")
+                    self.sym.mix_hash(self.rkem_pub)
+                elif token == "kem":
+                    ct = message[ptr:ptr + KEM_CTLEN]
+                    ptr += KEM_CTLEN
+                    if len(ct) != KEM_CTLEN:
+                        raise HandshakeFailed("truncated ML-KEM ciphertext")
+                    self.sym.mix_hash(ct)
+                    try:
+                        shared = self.kem_sk.decapsulate(ct)
+                    except Exception as exc:
+                        raise HandshakeFailed("ML-KEM decapsulation failed") from exc
+                    self.sym.mix_key(shared)
                 elif token == "s":
                     length = DHLEN + TAGLEN if self.sym.cs.has_key() else DHLEN
                     enc = message[ptr:ptr + length]
