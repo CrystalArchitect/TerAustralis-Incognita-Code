@@ -135,6 +135,7 @@
     <div class="mark" aria-hidden="true"></div>
     <h1>Clementine</h1>
     <span class="spacer"></span>
+    <button id="diag-btn" type="button">Diagnostics</button>
     <button id="privacy-btn" type="button">Where audio goes</button>
     <button id="settings-btn" type="button">Setup</button>
   </header>
@@ -171,17 +172,46 @@
         is in the path. A shared phone is the wrong place to keep a key.
       </p>
       <div class="field"><label for="f-base">Endpoint (base URL)</label>
-        <input id="f-base" type="url" inputmode="url" autocomplete="off" placeholder="https://openrouter.ai/api/v1" /></div>
+        <!-- text, not url: type="url" makes the browser reject a scheme-less
+             value on submit, so the dialog silently refuses to close and the
+             normalisation below never gets to add the https:// itself. -->
+        <input id="f-base" type="text" inputmode="url" autocomplete="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="tap and type — e.g. openrouter.ai/api/v1" /></div>
       <div class="field"><label for="f-key">API key</label>
-        <input id="f-key" type="password" autocomplete="off" placeholder="sk-…" /></div>
+        <input id="f-key" type="password" autocomplete="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="tap and paste your key" /></div>
       <div class="field"><label for="f-model">Model</label>
-        <input id="f-model" type="text" autocomplete="off" placeholder="e.g. anthropic/claude-sonnet-4.5" /></div>
+        <input id="f-model" type="text" autocomplete="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="tap and type a model id" /></div>
+      <p class="note" id="stored" style="margin-bottom:10px"></p>
       <div class="field"><label for="f-voice">Voice (on-device only)</label>
         <select id="f-voice"></select></div>
       <div class="actions">
         <button value="save" id="save">Save</button>
         <button value="cancel" class="ghost" type="submit" formnovalidate>Cancel</button>
       </div>
+    </form>
+  </dialog>
+
+  <dialog id="diag">
+    <form method="dialog" class="sheet">
+      <h2>Diagnostics</h2>
+      <p class="note">What this browser actually reports. Screenshot this if
+      something is not working — it is the only view into the device I have.</p>
+      <pre id="diag-body" style="white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--ink);background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:9px;padding:11px;overflow-x:auto"></pre>
+      <div class="field" id="unflagged-wrap" style="display:none">
+        <label style="display:flex;gap:9px;align-items:flex-start;line-height:1.45">
+          <input type="checkbox" id="allow-unflagged" style="width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--cyan)" />
+          <span>Use the voices above even though none is flagged on-device.
+          The flag is unreliable across browsers, so these are probably your
+          phone's own voices — but this page cannot confirm that, which is why
+          it is your call and not a default.</span>
+        </label>
+      </div>
+      <div class="actions"><button value="ok">Close</button></div>
     </form>
   </dialog>
 
@@ -265,8 +295,27 @@
 
   // ---- speaking: on-device voices only ------------------------------------
   var speechOK = "speechSynthesis" in window;
+
+  function allVoices() {
+    try { return speechOK ? (window.speechSynthesis.getVoices() || []) : []; }
+    catch (e) { return []; }
+  }
   function localVoices() {
-    return speechOK ? window.speechSynthesis.getVoices().filter(function (v) { return v.localService; }) : [];
+    return allVoices().filter(function (v) { return v.localService; });
+  }
+  /** Voices we are actually allowed to use.
+   *
+   * The rule is on-device only. But `localService` is not reported the same
+   * way everywhere — a browser can list perfectly good system voices without
+   * flagging any of them — and the first version of this treated "none
+   * flagged" as "stay silent", which is indistinguishable from being broken.
+   * So: prefer flagged-local voices; if there are none but voices exist, say
+   * so and let the human decide, rather than deciding by silence.
+   */
+  function usableVoices() {
+    var local = localVoices();
+    if (local.length) return local;
+    return cfg.allowUnflaggedVoices ? allVoices() : [];
   }
   var fVoice = document.getElementById("f-voice");
   function fillVoices() {
@@ -296,8 +345,31 @@
   var onAllSpoken = null;
 
   function currentVoice() {
-    var vs = localVoices();
+    var vs = usableVoices();
     return vs.filter(function (v) { return v.name === cfg.voice; })[0] || vs[0];
+  }
+
+  var explainedSilence = false;
+  function explainSilence() {
+    if (explainedSilence) return;
+    explainedSilence = true;
+    var all = allVoices();
+    if (!speechOK) {
+      say("Clementine", "This browser has no speech synthesis at all, so I cannot speak aloud here.", "err");
+    } else if (!all.length) {
+      say("Clementine",
+          "Your browser reports no installed voices yet, so there is nothing for me to " +
+          "speak with. On iPhone they sometimes appear only after Settings → Accessibility " +
+          "→ Spoken Content → Voices has one downloaded. Tap Diagnostics to see what this " +
+          "browser is reporting.", "err");
+    } else {
+      say("Clementine",
+          "I found " + all.length + " voice(s), but none of them is flagged as on-device, " +
+          "so I stayed silent rather than quietly use one that might send text to a server. " +
+          "That flag is not reported consistently across browsers, so this may be a " +
+          "mislabel rather than a real cloud voice. Tap Diagnostics to see the list and " +
+          "decide.", "err");
+    }
   }
 
   function settle() {
@@ -311,8 +383,9 @@
   /** Queue one fragment. Does not cancel what is already speaking. */
   function speakChunk(text) {
     var clean = String(text).replace(/\s+/g, " ").trim();
+    if (!clean) return;
     var voice = speechOK ? currentVoice() : null;
-    if (!clean || !voice) return;   // silence beats a cloud voice
+    if (!voice) { explainSilence(); return; }
     var u = new SpeechSynthesisUtterance(clean);
     u.voice = voice;
     speaking = true;
@@ -348,6 +421,11 @@
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var rec = null;
   var interimTurn = null;
+  // A recogniser can exist and still never fire an event — presence is not
+  // function, and treating it as function is how a page ends up looking dead.
+  var recogniserEverStarted = false;
+  var lastSpeechError = "";
+  var startWatchdog = null;
 
   function buildRecogniser() {
     if (!SR) return null;
@@ -358,6 +436,8 @@
     r.maxAlternatives = 1;
 
     r.onstart = function () {
+      recogniserEverStarted = true;
+      if (startWatchdog) { clearTimeout(startWatchdog); startWatchdog = null; }
       listening = true;
       talkBtn.classList.add("live");
       setState("Listening — talk, then pause", "live");
@@ -381,6 +461,8 @@
     };
 
     r.onerror = function (ev) {
+      lastSpeechError = ev.error || "unknown";
+      if (startWatchdog) { clearTimeout(startWatchdog); startWatchdog = null; }
       listening = false;
       talkBtn.classList.remove("live");
       if (interimTurn) { interimTurn.remove(); interimTurn = null; }
@@ -415,8 +497,28 @@
     }
     if (listening || busy || speaking) return;
     if (!rec) rec = buildRecogniser();
+    setState("Starting the microphone…");
+    if (startWatchdog) clearTimeout(startWatchdog);
+    // If neither onstart nor onerror lands, the API is present but not
+    // working — which happens on some iOS versions. Say so and hand over to
+    // the keyboard's dictation rather than sit on a button that does nothing.
+    startWatchdog = setTimeout(function () {
+      if (listening || recogniserEverStarted) return;
+      lastSpeechError = "no response from the recogniser";
+      setState("The microphone didn't start");
+      say("Clementine",
+          "I asked this browser for the microphone and it neither started nor " +
+          "reported an error — on some iPhones the speech API exists but does " +
+          "nothing. Two things that do work: tap Type and use the 🎤 key on " +
+          "your keyboard (that dictation is on-device anyway), or check " +
+          "Diagnostics to see what the browser is reporting.", "err");
+      showTyping(true);
+    }, 2500);
     try { rec.start(); }
-    catch (e) { /* already started; ignore */ }
+    catch (e) {
+      lastSpeechError = String(e && e.message ? e.message : e);
+      /* already started, or refused; the watchdog reports it */
+    }
   }
 
   function stopListening() {
@@ -487,19 +589,106 @@
   function openSettings() {
     fBase.value = cfg.base || ""; fKey.value = cfg.key || ""; fModel.value = cfg.model || "";
     fillVoices();
+    var stored = document.getElementById("stored");
+    stored.textContent = ready()
+      ? "Currently stored — endpoint: " + cfg.base + " · model: " + cfg.model +
+        " · key: " + keyShape()
+      : "Nothing stored yet. Grey text in the boxes below is a hint, not a value — " +
+        "each box has to be typed into.";
     settingsDlg.showModal();
   }
   document.getElementById("settings-btn").addEventListener("click", function () { prime(); openSettings(); });
   document.getElementById("privacy-btn").addEventListener("click", function () { privacyDlg.showModal(); });
+
+  // ---- diagnostics --------------------------------------------------------
+  var diagDlg = document.getElementById("diag");
+  document.getElementById("diag-btn").addEventListener("click", function () {
+    prime();                       // a gesture: iOS often only lists voices after one
+    var all = allVoices(), local = localVoices();
+    var lines = [
+      "speechSynthesis present : " + speechOK,
+      "voices reported         : " + all.length,
+      "flagged on-device       : " + local.length,
+      "",
+    ];
+    all.slice(0, 12).forEach(function (v) {
+      lines.push("  " + (v.localService ? "[on-device] " : "[  network] ") + v.name +
+                 "  (" + v.lang + ")");
+    });
+    if (all.length > 12) lines.push("  …and " + (all.length - 12) + " more");
+    lines.push("",
+      "SpeechRecognition       : " + (SR ? "present" : "ABSENT"),
+      "recogniser ever started : " + recogniserEverStarted,
+      "last speech error       : " + (lastSpeechError || "none"),
+      "language                : " + (navigator.language || "?"),
+      "secure context          : " + (window.isSecureContext === true),
+      "",
+      "configured              : " + (ready() ? "yes" : "NO — tap Setup"),
+      "key                     : " + keyShape());
+    document.getElementById("diag-body").textContent = lines.join("\n");
+    var wrap = document.getElementById("unflagged-wrap");
+    wrap.style.display = (all.length && !local.length) ? "block" : "none";
+    document.getElementById("allow-unflagged").checked = !!cfg.allowUnflaggedVoices;
+    diagDlg.showModal();
+  });
+  document.getElementById("allow-unflagged").addEventListener("change", function (e) {
+    cfg.allowUnflaggedVoices = e.target.checked;
+    cfg.voice = "";                // re-pick from the newly allowed set
+    save(); fillVoices();
+    explainedSilence = false;      // let it speak up again if it still cannot
+  });
   settingsDlg.addEventListener("close", function () {
     if (settingsDlg.returnValue !== "save") return;
-    cfg.base = fBase.value.trim().replace(/\/+$/, "");
+    var base = fBase.value.trim().replace(/\/+$/, "");
+    // Upgrade http -> https and add a missing scheme. Both otherwise cause a
+    // redirect, and a redirect is exactly what strips Authorization.
+    if (/^http:\/\//i.test(base)) base = base.replace(/^http:\/\//i, "https://");
+    else if (base && !/^https:\/\//i.test(base)) base = "https://" + base;
+    cfg.base = base;
     cfg.key = fKey.value.trim();
     cfg.model = fModel.value.trim();
     if (!fVoice.disabled) cfg.voice = fVoice.value;
     save();
     setState("Tap to talk");
   });
+
+  // ---- diagnostics --------------------------------------------------------
+  // On a phone there is no devtools, so the page has to be able to say what it
+  // actually sent. The key is shown only as a length and its first/last three
+  // characters — enough to tell "empty", "that's my endpoint URL" and "looks
+  // like a key" apart, without printing a secret on screen.
+  function keyShape() {
+    var k = cfg.key || "";
+    if (!k) return "no key stored";
+    var shape = k.length + " chars, " + k.slice(0, 3) + "…" + k.slice(-3);
+    if (/\s/.test(k)) shape += " — CONTAINS WHITESPACE, likely a bad paste";
+    if (/^https?:/i.test(k)) shape += " — that looks like a URL, not a key";
+    return shape;
+  }
+
+  function diagnose(res, body) {
+    var lines = ["What was sent:",
+                 "  endpoint  " + cfg.base + "/chat/completions",
+                 "  model     " + cfg.model,
+                 "  key       " + keyShape()];
+    if (res) {
+      lines.push("  final URL " + res.url);
+      if (res.redirected) {
+        lines.push("",
+          "THE REQUEST WAS REDIRECTED. Browsers strip the Authorization header",
+          "across a redirect to another origin, so the endpoint sees no key.",
+          "Fix: put the endpoint's exact final URL in Setup — https, no",
+          "trailing slash, and the same host it ends up on.");
+      }
+    }
+    if (/missing.*auth|no auth|unauthor/i.test(body || "") && !(res && res.redirected)) {
+      lines.push("",
+        "The endpoint says the auth header was missing rather than wrong.",
+        "If the key above looks right, check the endpoint URL — a redirect",
+        "or a proxy in front of it will drop the header.");
+    }
+    return lines.join("\n");
+  }
 
   // ---- the turn -----------------------------------------------------------
   async function send(text) {
@@ -521,7 +710,15 @@
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.key },
         body: JSON.stringify({ model: cfg.model, messages: history, stream: true })
       });
-      if (!res.ok) throw new Error("HTTP " + res.status + " — " + (await res.text()).slice(0, 300));
+      if (!res.ok) {
+        var body = (await res.text()).slice(0, 300);
+        // A 401 that says the header is *missing* (rather than invalid) is
+        // usually not a wrong key. Browsers drop Authorization when a request
+        // is redirected to another origin, so the endpoint receives none —
+        // which is why res.redirected and the final URL are reported here.
+        var why = "HTTP " + res.status + " — " + body + "\n\n" + diagnose(res, body);
+        throw new Error(why);
+      }
 
       var reply = "";
       var ctype = res.headers.get("content-type") || "";
