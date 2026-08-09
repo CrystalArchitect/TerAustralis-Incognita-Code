@@ -164,6 +164,77 @@ def test_status_includes_everything_when_present():
                     "· last seen an hour ago")
 
 
+def test_mentions_are_stripped_before_the_model_sees_them():
+    assert discord_bot.strip_mentions("<@42> hello", 42) == "hello"
+    assert discord_bot.strip_mentions("<@!42> hello", 42) == "hello"
+
+
+def test_mention_stripping_survives_a_client_with_no_identity_yet():
+    """`client.user` is None until the gateway says ready."""
+    assert discord_bot.strip_mentions("<@42> hello", None) == "<@42> hello"
+
+
+def test_someone_elses_mention_is_left_alone():
+    assert discord_bot.strip_mentions("<@7> hi", 42) == "<@7> hi"
+
+
+# ------------------------------------------------------------------- --check
+
+def _report(**over):
+    args = dict(api_ok=True, api_detail="Clementine at x, model m",
+                token_present=True, owners={1},
+                gateway="ok", gateway_detail="connected as Bot#1")
+    args.update(over)
+    return discord_bot.check_report(**args)
+
+
+def test_check_reports_all_clear_when_everything_passes():
+    out = _report()
+    assert "FAIL" not in out
+    assert "All four green" in out
+
+
+def test_check_names_the_missing_intent_and_how_to_fix_it():
+    """The failure that makes a bot connect happily and then appear deaf."""
+    out = _report(gateway="intent", gateway_detail="refused the intent")
+    assert "FAIL" in out
+    assert "MESSAGE CONTENT INTENT" in out
+
+
+def test_check_explains_a_rejected_token():
+    out = _report(gateway="token", gateway_detail="rejected")
+    assert "Reset it" in out
+
+
+def test_check_tells_you_where_to_find_your_user_id():
+    out = _report(owners=set())
+    assert "Copy User ID" in out
+    assert "Developer Mode" in out
+
+
+def test_check_tells_you_to_start_the_server():
+    out = _report(api_ok=False, api_detail="nothing answering")
+    assert "python server.py" in out
+
+
+def test_check_shows_each_of_the_four_parts_separately():
+    """One pass/fail would hide which part is broken. Counts the status
+    markers only — the closing line mentions FAIL too, and an earlier
+    version of this assertion tripped over exactly that."""
+    out = _report(api_ok=False, api_detail="d", token_present=False,
+                  owners=set(), gateway="network", gateway_detail="d")
+    assert out.count("[ FAIL ]") == 4, "a failing part was reported as passing"
+
+
+def test_check_does_not_blame_a_token_that_was_never_set():
+    """Telling someone to reset a token they have not made yet is a wrong
+    instruction at the moment they are following instructions."""
+    out = _report(token_present=False, gateway="skipped",
+                  gateway_detail="not attempted — no token set")
+    assert "rejected" not in out
+    assert "set DISCORD_TOKEN" in out
+
+
 def test_memories_are_grouped_and_truncation_is_admitted():
     payload = {"facts": [{"handle": f"f{i}", "text": f"fact {i}"}
                          for i in range(30)],
