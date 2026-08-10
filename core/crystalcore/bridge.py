@@ -42,23 +42,49 @@ SRC_ROOT = Path(__file__).resolve().parent.parent          # core/
 REPO_ROOT = SRC_ROOT.parent                                 # repo root (parent of core/ and vision/)
 # The front-of-house interface. Only the *memory* the mind reads lives
 # beside the interface; that is what this path is for.
-APP_DIR = REPO_ROOT / "vision" / "apps" / "clementine"
+#: Where the human's companion keeps its profiles. There is no default and
+#: deliberately no guess: the companion is installed wherever its owner chose
+#: to clone it, so this process cannot know the path and must be told.
+MEMORY_DIR_ENV = "CRYSTALBRIDGE_MEMORY_DIR"
+
+
+class MemoryNotConfigured(SystemExit):
+    """Raised instead of running against a memory folder nobody nominated."""
+
+    def __init__(self, detail: str):
+        super().__init__(
+            f"CrystalBridge: {detail}\n\n"
+            "This server hands a guest access to a human's actual companion "
+            "memory, so it will not guess where that is.\n"
+            "Point it at the profiles folder of a running companion:\n\n"
+            f"    python -m crystalcore.bridge --memory-dir <path> --profile <name>\n"
+            f"    {MEMORY_DIR_ENV}=<path> python -m crystalcore.bridge --profile <name>\n\n"
+            "<path> is the folder holding the named profiles — for a companion "
+            "installed from Clementine-ai-companion, that is normally "
+            "clementine/clementine_profiles/."
+        )
 
 
 def _profiles_root() -> Path:
-    """The profiles folder, anchored to the interface rather than to cwd.
+    """The profiles folder, as nominated. Fails closed if it is not.
 
-    Mirrors the mind's own legacy fallback so the bridge and a human at the
-    terminal always reach the same memory, including on installs that still
-    carry the older folder name.
+    This used to be derived from a path inside this repository, back when the
+    companion lived here. It no longer does, and a derived path would now
+    resolve to somewhere that does not exist — at which point the mind would
+    helpfully *create* it and the bridge would serve a guest an empty
+    companion, while `teach` wrote memories into a folder the human never
+    reads. Silence is the danger here, not absence: an empty companion looks
+    like a companion with nothing to say.
+
+    So: no default, no fallback, no creation. Told, or stopped.
     """
-    from crystalcore.mind import profiles as mind_profiles
-
-    new = APP_DIR / mind_profiles.DEFAULT_PROFILES_DIR.name
-    legacy = APP_DIR / mind_profiles.LEGACY_PROFILES_DIR.name
-    if not new.exists() and legacy.exists():
-        return legacy
-    return new
+    raw = os.environ.get(MEMORY_DIR_ENV, "").strip()
+    if not raw:
+        raise MemoryNotConfigured(f"{MEMORY_DIR_ENV} is not set")
+    root = Path(raw).expanduser()
+    if not root.is_dir():
+        raise MemoryNotConfigured(f"{raw} is not a directory")
+    return root
 
 
 class Bridge:
@@ -233,11 +259,18 @@ def review_memories(profile: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(prog="crystalcore.bridge")
     parser.add_argument("--profile", default="default")
+    parser.add_argument("--memory-dir", default="",
+                        help="the companion's profiles folder. Required, "
+                             f"unless {MEMORY_DIR_ENV} is set. There is no "
+                             "default: this server will not guess where a "
+                             "human's memory lives.")
     parser.add_argument("--mint-token", metavar="GUEST",
                         help="mint a provenance secret for GUEST and exit")
     parser.add_argument("--review-memories", action="store_true",
                         help="interactively mark private memories as shared")
     args = parser.parse_args()
+    if args.memory_dir:
+        os.environ[MEMORY_DIR_ENV] = args.memory_dir
 
     if args.mint_token:
         mint_token(args.profile, args.mint_token)
@@ -249,6 +282,12 @@ def main() -> None:
     guest = os.environ.get("CRYSTALBRIDGE_GUEST", "")
     token = os.environ.get("CRYSTALBRIDGE_TOKEN", "")
     config = BridgeConfig.load(args.profile)
+    # Resolved here, before the server starts, though the companion itself is
+    # loaded lazily. Left to the lazy path, an unconfigured bridge would come
+    # up clean, report nothing, and fail only when a guest called a tool —
+    # putting the error in front of the guest instead of the operator who can
+    # fix it. Fail closed *and* early.
+    _profiles_root()
     bridge = Bridge(config, guest, token)
     server = build_server(bridge)
     server.run(transport="stdio")
