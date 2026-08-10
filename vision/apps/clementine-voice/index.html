@@ -599,6 +599,76 @@
     return r;
   }
 
+  // Detach before discarding, so a dying instance's parting onend cannot land
+  // after its replacement has started and set `listening` false underneath it.
+  function discardRecogniser() {
+    if (!rec) return;
+    rec.onstart = rec.onresult = rec.onerror = rec.onend = null;
+    try { rec.abort(); } catch (e) {}
+    rec = null;
+  }
+
+  // WebKit gives the audio session to whoever asked last, and synthesis holds
+  // it until it is finished or cancelled. Asking for the microphone while she
+  // is still holding it is one way to get a recogniser that never starts and
+  // never errors.
+  function releaseAudio() {
+    try { if (speechOK) window.speechSynthesis.cancel(); } catch (e) {}
+  }
+
+  // One silent retry before admitting defeat.
+  //
+  // A fresh recogniser per attempt fixed "the microphone works exactly once".
+  // What it left behind was intermittent, and intermittent is the signature of
+  // a race rather than a rule: abort() on the old instance returns immediately
+  // but WebKit tears the audio session down asynchronously, so a start() fired
+  // in the same tick sometimes lands before the teardown finishes and is
+  // swallowed. Waiting a beat and asking again clears it.
+  //
+  // The retry is deliberately not conditional on knowing that is the cause.
+  // Whatever makes a start silently fail to land, asking a second time costs a
+  // moment and fixes it; only a failure that survives two attempts is worth
+  // telling the human about. The first version of this told them on attempt
+  // one, which for a race means being handed an error message roughly half
+  // the time the thing actually works.
+  function beginAttempt(attempt, isRetry) {
+    discardRecogniser();
+    releaseAudio();
+    rec = buildRecogniser(attempt);
+    if (startWatchdog) clearTimeout(startWatchdog);
+    startWatchdog = setTimeout(function () {
+      if (listening || startedAttempt === attempt) return;
+
+      if (!isRetry) {
+        lastSpeechError = "first start did not land; retried";
+        setState("Starting the microphone…");
+        // A beat before asking again: retrying in the same tick would
+        // reproduce the race being worked around.
+        setTimeout(function () {
+          if (listening || startedAttempt === attempt) return;
+          beginAttempt(attempt, true);
+        }, 250);
+        return;
+      }
+
+      lastSpeechError = "no response from the recogniser (after a retry)";
+      setState("The microphone didn't start");
+      say("Clementine",
+          "I asked this browser for the microphone twice and it neither " +
+          "started nor reported an error — on some iPhones the speech API " +
+          "exists but does nothing. Two things that do work: tap Type and use " +
+          "the 🎤 key on your keyboard (that dictation is on-device anyway), " +
+          "or check Diagnostics to see what the browser is reporting.", "err");
+      showTyping(true);
+    }, isRetry ? 2500 : 1600);
+
+    try { rec.start(); }
+    catch (e) {
+      lastSpeechError = String(e && e.message ? e.message : e);
+      /* already started, or refused; the watchdog handles both */
+    }
+  }
+
   function startListening() {
     if (!SR) {
       setState("This browser has no speech recognition");
@@ -606,52 +676,8 @@
       return;
     }
     if (listening || busy || speaking) return;
-
-    // A fresh recogniser per attempt, and this is the whole reason the
-    // microphone worked exactly once per page load. iOS Safari will not
-    // restart a SpeechRecognition that has already ended: start() on a used
-    // instance does nothing at all — no event, no error, no exception to
-    // catch. Reusing the object is fine on desktop Chrome, which is why the
-    // emulated tests never saw it.
-    //
-    // Handlers come off the old one before aborting it, so its parting
-    // onend/onerror cannot land after the new one has started and set
-    // `listening` back to false underneath it.
-    if (rec) {
-      rec.onstart = rec.onresult = rec.onerror = rec.onend = null;
-      try { rec.abort(); } catch (e) {}
-    }
-    var attempt = ++listenAttempt;
-    rec = buildRecogniser(attempt);
-
     setState("Starting the microphone…");
-    if (startWatchdog) clearTimeout(startWatchdog);
-    // If neither onstart nor onerror lands, the API is present but not
-    // working — which happens on some iOS versions. Say so and hand over to
-    // the keyboard's dictation rather than sit on a button that does nothing.
-    //
-    // Guarded on *this* attempt, not on whether one ever succeeded. The
-    // earlier version checked recogniserEverStarted, a flag that latches true
-    // forever after the first success — so from the second tap onward a dead
-    // microphone was silent by construction. The bug above and this guard hid
-    // each other exactly.
-    startWatchdog = setTimeout(function () {
-      if (listening || startedAttempt === attempt) return;
-      lastSpeechError = "no response from the recogniser";
-      setState("The microphone didn't start");
-      say("Clementine",
-          "I asked this browser for the microphone and it neither started nor " +
-          "reported an error — on some iPhones the speech API exists but does " +
-          "nothing. Two things that do work: tap Type and use the 🎤 key on " +
-          "your keyboard (that dictation is on-device anyway), or check " +
-          "Diagnostics to see what the browser is reporting.", "err");
-      showTyping(true);
-    }, 2500);
-    try { rec.start(); }
-    catch (e) {
-      lastSpeechError = String(e && e.message ? e.message : e);
-      /* already started, or refused; the watchdog reports it */
-    }
+    beginAttempt(++listenAttempt, false);
   }
 
   function stopListening() {
