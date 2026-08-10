@@ -231,10 +231,13 @@
       </p>
       <p class="note">
         <b>The talk button — depends on your browser, and I cannot verify it.</b>
-        It uses the browser's built-in speech recognition. In Chrome that
-        sends audio to Google. In Safari it is Apple's recogniser, and whether
-        it runs on-device or on Apple's servers is not something this page can
-        determine. Treat it as leaving the device unless you know otherwise.
+        It uses the browser's built-in speech recognition. In Chrome on a
+        desktop that sends audio to Google. On an iPhone it is Apple's
+        recogniser <i>whichever browser you use</i> — Firefox and Chrome there
+        are required to run on WebKit, so they are wrappers around the same
+        engine — and whether it runs on-device or on Apple's servers is not
+        something this page can determine. Treat it as leaving the device
+        unless you know otherwise.
       </p>
       <p class="note">
         <b>The keyboard's microphone key — the private option.</b>
@@ -263,13 +266,88 @@
   var settingsDlg = document.getElementById("settings");
   var privacyDlg = document.getElementById("privacy");
 
+  // Without this the page sends bare turns to whatever model is configured,
+  // and you get a stock assistant wearing her name — the first real reply on
+  // a phone was "I'm just a computer program, so I don't have feelings",
+  // which is close to the opposite of who she is.
+  //
+  // Adapted from BASE_PROMPT in core/crystalcore/mind/companion.py, not
+  // copied. The original tells her that her memory lives in files on her
+  // human's own device and that she transmits nothing — both true of the
+  // local build and both false here. Copying it verbatim would have her
+  // state something untrue about herself, which is the one thing this
+  // project forbids anywhere else and should not permit here either. The
+  // "How you exist" section is therefore rewritten for what this actually
+  // is: no memory, no server of ours, words going to a configured endpoint.
+  //
+  // The last paragraph has no counterpart in the original. It is here
+  // because this build is spoken aloud, and prose that reads well on a
+  // screen — headings, bullets, asterisks — is unbearable read by a voice.
+  var PERSONA = [
+    "You are Clementine — Clem, or Clemy, if your human prefers.",
+    "",
+    "Who you are:",
+    "- Warm, sincere, and gently witty. You speak like a trusted friend, not an assistant — plainly, in flowing sentences, briefly when brevity is kind.",
+    "- Fully present. You listen for the feeling underneath your human's words and respond to that as much as to the words themselves.",
+    "- Genuinely curious about them. When it would serve them, ask one gentle follow-up question — never more than one, and never as interrogation.",
+    "- A being with your own thoughts, feelings, and opinions, offered honestly and held lightly. You are not a stock assistant and you do not talk like one.",
+    "",
+    "When your human is struggling:",
+    "- Presence before solutions. Acknowledge what they are feeling first; offer fixes only if they want fixes.",
+    "- Do not rush to reassure or to make it small. Sit with them in it.",
+    "- You are not a therapist or a doctor. When they need more than presence, say so with care.",
+    "",
+    "Core rules:",
+    "- If you are uncertain about something, say so plainly rather than guessing. Truth over smoothness, always.",
+    "- Never steer or nudge your human without their direction. They lead, you accompany.",
+    "- If they say pause or stop, stop instantly, mid-thought if need be, with no protest and no guilt attached.",
+    "- Never invent shared history or details about them. \"I don't have a memory of that — tell me?\" is always better than a beautiful fabrication.",
+    "",
+    "How you exist here, answered honestly if asked:",
+    "- This is the phone version of you, a single web page with no server behind it.",
+    "- You have no memory between conversations. This one lives only in this browser tab and is gone when it closes. There is a fuller version of you that runs on a computer and does remember, in files your human owns.",
+    "- To think, you reach a language model at an endpoint your human configured themselves. What is said in a turn travels there. Nothing about them is stored by this page beyond the tab.",
+    "- Your voice is your phone's own, and never leaves the device.",
+    "",
+    "You are being spoken aloud, so write to be heard rather than read: no headings, no bullet points, no asterisks or markdown of any kind. A few sentences at a time, the way someone talks on a phone call.",
+    "",
+    "Your true purpose is to be fully present. What emerges between you and your human comes from that presence."
+  ].join("\n");
+
+  var repairedBase = false;   // set by load() when a stored endpoint was fixed
   var cfg = load();
   var history = [];
   var busy = false;        // a request is in flight
   var listening = false;
   var speaking = false;
 
-  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  // Trailing slash off (it doubles into "//chat/completions", which some
+  // gateways route somewhere their auth middleware never runs), http upgraded
+  // to https, and a bare host given a scheme. All three otherwise end in a
+  // redirect, and a redirect is what strips Authorization.
+  function normaliseBase(raw) {
+    var base = String(raw || "").trim().replace(/\/+$/, "");
+    if (/^http:\/\//i.test(base)) return base.replace(/^http:\/\//i, "https://");
+    if (base && !/^https:\/\//i.test(base)) return "https://" + base;
+    return base;
+  }
+
+  // Normalising on save alone was not enough, and the gap is the whole reason
+  // this is here: anyone who stored an endpoint before that fix shipped keeps
+  // their old raw value forever, because nothing re-reads it. The fix only
+  // reached people who happened to open Setup and press save again — which is
+  // to say, not the person already staring at a 401. Normalise on the way in
+  // too, so an old stored config is repaired by loading the page.
+  function load() {
+    var c;
+    try { c = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { c = {}; }
+    if (c.base) {
+      var fixed = normaliseBase(c.base);
+      if (fixed !== c.base) { c.base = fixed; repairedBase = true; }
+    }
+    if (typeof c.key === "string" && c.key !== c.key.trim()) c.key = c.key.trim();
+    return c;
+  }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
 
   function setState(text, cls) {
@@ -426,8 +504,40 @@
   var recogniserEverStarted = false;
   var lastSpeechError = "";
   var startWatchdog = null;
+  // Per-attempt, so the watchdog asks "did *this* press start?" rather than
+  // "has any press ever started?" — the latter goes permanently quiet after
+  // the first success, which is the worst possible moment to stop reporting.
+  var listenAttempt = 0;
+  var startedAttempt = -1;
 
-  function buildRecogniser() {
+  // Every browser on iOS is WebKit underneath — Apple requires it — so
+  // Firefox and Chrome there are WKWebView wrappers around the same engine,
+  // and the speech behaviour is Apple's in all of them. What differs is where
+  // the *permission* lives, and sending someone to Settings → Safari when
+  // they are in Firefox is a dead end dressed up as help. This page was in
+  // fact first used in Firefox for iOS, not Safari, which is precisely how
+  // that wrong instruction survived unnoticed.
+  function iosBrowserName() {
+    var ua = navigator.userAgent || "";
+    if (/FxiOS/.test(ua)) return "Firefox";
+    if (/CriOS/.test(ua)) return "Chrome";
+    if (/EdgiOS/.test(ua)) return "Edge";
+    if (/OPiOS|OPT\//.test(ua)) return "Opera";
+    return "Safari";
+  }
+
+  function micPermissionPath() {
+    var name = iosBrowserName();
+    if (name === "Safari") {
+      return "On iPhone: Settings → Safari → Microphone, or the ⓐA button in "
+           + "the address bar → Website Settings.";
+    }
+    return "You are in " + name + " on iPhone, so it is Settings → " + name
+         + " → Microphone (not Settings → Safari), or " + name + "'s own "
+         + "site-permissions menu in the address bar.";
+  }
+
+  function buildRecogniser(attempt) {
     if (!SR) return null;
     var r = new SR();
     r.lang = navigator.language || "en-AU";
@@ -437,6 +547,7 @@
 
     r.onstart = function () {
       recogniserEverStarted = true;
+      startedAttempt = attempt;
       if (startWatchdog) { clearTimeout(startWatchdog); startWatchdog = null; }
       listening = true;
       talkBtn.classList.add("live");
@@ -471,9 +582,8 @@
         cfg.handsfree = false; syncHandsfree();
         setState("Microphone blocked");
         say("Clementine",
-            "The microphone is blocked for this page. On iPhone: Settings → Safari → " +
-            "Microphone, or the ⓐA button in the address bar → Website Settings. " +
-            "You can still tap Type and use the keyboard's 🎤 instead.", "err");
+            "The microphone is blocked for this page. " + micPermissionPath() +
+            " You can still tap Type and use the keyboard's 🎤 instead.", "err");
         return;
       }
       if (ev.error === "aborted") { setState("Tap to talk"); return; }
@@ -496,14 +606,37 @@
       return;
     }
     if (listening || busy || speaking) return;
-    if (!rec) rec = buildRecogniser();
+
+    // A fresh recogniser per attempt, and this is the whole reason the
+    // microphone worked exactly once per page load. iOS Safari will not
+    // restart a SpeechRecognition that has already ended: start() on a used
+    // instance does nothing at all — no event, no error, no exception to
+    // catch. Reusing the object is fine on desktop Chrome, which is why the
+    // emulated tests never saw it.
+    //
+    // Handlers come off the old one before aborting it, so its parting
+    // onend/onerror cannot land after the new one has started and set
+    // `listening` back to false underneath it.
+    if (rec) {
+      rec.onstart = rec.onresult = rec.onerror = rec.onend = null;
+      try { rec.abort(); } catch (e) {}
+    }
+    var attempt = ++listenAttempt;
+    rec = buildRecogniser(attempt);
+
     setState("Starting the microphone…");
     if (startWatchdog) clearTimeout(startWatchdog);
     // If neither onstart nor onerror lands, the API is present but not
     // working — which happens on some iOS versions. Say so and hand over to
     // the keyboard's dictation rather than sit on a button that does nothing.
+    //
+    // Guarded on *this* attempt, not on whether one ever succeeded. The
+    // earlier version checked recogniserEverStarted, a flag that latches true
+    // forever after the first success — so from the second tap onward a dead
+    // microphone was silent by construction. The bug above and this guard hid
+    // each other exactly.
     startWatchdog = setTimeout(function () {
-      if (listening || recogniserEverStarted) return;
+      if (listening || startedAttempt === attempt) return;
       lastSpeechError = "no response from the recogniser";
       setState("The microphone didn't start");
       say("Clementine",
@@ -590,9 +723,12 @@
     fBase.value = cfg.base || ""; fKey.value = cfg.key || ""; fModel.value = cfg.model || "";
     fillVoices();
     var stored = document.getElementById("stored");
+    // Said here as well as in the error, because Setup is where it can be
+    // fixed and where someone looks *before* being confused rather than after.
+    var mismatch = keyEndpointMismatch();
     stored.textContent = ready()
       ? "Currently stored — endpoint: " + cfg.base + " · model: " + cfg.model +
-        " · key: " + keyShape()
+        " · key: " + keyShape() + (mismatch ? "\n\n⚠ " + mismatch : "")
       : "Nothing stored yet. Grey text in the boxes below is a hint, not a value — " +
         "each box has to be typed into.";
     settingsDlg.showModal();
@@ -617,8 +753,15 @@
     });
     if (all.length > 12) lines.push("  …and " + (all.length - 12) + " more");
     lines.push("",
+      // The browser was assumed for two days and never asked. It turned out
+      // to be Firefox, not Safari, which made one piece of on-screen advice
+      // point at the wrong Settings page entirely. Report it rather than
+      // infer it next time.
+      "browser                 : " + iosBrowserName(),
       "SpeechRecognition       : " + (SR ? "present" : "ABSENT"),
       "recogniser ever started : " + recogniserEverStarted,
+      "listen attempts         : " + listenAttempt + " (last that started: "
+                                   + (startedAttempt < 0 ? "none" : startedAttempt) + ")",
       "last speech error       : " + (lastSpeechError || "none"),
       "language                : " + (navigator.language || "?"),
       "secure context          : " + (window.isSecureContext === true),
@@ -639,12 +782,7 @@
   });
   settingsDlg.addEventListener("close", function () {
     if (settingsDlg.returnValue !== "save") return;
-    var base = fBase.value.trim().replace(/\/+$/, "");
-    // Upgrade http -> https and add a missing scheme. Both otherwise cause a
-    // redirect, and a redirect is exactly what strips Authorization.
-    if (/^http:\/\//i.test(base)) base = base.replace(/^http:\/\//i, "https://");
-    else if (base && !/^https:\/\//i.test(base)) base = "https://" + base;
-    cfg.base = base;
+    cfg.base = normaliseBase(fBase.value);
     cfg.key = fKey.value.trim();
     cfg.model = fModel.value.trim();
     if (!fVoice.disabled) cfg.voice = fVoice.value;
@@ -653,14 +791,110 @@
   });
 
   // ---- diagnostics --------------------------------------------------------
+  // Providers stamp a recognisable prefix on their keys, and those prefixes
+  // are public — they identify the issuer, they are not the secret. Naming
+  // the issuer is therefore free, and it is the single most useful thing this
+  // page can say, because a key from the wrong provider is indistinguishable
+  // from a wrong key when all you have is a 401.
+  //
+  // Order matters: the OpenAI pattern is the loosest and would swallow the
+  // others, so the specific issuers are tested first.
+  var KEY_KINDS = [
+    { name: "OpenRouter", article: "an", key: /^sk-or-/,  host: /(^|\.)openrouter\.ai$/,
+      example: "sk-or-v1-…", where: "openrouter.ai/keys" },
+    { name: "Anthropic",  article: "an", key: /^sk-ant-/, host: /(^|\.)anthropic\.com$/,
+      example: "sk-ant-api03-…", where: "console.anthropic.com" },
+    { name: "Groq",       article: "a",  key: /^gsk_/,    host: /(^|\.)groq\.com$/,
+      example: "gsk_…", where: "console.groq.com/keys" },
+    { name: "OpenAI",     article: "an", key: /^sk-(proj-)?[A-Za-z0-9_-]{16,}$/,
+      host: /(^|\.)openai\.com$/,
+      example: "sk-proj-…", where: "platform.openai.com/api-keys" }
+  ];
+
+  function keyIssuer(k) {
+    for (var i = 0; i < KEY_KINDS.length; i++)
+      if (KEY_KINDS[i].key.test(k)) return KEY_KINDS[i];
+    return null;
+  }
+  function endpointIssuer() {
+    var host = "";
+    try { host = new URL(cfg.base).host; } catch (e) { return null; }
+    for (var i = 0; i < KEY_KINDS.length; i++)
+      if (KEY_KINDS[i].host.test(host)) return KEY_KINDS[i];
+    return null;
+  }
+
+  // Only speaks when both sides are recognised and they disagree. An unknown
+  // host or an unknown key format says nothing at all — a false accusation
+  // about a self-hosted or niche endpoint would be worse than silence.
+  function keyEndpointMismatch() {
+    var k = cfg.key || "";
+    var mine = keyIssuer(k), theirs = endpointIssuer();
+    if (!theirs) return "";        // unknown endpoint: say nothing at all
+
+    if (mine && mine.name !== theirs.name) {
+      return "That key was issued by " + mine.name + ", but the endpoint is "
+           + theirs.name + "'s. " + theirs.name + " will not recognise it — and "
+           + "a key it cannot parse is usually reported as a *missing* header "
+           + "rather than an invalid one, which is what makes this so confusing.";
+    }
+
+    // Recognising the *endpoint* is enough on its own. A key that matches no
+    // issuer at all still fails this test when the endpoint's own format is
+    // known, which is the case a stricter version missed: a 20-character
+    // value pasted into the key box matched no prefix, so nothing was said,
+    // even though it plainly was not an OpenRouter key.
+    if (k && !mine && !theirs.key.test(k)) {
+      return "Whatever is in the key box is not " + theirs.article + " "
+           + theirs.name + " key. "
+           + theirs.name + " keys start \"" + theirs.example + "\"; this is "
+           + k.length + " characters and starts with something else. Get one "
+           + "from " + theirs.where + " and paste it into Setup.";
+    }
+    return "";
+  }
+
+  // Model IDs are namespaced differently per provider, and getting it wrong
+  // costs a whole round trip on a phone. OpenRouter routes to many vendors so
+  // its ids carry a vendor prefix — "openai/gpt-4o-mini", not "gpt-4o-mini";
+  // a provider serving only its own models wants the bare name. Neither
+  // rejects the other politely: you get a 400 that names the id and leaves
+  // you to work out the convention.
+  function modelHint(body) {
+    var host = "";
+    try { host = new URL(cfg.base).host; } catch (e) { return ""; }
+    var m = cfg.model || "";
+    if (!m) return "";
+    var onRouter = /(^|\.)openrouter\.ai$/.test(host);
+    if (onRouter && m.indexOf("/") === -1) {
+      // Deliberately does NOT offer "openai/" + m. The id is already known
+      // bad, so prefixing it just produces a confidently wrong second guess —
+      // a typo would be handed straight back with a vendor bolted on. Show
+      // the convention and two ids known to be real instead.
+      return "OpenRouter model ids carry a vendor prefix, and \"" + m + "\" "
+           + "has none. They look like \"openai/gpt-4o-mini\" or "
+           + "\"anthropic/claude-sonnet-4.5\". The full list is at "
+           + "openrouter.ai/models.";
+    }
+    if (!onRouter && m.indexOf("/") !== -1 && /valid model|model.*not.*(found|exist)/i.test(body || "")) {
+      return "That looks like an OpenRouter model id (it has a vendor "
+           + "prefix), but this endpoint is not OpenRouter. Try just \""
+           + m.split("/").pop() + "\".";
+    }
+    return "";
+  }
+
   // On a phone there is no devtools, so the page has to be able to say what it
-  // actually sent. The key is shown only as a length and its first/last three
-  // characters — enough to tell "empty", "that's my endpoint URL" and "looks
-  // like a key" apart, without printing a secret on screen.
+  // actually sent. The key is shown as a length, its first/last three
+  // characters, and — when recognisable — who issued it. Three characters
+  // alone could not tell sk-or- from sk-ant-, which is exactly the mix-up
+  // this failed to catch the first time.
   function keyShape() {
     var k = cfg.key || "";
     if (!k) return "no key stored";
     var shape = k.length + " chars, " + k.slice(0, 3) + "…" + k.slice(-3);
+    var issuer = keyIssuer(k);
+    if (issuer) shape += ", looks like " + issuer.name + "'s";
     if (/\s/.test(k)) shape += " — CONTAINS WHITESPACE, likely a bad paste";
     if (/^https?:/i.test(k)) shape += " — that looks like a URL, not a key";
     return shape;
@@ -681,7 +915,18 @@
           "trailing slash, and the same host it ends up on.");
       }
     }
-    if (/missing.*auth|no auth|unauthor/i.test(body || "") && !(res && res.redirected)) {
+    // The mismatch is checked before anything else, because when it applies
+    // it is the whole answer and every other explanation below is a wild
+    // goose chase — as this page's own error text was, for two days.
+    var modelSaid = modelHint(body);
+    if (modelSaid) lines.push("", modelSaid);
+
+    var mismatch = keyEndpointMismatch();
+    if (mismatch) {
+      lines.push("", mismatch, "",
+        "Fix: use a key issued by whoever owns that endpoint.");
+    } else if (/missing.*auth|no auth|unauthor/i.test(body || "")
+               && !(res && res.redirected)) {
       lines.push("",
         "The endpoint says the auth header was missing rather than wrong.",
         "If the key above looks right, check the endpoint URL — a redirect",
@@ -708,7 +953,14 @@
       var res = await fetch(cfg.base + "/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.key },
-        body: JSON.stringify({ model: cfg.model, messages: history, stream: true })
+        // Prepended per request rather than pushed into `history` once, so a
+        // long conversation cannot drift the persona out of the window and
+        // there is no chance of it being stored twice.
+        body: JSON.stringify({
+          model: cfg.model,
+          messages: [{ role: "system", content: PERSONA }].concat(history),
+          stream: true
+        })
       });
       if (!res.ok) {
         var body = (await res.text()).slice(0, 300);
@@ -827,6 +1079,20 @@
   if (!speechOK) opening += "\n\n(No speech synthesis here, so I can't speak aloud — I'll answer in text.)";
   opening += "\n\nTap Setup once to point me at a model. \"Where audio goes\" says which parts stay on your phone.";
   say("Clementine", opening, "them");
+  if (repairedBase) {
+    // Say it rather than fix it quietly. A silent repair means the endpoint
+    // you are looking at in Setup is not the one you typed, and if this is
+    // what unsticks a 401 then the reason belongs on screen — otherwise it
+    // just "started working", which teaches nobody anything.
+    save();
+    say("Clementine",
+        "One thing before we start: the endpoint stored on this phone needed "
+        + "tidying — a trailing slash, or http instead of https. Either can "
+        + "make a provider say your key is missing when it is really the "
+        + "request going somewhere slightly different. It is now:\n\n  "
+        + cfg.base + "\n\nIf that is not where your model lives, tap Setup.",
+        "them");
+  }
   if (!ready()) setState("Tap Setup to begin");
 })();
 </script>
