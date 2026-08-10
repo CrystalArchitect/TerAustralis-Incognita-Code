@@ -617,9 +617,12 @@
     fBase.value = cfg.base || ""; fKey.value = cfg.key || ""; fModel.value = cfg.model || "";
     fillVoices();
     var stored = document.getElementById("stored");
+    // Said here as well as in the error, because Setup is where it can be
+    // fixed and where someone looks *before* being confused rather than after.
+    var mismatch = keyEndpointMismatch();
     stored.textContent = ready()
       ? "Currently stored — endpoint: " + cfg.base + " · model: " + cfg.model +
-        " · key: " + keyShape()
+        " · key: " + keyShape() + (mismatch ? "\n\n⚠ " + mismatch : "")
       : "Nothing stored yet. Grey text in the boxes below is a hint, not a value — " +
         "each box has to be typed into.";
     settingsDlg.showModal();
@@ -675,14 +678,57 @@
   });
 
   // ---- diagnostics --------------------------------------------------------
+  // Providers stamp a recognisable prefix on their keys, and those prefixes
+  // are public — they identify the issuer, they are not the secret. Naming
+  // the issuer is therefore free, and it is the single most useful thing this
+  // page can say, because a key from the wrong provider is indistinguishable
+  // from a wrong key when all you have is a 401.
+  //
+  // Order matters: the OpenAI pattern is the loosest and would swallow the
+  // others, so the specific issuers are tested first.
+  var KEY_KINDS = [
+    { name: "OpenRouter", key: /^sk-or-/,            host: /(^|\.)openrouter\.ai$/ },
+    { name: "Anthropic",  key: /^sk-ant-/,           host: /(^|\.)anthropic\.com$/ },
+    { name: "Groq",       key: /^gsk_/,              host: /(^|\.)groq\.com$/ },
+    { name: "OpenAI",     key: /^sk-(proj-)?[A-Za-z0-9_-]{16,}$/, host: /(^|\.)openai\.com$/ }
+  ];
+
+  function keyIssuer(k) {
+    for (var i = 0; i < KEY_KINDS.length; i++)
+      if (KEY_KINDS[i].key.test(k)) return KEY_KINDS[i];
+    return null;
+  }
+  function endpointIssuer() {
+    var host = "";
+    try { host = new URL(cfg.base).host; } catch (e) { return null; }
+    for (var i = 0; i < KEY_KINDS.length; i++)
+      if (KEY_KINDS[i].host.test(host)) return KEY_KINDS[i];
+    return null;
+  }
+
+  // Only speaks when both sides are recognised and they disagree. An unknown
+  // host or an unknown key format says nothing at all — a false accusation
+  // about a self-hosted or niche endpoint would be worse than silence.
+  function keyEndpointMismatch() {
+    var mine = keyIssuer(cfg.key || ""), theirs = endpointIssuer();
+    if (!mine || !theirs || mine.name === theirs.name) return "";
+    return "That key was issued by " + mine.name + ", but the endpoint is "
+         + theirs.name + "'s. " + theirs.name + " will not recognise it — and "
+         + "a key it cannot parse is usually reported as a *missing* header "
+         + "rather than an invalid one, which is what makes this so confusing.";
+  }
+
   // On a phone there is no devtools, so the page has to be able to say what it
-  // actually sent. The key is shown only as a length and its first/last three
-  // characters — enough to tell "empty", "that's my endpoint URL" and "looks
-  // like a key" apart, without printing a secret on screen.
+  // actually sent. The key is shown as a length, its first/last three
+  // characters, and — when recognisable — who issued it. Three characters
+  // alone could not tell sk-or- from sk-ant-, which is exactly the mix-up
+  // this failed to catch the first time.
   function keyShape() {
     var k = cfg.key || "";
     if (!k) return "no key stored";
     var shape = k.length + " chars, " + k.slice(0, 3) + "…" + k.slice(-3);
+    var issuer = keyIssuer(k);
+    if (issuer) shape += ", looks like " + issuer.name + "'s";
     if (/\s/.test(k)) shape += " — CONTAINS WHITESPACE, likely a bad paste";
     if (/^https?:/i.test(k)) shape += " — that looks like a URL, not a key";
     return shape;
@@ -703,7 +749,15 @@
           "trailing slash, and the same host it ends up on.");
       }
     }
-    if (/missing.*auth|no auth|unauthor/i.test(body || "") && !(res && res.redirected)) {
+    // The mismatch is checked before anything else, because when it applies
+    // it is the whole answer and every other explanation below is a wild
+    // goose chase — as this page's own error text was, for two days.
+    var mismatch = keyEndpointMismatch();
+    if (mismatch) {
+      lines.push("", mismatch, "",
+        "Fix: use a key issued by whoever owns that endpoint.");
+    } else if (/missing.*auth|no auth|unauthor/i.test(body || "")
+               && !(res && res.redirected)) {
       lines.push("",
         "The endpoint says the auth header was missing rather than wrong.",
         "If the key above looks right, check the endpoint URL — a redirect",
