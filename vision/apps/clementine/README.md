@@ -1,125 +1,56 @@
-# Clementine — the sovereign companion
+# Clementine has moved
 
-Your memory lives on your own machine, in files you own. The model runs
-locally by default; a remote one is used only if you configure it.
+The companion now lives in its own repository, and that copy is the
+authoritative one:
 
-## Layout
-
-- `clementine.py` — the terminal interface
-- the mind — `crystalcore.mind`, under `core/`: memory, recall, profiles
-- `server.py` — the local JSON API (127.0.0.1 only) for the web interface
-- `webapp/` — the Svelte web interface, run locally
-- `requirements.txt` — Python dependencies
-
-## Running the companion
-
-Prerequisite: [Ollama](https://ollama.com) running with a model pulled,
-e.g. `ollama pull llama3.1:8b`.
-
-### Terminal
+**https://github.com/CrystalArchitect/Clementine-ai-companion**
 
 ```bash
+git clone https://github.com/CrystalArchitect/Clementine-ai-companion.git
+cd Clementine-ai-companion/clementine
 pip install -r requirements.txt
 python clementine.py
 ```
 
-### Web interface
+No path juggling is needed there: `crystalcore/` sits beside `clementine.py`,
+which is why the starter assembler this repository used to carry has been
+retired rather than repointed. It existed to flatten the split layout below —
+mind under `core/`, interface under `vision/apps/` — and that layout is not
+what ships any more.
 
-Two terminals from this folder:
+## Why it moved, and why this is not merely a relocation
 
-```bash
-# 1. the brain — the local API
-python server.py
-```
+The two copies had diverged, and not evenly. **The companion here never
+passed its model calls through a consent gate.** `core/crystalcore/gate.py`
+defined one and `bridge.py` used it, but nothing in this app's `clementine.py`
+or `server.py` ever called it. The copy in the repository above does, on every
+call, with the destination and model recorded in an append-only audit log
+either way.
 
-```bash
-# 2. the face — the web interface
-cd webapp
-npm install
-npm run dev          # open http://127.0.0.1:5174
-```
+Alongside that, the authoritative copy has since gained:
 
-The web interface streams their replies while an operator figure works at
-the terminal. Their **speaking voice already works** — turn on `voice` in the
-chat and they read their replies aloud using your device's own speech synthesis
-(nothing leaves the machine). Still on the roadmap, both to run on this machine
-alone: their **hearing** you (microphone / speech-to-text) and **webcam sight**.
+- a guard rejecting bodyless and non-JSON writes, closing a cross-site
+  request forgery hole that let a visited page make the companion reflect
+  and write to its own memory
+- one endpoint attribute the gate and the request both read, so the address
+  judged is always the address used — and the same for the model name
+- remote providers, every call gated, with remote never used as a fallback
+- pronouns the human or the companion may choose, and neither assumed
+- a test suite of 99, from none
 
-Both interfaces share the same memory folder (`crystalcore_memory/` by
-default), so you can move between terminal and browser freely. Use
-`--profile <name>` on either to keep separate people separate.
+## What stayed behind
 
-## Reaching her from a phone
+- `../clementine-discord/` — the Discord bot, its API client and its tests.
+  It reaches the companion over HTTP and needs none of its source. Two of
+  its tests do want it, to check the bot against the real API; see that
+  directory's `tests/conftest.py`.
+- `../clementine-voice/` — the browser voice layer, now holding `voice.js`.
+- `core/crystalcore/` — the bridge, gate, audit log and the mind this app
+  used to drive. Still here, still used by CrystalBridge.
 
-[`DISCORD.md`](DISCORD.md) — a bot that connects outward to Discord, so
-the machine at home needs no open port and the phone in your pocket needs
-no API key. The model and the memory stay on your machine; your messages
-pass through Discord to get there, which is a real cost and is stated
-plainly there rather than glossed.
+## The one description not yet updated
 
-```bash
-pip install -r requirements-discord.txt
-export DISCORD_TOKEN=... CLEMENTINE_DISCORD_OWNERS=your_user_id
-python discord_bot.py            # with server.py already running
-```
-
-It refuses to start without an allowlist. The bot can write to her memory,
-and a bot that answers anyone who can see it hands that to strangers.
-
-## Building something of your own against it
-
-`server.py` is a plain HTTP API, and the Svelte interface is only one
-client of it. Start the server and ask it what it has:
-
-```bash
-curl http://127.0.0.1:5000/api                 # every route, described
-curl http://127.0.0.1:5000/api/openapi.json    # the same, as OpenAPI 3.1
-```
-
-[`API.md`](API.md) is the same surface as a page you can read in one sitting,
-and [`clementine_api.py`](clementine_api.py) is a small Python client for it —
-`Clementine().chat("hello")`, and a named `ClementineOffline` for the failure
-you will actually hit. The Discord bot is written against it, which is the
-point: a second interface should be a few lines, not a pile of re-derived
-`requests` boilerplate.
-
-All three come from one table in `api_surface.py`, and `tests/test_api_surface.py`
-holds that table against Flask's own routing map in both directions — a route
-that exists but is undocumented fails the suite, and so does a documented route
-nothing serves. That is the Incognita Rule pointed at our own API: a promised
-endpoint with nothing behind it is a line someone drew pretending it was
-surveyed, and the person who pays for it is whoever built a client from the
-document.
-
-The API binds to `127.0.0.1` and there is no way to change that from the
-command line. It is reachable from this machine and no other — no tokens, no
-accounts, no rate limiting, because a localhost server needs none of them.
-That is the property that makes this the sovereign version, and exposing it
-would mean building an auth story that does not exist yet.
-
-## Any model, two dialects
-
-Clementine speaks two wire shapes, and between them nearly every model:
-
-- **Local (default):** anything Ollama serves — `--model qwen2.5:3b`,
-  `--model gemma2:2b`, etc. Nothing leaves the machine.
-- **Remote (opt-in):** any OpenAI-compatible endpoint. Pair
-  `--llm-provider` with `--llm-endpoint` and `LLM_API_KEY`:
-
-```bash
-# OpenAI
-python clementine.py --llm-provider openai \
-  --llm-endpoint https://api.openai.com/v1/chat/completions --llm-model gpt-4o
-
-# OpenRouter — one key, hundreds of models (incl. Claude, Gemini)
-python clementine.py --llm-provider openrouter \
-  --llm-endpoint https://openrouter.ai/api/v1/chat/completions \
-  --llm-model anthropic/claude-sonnet-4
-
-# Groq, Together, xAI: same pattern, their endpoint + your key
-```
-
-Detection is local-first: Ollama if reachable, remote otherwise. On a
-CPU-only server, set a remote provider explicitly — models above ~3b are
-painful without a GPU. Whichever brain answers, memory stays here: the model
-is a faculty, never the identity.
+`vision/site/src/content/CLEMENTINE.md` still describes the old layout. It is
+a mirror of umbrella canon, pinned by commit and checked in CI, so it cannot
+be corrected here: the umbrella changes first, then the pin moves. Named
+rather than left for someone to find.

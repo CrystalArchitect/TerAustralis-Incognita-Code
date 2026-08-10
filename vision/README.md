@@ -16,8 +16,8 @@ this area holds Crystal Vision: user-facing applications, interfaces, and the co
 ## Prove it
 
 ```bash
-# From the vision/apps/clementine directory (tests embedded)
-cd vision/apps/clementine
+# From the vision/apps/clementine-discord directory
+cd vision/apps/clementine-discord
 python -m pytest tests/
 ```
 

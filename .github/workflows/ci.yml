@@ -60,7 +60,12 @@ jobs:
         run: |
           pip install pytest
           python -m pytest tests -q
-      - name: Companion dependencies
-        run: pip install -r vision/apps/clementine/requirements.txt pytest
-      - name: Companion core tests
-        run: python -m pytest vision/apps/clementine/tests -q
+      # The companion's own tests went with it to
+      # CrystalArchitect/Clementine-ai-companion, where they run in that
+      # repository's CI — 99 of them, against the copy that actually ships.
+      # Running a second, older copy here was the drift this consolidation
+      # removed.
+      - name: Discord bot tests
+        run: pip install -r vision/apps/clementine-discord/requirements-discord.txt pytest
+      - name: Discord bot
+        run: python -m pytest vision/apps/clementine-discord/tests -q

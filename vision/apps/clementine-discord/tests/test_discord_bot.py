@@ -13,6 +13,8 @@ That is on purpose: a test suite that only runs once you have installed
 the optional extra is a test suite that stops running.
 """
 
+import os
+
 import pytest
 import requests
 
@@ -346,6 +348,10 @@ def test_every_client_method_maps_to_a_route_that_exists():
     a route nobody serves fails, exactly as a documented-but-unbuilt
     route does.
     """
+    if not os.environ.get("CLEMENTINE_SRC", "").strip():
+        pytest.skip("needs the companion's source: set CLEMENTINE_SRC to the "
+                    "clementine/ directory of a Clementine-ai-companion "
+                    "checkout. See tests/conftest.py.")
     import api_surface
     paths = {r.path for r in api_surface.ROUTES}
     used = {
