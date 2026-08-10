@@ -39,11 +39,13 @@ the same promise `vision/apps/clementine/webapp/src/lib/voice.js` makes. With
 no on-device voice she stays silent rather than fall back to a network one.
 
 **The talk button** uses the browser's built-in `SpeechRecognition`. In Chrome
-that sends audio to Google. In Safari it is Apple's recogniser, and whether it
-runs on-device or on Apple's servers is **not something this page can
-determine** — so it is described as leaving the device, rather than assumed
-not to. If that matters, use the keyboard key instead: slower, and the one
-whose answer is clean.
+on a desktop that sends audio to Google. On an iPhone it is Apple's recogniser
+*whichever browser you use* — Firefox and Chrome there are required to run on
+WebKit, so they are wrappers around the same engine — and whether it runs
+on-device or on Apple's servers is **not something this page can determine**.
+So it is described as leaving the device, rather than assumed not to. If that
+matters, use the keyboard key instead: slower, and the one whose answer is
+clean.
 
 Both routes end the same way: the transcribed text goes to your endpoint.
 
@@ -99,11 +101,15 @@ Two specific failures it exists to catch:
   diagnostic there is. A provider that refuses needs a proxy, which needs a
   server, which this deliberately does not have.
 - **A key in `localStorage` is only as private as the phone.**
-- **Untested on real iOS.** Verified in mobile-emulated Chromium with a mock
-  recogniser and a stub endpoint — there is no iPhone in the build container.
-  Safari differs from Chromium in exactly the places that matter here (speech
-  permissions, voice availability, autoplay rules). Treat the behaviour as
-  expected, not confirmed, until it has been tapped once.
+- **Now run on real iOS — in Firefox, not Safari.** A full turn works there:
+  spoken input transcribed, request authenticated, reply spoken aloud through
+  an on-device voice. Everything before that was mobile-emulated Chromium with
+  a mock recogniser, and Chromium differs from WebKit in exactly the places
+  that matter here. Two bugs only the real device could show: a
+  `SpeechRecognition` instance cannot be restarted on WebKit, so the
+  microphone worked exactly once per page load; and the microphone-blocked
+  guidance named Safari's Settings page to a Firefox user. Safari itself is
+  still unconfirmed.
 - Hands-free turns itself off when a request fails, so a broken endpoint
   cannot put it in a listen/fail loop.
 - **Streaming depends on the provider.** The request asks for it; an endpoint
@@ -122,8 +128,9 @@ mock recogniser driving the real code path:
   final result auto-sends without another tap
 - **hands-free relistens after the reply finishes speaking** (recogniser start
   count rises across a turn on its own)
-- microphone-denied produces named guidance (iOS Settings → Safari →
-  Microphone) and switches hands-free off rather than looping
+- microphone-denied produces guidance naming *the browser you are actually
+  in* (Settings → Firefox → Microphone for a Firefox user, Safari's ⓐA route
+  for a Safari one) and switches hands-free off rather than looping
 - a reply containing `<img src=x onerror=…>` renders as literal text — no
   element created, no script run
 - no horizontal overflow; header and talk button stay in view; only the

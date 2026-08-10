@@ -231,10 +231,13 @@
       </p>
       <p class="note">
         <b>The talk button — depends on your browser, and I cannot verify it.</b>
-        It uses the browser's built-in speech recognition. In Chrome that
-        sends audio to Google. In Safari it is Apple's recogniser, and whether
-        it runs on-device or on Apple's servers is not something this page can
-        determine. Treat it as leaving the device unless you know otherwise.
+        It uses the browser's built-in speech recognition. In Chrome on a
+        desktop that sends audio to Google. On an iPhone it is Apple's
+        recogniser <i>whichever browser you use</i> — Firefox and Chrome there
+        are required to run on WebKit, so they are wrappers around the same
+        engine — and whether it runs on-device or on Apple's servers is not
+        something this page can determine. Treat it as leaving the device
+        unless you know otherwise.
       </p>
       <p class="note">
         <b>The keyboard's microphone key — the private option.</b>
@@ -507,6 +510,33 @@
   var listenAttempt = 0;
   var startedAttempt = -1;
 
+  // Every browser on iOS is WebKit underneath — Apple requires it — so
+  // Firefox and Chrome there are WKWebView wrappers around the same engine,
+  // and the speech behaviour is Apple's in all of them. What differs is where
+  // the *permission* lives, and sending someone to Settings → Safari when
+  // they are in Firefox is a dead end dressed up as help. This page was in
+  // fact first used in Firefox for iOS, not Safari, which is precisely how
+  // that wrong instruction survived unnoticed.
+  function iosBrowserName() {
+    var ua = navigator.userAgent || "";
+    if (/FxiOS/.test(ua)) return "Firefox";
+    if (/CriOS/.test(ua)) return "Chrome";
+    if (/EdgiOS/.test(ua)) return "Edge";
+    if (/OPiOS|OPT\//.test(ua)) return "Opera";
+    return "Safari";
+  }
+
+  function micPermissionPath() {
+    var name = iosBrowserName();
+    if (name === "Safari") {
+      return "On iPhone: Settings → Safari → Microphone, or the ⓐA button in "
+           + "the address bar → Website Settings.";
+    }
+    return "You are in " + name + " on iPhone, so it is Settings → " + name
+         + " → Microphone (not Settings → Safari), or " + name + "'s own "
+         + "site-permissions menu in the address bar.";
+  }
+
   function buildRecogniser(attempt) {
     if (!SR) return null;
     var r = new SR();
@@ -552,9 +582,8 @@
         cfg.handsfree = false; syncHandsfree();
         setState("Microphone blocked");
         say("Clementine",
-            "The microphone is blocked for this page. On iPhone: Settings → Safari → " +
-            "Microphone, or the ⓐA button in the address bar → Website Settings. " +
-            "You can still tap Type and use the keyboard's 🎤 instead.", "err");
+            "The microphone is blocked for this page. " + micPermissionPath() +
+            " You can still tap Type and use the keyboard's 🎤 instead.", "err");
         return;
       }
       if (ev.error === "aborted") { setState("Tap to talk"); return; }
@@ -724,8 +753,15 @@
     });
     if (all.length > 12) lines.push("  …and " + (all.length - 12) + " more");
     lines.push("",
+      // The browser was assumed for two days and never asked. It turned out
+      // to be Firefox, not Safari, which made one piece of on-screen advice
+      // point at the wrong Settings page entirely. Report it rather than
+      // infer it next time.
+      "browser                 : " + iosBrowserName(),
       "SpeechRecognition       : " + (SR ? "present" : "ABSENT"),
       "recogniser ever started : " + recogniserEverStarted,
+      "listen attempts         : " + listenAttempt + " (last that started: "
+                                   + (startedAttempt < 0 ? "none" : startedAttempt) + ")",
       "last speech error       : " + (lastSpeechError || "none"),
       "language                : " + (navigator.language || "?"),
       "secure context          : " + (window.isSecureContext === true),
