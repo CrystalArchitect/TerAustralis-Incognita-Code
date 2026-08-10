@@ -35,7 +35,7 @@ only true of some of it.
 | Your words → the model | your configured endpoint | **yes**, always |
 
 **Speaking** uses `speechSynthesis` filtered to `localService` voices only —
-the same promise `vision/apps/clementine/webapp/src/lib/voice.js` makes. With
+the same promise `voice.js` in this directory makes. With
 no on-device voice she stays silent rather than fall back to a network one.
 
 **The talk button** uses the browser's built-in `SpeechRecognition`. In Chrome

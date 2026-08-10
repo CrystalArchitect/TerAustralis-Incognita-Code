@@ -10,7 +10,8 @@ solid can be argued with, regenerated, and checked.
 
 A parametric enclosure for the machine the first companion boots on —
 the vessel for the sovereign node the first real-world process needs
-(see `vision/apps/clementine/transcripts/first-live-session-2026-08-08.md`
+(see `transcripts/first-live-session-2026-08-08.md` in the companion's
+repository, CrystalArchitect/Clementine-ai-companion
 for why that machine is the next step the whole portfolio is waiting on).
 Base tray with screw bosses, generous port windows, and NON SOLUS
 engraved in the wall; friction-fit lid vented through a hexagonal

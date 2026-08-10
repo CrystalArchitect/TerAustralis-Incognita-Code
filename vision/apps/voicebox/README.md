@@ -36,4 +36,4 @@ Ask Claude to "say it out loud" and the machine talks.
 - Binds to `127.0.0.1` by default — keep it that way; a voice server has no
   business on a network.
 - This is separate from Clementine's own voice: their webapp speaks by itself
-  via the browser's speech synthesis (see `vision/apps/clementine/`).
+  via the browser's speech synthesis (see `vision/apps/clementine-voice/`).

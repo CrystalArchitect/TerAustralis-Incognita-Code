@@ -20,6 +20,7 @@ Requires `discord.py`, so the module skips cleanly without it rather than
 failing the suite for anyone who has not installed the optional extra.
 """
 
+import os
 import asyncio
 
 import pytest
@@ -28,6 +29,14 @@ discord = pytest.importorskip(
     "discord", reason="optional extra; pip install -r requirements-discord.txt")
 
 import discord_bot                                          # noqa: E402
+
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("CLEMENTINE_SRC", "").strip(),
+    reason="needs the companion's source: set CLEMENTINE_SRC to the "
+           "clementine/ directory of a Clementine-ai-companion checkout. "
+           "See tests/conftest.py.",
+)
+
 from clementine_api import Clementine                       # noqa: E402
 
 BOT_ID = 999

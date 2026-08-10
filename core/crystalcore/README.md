@@ -45,7 +45,7 @@ CRYSTALBRIDGE_GUEST=claude python3 -m crystalcore.bridge --profile default
 process — one guest per bridge invocation, matching how MCP stdio servers
 are normally launched (once per client). `--profile` selects which
 `src/profiles/<name>/bridge_config.json` to load, and also which of the
-companion's own profiles (`vision/apps/clementine/crystalcore_profiles/<name>/`)
+companion's own profiles (the folder named by CRYSTALBRIDGE_MEMORY_DIR)
 to give access to — the two share a name on purpose, so a bridge profile
 always points at one specific companion.
 
@@ -53,7 +53,7 @@ always points at one specific companion.
 relative to the calling process's working directory, which would silently
 point the bridge at a different (empty) memory location than the one you use
 day to day. `bridge.py` works around this by resolving the path explicitly
-relative to `vision/apps/clementine/` rather than trusting the relative
+relative to a nominated memory folder rather than trusting the relative
 helper — see `_profiles_root()` and the comment on `Bridge.companion` if
 you're touching that code. It honours an existing `lumina_profiles/` folder
 too, so an install predating the rename keeps its memory.

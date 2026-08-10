@@ -114,7 +114,7 @@ class Bridge:
         The mind's own `profiles.profile_dir()` resolves relative to the
         *calling process's* working directory. This bridge runs from
         `core/`, a different cwd than the terminal interface uses
-        (`cd vision/apps/clementine && python3 clementine.py`), so the path
+        (wherever the human cloned the companion), so the path
         is built explicitly and anchored to the interface — otherwise the
         bridge would open a second, empty profile dir wherever it happened
         to be launched from, instead of the memory the human actually sees.

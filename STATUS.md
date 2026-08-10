@@ -126,8 +126,10 @@ Executes, or can be opened and used by someone other than me.
   Debian-owned `blinker` and `PyJWT` abort a plain `pip install` of
   `flask` and of `requirements-bridge.txt` with "Cannot uninstall …
   RECORD file not found" — `pip install --ignore-installed` clears both.
-- Companion core tests — 47/47 pass (`python -m pytest
-  vision/apps/clementine/tests`; needs `pytest`, `requests`, `flask`),
+- Companion core tests — moved with the companion to
+  CrystalArchitect/Clementine-ai-companion, where they run in that
+  repository's CI (99 as of 2026-08-10). The count below is the last
+  figure measured here, before the move: 47/47 pass,
   re-verified 2026-07-29: the original 33, plus 10 provider-dialect
   tests (including the regression for `--llm-provider openai`, which
   was advertised but had never worked — it sent Ollama-shaped JSON at
@@ -224,7 +226,8 @@ Code exists and is complete enough to run. No runtime here exercises it.
   labelled as such in its own replies, evidence of machinery and not of
   intelligence. The webapp also builds now (`npm install && npm run
   build`, 117 modules, `dist/` produced). Verbatim record:
-  `vision/apps/clementine/transcripts/first-live-session-2026-08-08.md`.
+  `transcripts/first-live-session-2026-08-08.md`, in
+  CrystalArchitect/Clementine-ai-companion.
   The one remaining link is a real model: the session container's
   network policy denies every weight source (`ollama.com` CONNECT 403,
   `registry.ollama.ai` and `huggingface.co` unreachable), so this entry
@@ -290,7 +293,9 @@ code matches:
   CrystalBridge); now `bus`, with `BusHub` in place of `ClementineHub`,
   matching canon.
 - **Clementine** — the voice at the front, and the only place a persona
-  name appears: `vision/apps/clementine/`.
+  name appears. Now its own repository,
+  CrystalArchitect/Clementine-ai-companion; `vision/apps/clementine/`
+  here holds only a pointer to it.
 
 The mind itself is nameless. `Personality.name` still defaults to `""`,
 so a companion is unnamed until the human names it or it chooses its own.

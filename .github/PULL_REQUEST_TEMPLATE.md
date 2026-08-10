@@ -24,7 +24,7 @@
 - [ ] `python -m compileall -q core vision`
 - [ ] Crystal Core self-tests (`bus` / `services` / `starline` / `rdp`, in `core/crystal-core/`)
 - [ ] Mesh stub tests (`cd core && PYTHONPATH=. pytest tests -q`)
-- [ ] `pytest vision/apps/clementine/tests`
+- [ ] `pytest vision/apps/clementine-discord/tests`
 - [ ] Site builds (`cd vision/site && npm run build`) — if the site changed
 - [ ] No generated files, secrets, or personal data staged
 
