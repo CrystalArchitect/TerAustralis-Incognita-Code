@@ -501,8 +501,13 @@
   var recogniserEverStarted = false;
   var lastSpeechError = "";
   var startWatchdog = null;
+  // Per-attempt, so the watchdog asks "did *this* press start?" rather than
+  // "has any press ever started?" — the latter goes permanently quiet after
+  // the first success, which is the worst possible moment to stop reporting.
+  var listenAttempt = 0;
+  var startedAttempt = -1;
 
-  function buildRecogniser() {
+  function buildRecogniser(attempt) {
     if (!SR) return null;
     var r = new SR();
     r.lang = navigator.language || "en-AU";
@@ -512,6 +517,7 @@
 
     r.onstart = function () {
       recogniserEverStarted = true;
+      startedAttempt = attempt;
       if (startWatchdog) { clearTimeout(startWatchdog); startWatchdog = null; }
       listening = true;
       talkBtn.classList.add("live");
@@ -571,14 +577,37 @@
       return;
     }
     if (listening || busy || speaking) return;
-    if (!rec) rec = buildRecogniser();
+
+    // A fresh recogniser per attempt, and this is the whole reason the
+    // microphone worked exactly once per page load. iOS Safari will not
+    // restart a SpeechRecognition that has already ended: start() on a used
+    // instance does nothing at all — no event, no error, no exception to
+    // catch. Reusing the object is fine on desktop Chrome, which is why the
+    // emulated tests never saw it.
+    //
+    // Handlers come off the old one before aborting it, so its parting
+    // onend/onerror cannot land after the new one has started and set
+    // `listening` back to false underneath it.
+    if (rec) {
+      rec.onstart = rec.onresult = rec.onerror = rec.onend = null;
+      try { rec.abort(); } catch (e) {}
+    }
+    var attempt = ++listenAttempt;
+    rec = buildRecogniser(attempt);
+
     setState("Starting the microphone…");
     if (startWatchdog) clearTimeout(startWatchdog);
     // If neither onstart nor onerror lands, the API is present but not
     // working — which happens on some iOS versions. Say so and hand over to
     // the keyboard's dictation rather than sit on a button that does nothing.
+    //
+    // Guarded on *this* attempt, not on whether one ever succeeded. The
+    // earlier version checked recogniserEverStarted, a flag that latches true
+    // forever after the first success — so from the second tap onward a dead
+    // microphone was silent by construction. The bug above and this guard hid
+    // each other exactly.
     startWatchdog = setTimeout(function () {
-      if (listening || recogniserEverStarted) return;
+      if (listening || startedAttempt === attempt) return;
       lastSpeechError = "no response from the recogniser";
       setState("The microphone didn't start");
       say("Clementine",
