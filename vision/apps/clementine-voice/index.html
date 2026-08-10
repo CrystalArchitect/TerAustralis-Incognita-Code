@@ -800,10 +800,15 @@
   // Order matters: the OpenAI pattern is the loosest and would swallow the
   // others, so the specific issuers are tested first.
   var KEY_KINDS = [
-    { name: "OpenRouter", key: /^sk-or-/,            host: /(^|\.)openrouter\.ai$/ },
-    { name: "Anthropic",  key: /^sk-ant-/,           host: /(^|\.)anthropic\.com$/ },
-    { name: "Groq",       key: /^gsk_/,              host: /(^|\.)groq\.com$/ },
-    { name: "OpenAI",     key: /^sk-(proj-)?[A-Za-z0-9_-]{16,}$/, host: /(^|\.)openai\.com$/ }
+    { name: "OpenRouter", article: "an", key: /^sk-or-/,  host: /(^|\.)openrouter\.ai$/,
+      example: "sk-or-v1-…", where: "openrouter.ai/keys" },
+    { name: "Anthropic",  article: "an", key: /^sk-ant-/, host: /(^|\.)anthropic\.com$/,
+      example: "sk-ant-api03-…", where: "console.anthropic.com" },
+    { name: "Groq",       article: "a",  key: /^gsk_/,    host: /(^|\.)groq\.com$/,
+      example: "gsk_…", where: "console.groq.com/keys" },
+    { name: "OpenAI",     article: "an", key: /^sk-(proj-)?[A-Za-z0-9_-]{16,}$/,
+      host: /(^|\.)openai\.com$/,
+      example: "sk-proj-…", where: "platform.openai.com/api-keys" }
   ];
 
   function keyIssuer(k) {
@@ -823,12 +828,30 @@
   // host or an unknown key format says nothing at all — a false accusation
   // about a self-hosted or niche endpoint would be worse than silence.
   function keyEndpointMismatch() {
-    var mine = keyIssuer(cfg.key || ""), theirs = endpointIssuer();
-    if (!mine || !theirs || mine.name === theirs.name) return "";
-    return "That key was issued by " + mine.name + ", but the endpoint is "
-         + theirs.name + "'s. " + theirs.name + " will not recognise it — and "
-         + "a key it cannot parse is usually reported as a *missing* header "
-         + "rather than an invalid one, which is what makes this so confusing.";
+    var k = cfg.key || "";
+    var mine = keyIssuer(k), theirs = endpointIssuer();
+    if (!theirs) return "";        // unknown endpoint: say nothing at all
+
+    if (mine && mine.name !== theirs.name) {
+      return "That key was issued by " + mine.name + ", but the endpoint is "
+           + theirs.name + "'s. " + theirs.name + " will not recognise it — and "
+           + "a key it cannot parse is usually reported as a *missing* header "
+           + "rather than an invalid one, which is what makes this so confusing.";
+    }
+
+    // Recognising the *endpoint* is enough on its own. A key that matches no
+    // issuer at all still fails this test when the endpoint's own format is
+    // known, which is the case a stricter version missed: a 20-character
+    // value pasted into the key box matched no prefix, so nothing was said,
+    // even though it plainly was not an OpenRouter key.
+    if (k && !mine && !theirs.key.test(k)) {
+      return "Whatever is in the key box is not " + theirs.article + " "
+           + theirs.name + " key. "
+           + theirs.name + " keys start \"" + theirs.example + "\"; this is "
+           + k.length + " characters and starts with something else. Get one "
+           + "from " + theirs.where + " and paste it into Setup.";
+    }
+    return "";
   }
 
   // Model IDs are namespaced differently per provider, and getting it wrong
