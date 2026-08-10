@@ -718,6 +718,36 @@
          + "rather than an invalid one, which is what makes this so confusing.";
   }
 
+  // Model IDs are namespaced differently per provider, and getting it wrong
+  // costs a whole round trip on a phone. OpenRouter routes to many vendors so
+  // its ids carry a vendor prefix — "openai/gpt-4o-mini", not "gpt-4o-mini";
+  // a provider serving only its own models wants the bare name. Neither
+  // rejects the other politely: you get a 400 that names the id and leaves
+  // you to work out the convention.
+  function modelHint(body) {
+    var host = "";
+    try { host = new URL(cfg.base).host; } catch (e) { return ""; }
+    var m = cfg.model || "";
+    if (!m) return "";
+    var onRouter = /(^|\.)openrouter\.ai$/.test(host);
+    if (onRouter && m.indexOf("/") === -1) {
+      // Deliberately does NOT offer "openai/" + m. The id is already known
+      // bad, so prefixing it just produces a confidently wrong second guess —
+      // a typo would be handed straight back with a vendor bolted on. Show
+      // the convention and two ids known to be real instead.
+      return "OpenRouter model ids carry a vendor prefix, and \"" + m + "\" "
+           + "has none. They look like \"openai/gpt-4o-mini\" or "
+           + "\"anthropic/claude-sonnet-4.5\". The full list is at "
+           + "openrouter.ai/models.";
+    }
+    if (!onRouter && m.indexOf("/") !== -1 && /valid model|model.*not.*(found|exist)/i.test(body || "")) {
+      return "That looks like an OpenRouter model id (it has a vendor "
+           + "prefix), but this endpoint is not OpenRouter. Try just \""
+           + m.split("/").pop() + "\".";
+    }
+    return "";
+  }
+
   // On a phone there is no devtools, so the page has to be able to say what it
   // actually sent. The key is shown as a length, its first/last three
   // characters, and — when recognisable — who issued it. Three characters
@@ -752,6 +782,9 @@
     // The mismatch is checked before anything else, because when it applies
     // it is the whole answer and every other explanation below is a wild
     // goose chase — as this page's own error text was, for two days.
+    var modelSaid = modelHint(body);
+    if (modelSaid) lines.push("", modelSaid);
+
     var mismatch = keyEndpointMismatch();
     if (mismatch) {
       lines.push("", mismatch, "",
