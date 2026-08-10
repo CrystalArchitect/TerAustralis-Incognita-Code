@@ -7,7 +7,7 @@ this area holds Crystal Vision: user-facing applications, interfaces, and the co
 
 | Path | Component |
 |---|---|
-| `apps/clementine/` | **Clementine** — the front-of-house voice of the sovereign AI companion, Ollama-backed (local-first, memory-aware, configurable LLM provider) · terminal, Flask API, Svelte webapp, browser voice · drives `crystalcore.mind` under `core/` · a core test suite (33 tests) |
+| `apps/clementine/` | **Clementine** — the front-of-house voice of the sovereign AI companion, Ollama-backed (local-first, memory-aware, configurable LLM provider) · terminal, Flask API, Svelte webapp, browser voice · drives `crystalcore.mind` under `core/` · **being retired: the authoritative copy is [Clementine-ai-companion](https://github.com/CrystalArchitect/Clementine-ai-companion), whose companion passes every model call through a consent gate — this one does not** |
 | `apps/voicebox/` | Voice layer HTTP server (TTS/STT interfaces) |
 | `apps/crystal-interface/` | **Demo shell** — simulated data, Authority held (not production) |
 | `apps/vision-web/` | **Demo shell** — simulated data, Authority held (not production) |

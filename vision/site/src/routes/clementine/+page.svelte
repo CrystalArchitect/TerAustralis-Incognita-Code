@@ -11,8 +11,8 @@ ollama pull llama3.1:8b
 ollama pull nomic-embed-text
 
 # 3. Get the code
-git clone https://github.com/CrystalArchitect/TerAustralis-Incognita-Code.git
-cd TerAustralis-Incognita-Code/vision/apps/clementine
+git clone https://github.com/CrystalArchitect/Clementine-ai-companion.git
+cd Clementine-ai-companion/clementine
 pip install -r requirements.txt
 
 # 4. Wake them
