@@ -71,21 +71,56 @@ def _gate(
     return ConsentGate(config)
 
 
-def test_interface_dir_resolves_to_a_real_directory():
+def test_bridge_refuses_to_run_without_a_nominated_memory_folder():
     """The regression test for bug #1, in the form that survives the move.
 
-    The mind is imported now, not path-loaded, so the only path the bridge
-    still computes is the interface directory its profiles hang off. If the
-    repo layout moves again, this fails loudly rather than silently opening
-    an empty profile folder somewhere else.
-    """
-    from crystalcore.bridge import APP_DIR
+    It used to assert that a path computed inside this repository resolved
+    to a real directory — the interface the profiles hung off. The companion
+    no longer lives here, so there is no such path to check, and computing
+    one would be the bug rather than the test for it: it would resolve
+    somewhere absent, the mind would create it, and a guest would be served
+    an empty companion in silence.
 
-    assert APP_DIR.is_dir(), (
-        f"APP_DIR does not resolve to a real directory: {APP_DIR}. "
-        "The interface lives at vision/apps/clementine/ — if the repo "
-        "layout moved, fix bridge.py's path math."
-    )
+    What matters now is the opposite property. Unconfigured, the bridge must
+    stop. Both failure modes are checked, because "set but wrong" is the one
+    a person actually hits.
+    """
+    import os
+    import tempfile
+
+    from crystalcore.bridge import MEMORY_DIR_ENV, _profiles_root
+
+    before = os.environ.get(MEMORY_DIR_ENV)
+    try:
+        os.environ.pop(MEMORY_DIR_ENV, None)
+        try:
+            _profiles_root()
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError(
+                "the bridge resolved a memory folder with nothing set; it "
+                "must refuse rather than guess")
+
+        os.environ[MEMORY_DIR_ENV] = "/nonexistent/nobody/nominated/this"
+        try:
+            _profiles_root()
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError(
+                "the bridge accepted a path that is not a directory; it "
+                "must refuse rather than let the mind create one")
+
+        with tempfile.TemporaryDirectory() as real:
+            os.environ[MEMORY_DIR_ENV] = real
+            assert _profiles_root() == Path(real), (
+                "a nominated, existing folder must be used as given")
+    finally:
+        if before is None:
+            os.environ.pop(MEMORY_DIR_ENV, None)
+        else:
+            os.environ[MEMORY_DIR_ENV] = before
 
 
 def test_mind_imports_and_exposes_the_companion_class():
@@ -218,7 +253,7 @@ def test_memories_without_visibility_are_private():
 
 def main() -> int:
     tests = [
-        test_interface_dir_resolves_to_a_real_directory,
+        test_bridge_refuses_to_run_without_a_nominated_memory_folder,
         test_mind_imports_and_exposes_the_companion_class,
         test_approved_guest_with_allowed_tool_and_token_is_allowed,
         test_approved_guest_with_disallowed_tool_is_refused,
