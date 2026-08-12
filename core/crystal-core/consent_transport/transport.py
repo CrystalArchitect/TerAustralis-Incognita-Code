@@ -160,7 +160,16 @@ class StarlineServer:
                     reason=reason,
                 )
         except Exception:
-            pass  # observability must never be why a real request fails
+            # Law, decided 2026-08-12 (CONSENT-GATE-SPEC.md, decision 4):
+            # this log is knock telemetry, and telemetry failure proceeds.
+            # The consent chain on this surface fails closed on its own —
+            # pairing, peer grant, token verify, and a spend that cannot
+            # be recorded denies the transfer. Contrast the guest gate,
+            # where the pending record is part of the consent chain
+            # (request_id joins ask to answer) and an unrecordable ask
+            # refuses. Same project, two records, two jobs — by decision,
+            # not by accident.
+            pass
 
     def start(self) -> int:
         """Bind and begin serving in a background thread. Returns the

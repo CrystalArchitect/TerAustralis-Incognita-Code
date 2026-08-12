@@ -177,7 +177,7 @@ the real suite on 2026-08-12.
 
 ## Decisions taken
 
-All three were resolved with the maintainer and are reflected in the code
+All four were resolved with the maintainer and are reflected in the code
 described above; each is kept here with its resolution.
 
 1. **Two visibility classes or named partitions?** ~~This spec says two
@@ -202,3 +202,29 @@ described above; each is kept here with its resolution.
    until the human shares or re-teaches them. It is the honest default and
    the disruptive one; it landed with the maintainer's explicit yes, not a
    quiet diff.
+4. **Unrecordable ask — refuse or proceed?** **Decided, 2026-08-12: both,
+   scoped — and the scope is the law.** Two surfaces record asks, and
+   until this decision their comments stated opposite absolutes. The rule
+   that resolves them: *an ask that cannot be recorded refuses where the
+   record is part of the consent chain; it proceeds where the record is
+   knock telemetry and the consent chain itself fails closed upstream.*
+   - **Guest bridge (this spec, `gate.py`): refuses.** The `pending.jsonl`
+     line is part of the consent chain — written before evaluation, its
+     `request_id` repeated by the decision line and by the refusal payload
+     the guest sees. A guest ask that cannot be recorded is an
+     unobservable act by an agent holding write powers, so it does not
+     happen. Pinned by `test_unrecordable_ask_refuses`.
+   - **Starline (`consent_transport`): proceeds.** The ask-log is knock
+     telemetry. Every element of the consent chain on that surface fails
+     closed on its own: pairing and peer grant refuse unknowns, token
+     verification refuses at presentation, and a spend that cannot be
+     recorded denies the transfer (`record_use` failure ⇒ `denied`, per
+     the four-bug fix). A telemetry write failure therefore costs one
+     knock's visibility, never an unaccounted movement of data — and
+     making it refuse would turn a full disk into a peer outage on a
+     surface whose consent machinery still works.
+   - **Documented limitation, not a promise:** the Starline ask-log
+     carries no `request_id`, so an entry cannot be joined to the exact
+     denial a peer saw. The guest side can; the peer side cannot, yet.
+   The two code comments now cite this decision instead of stating
+   rival absolutes.
