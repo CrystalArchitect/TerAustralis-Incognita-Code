@@ -13,6 +13,7 @@ a real network can actually talk to each other under these same rules.
 from __future__ import annotations
 
 import json
+import os
 import socket
 import stat
 import struct
@@ -273,6 +274,44 @@ def test_ask_log_survives_a_reload():
     asks = reloaded.recent_asks()
     assert len(asks) == 1
     assert asks[0]["decision"] == "granted"
+
+
+def test_ask_log_file_is_never_group_or_world_readable():
+    """Asks name peers and kinds. Same bits as identity.json."""
+    from . import asklog
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_askperm_"))
+    path = d / "asks.jsonl"
+    asklog.append_ask(
+        path,
+        dh_public_hex="00",
+        peer_fingerprint=None,
+        peer_label="",
+        kinds_requested=["mythic"],
+        since=0.0,
+        kinds_granted=[],
+        stage="unpaired",
+        decision="denied",
+        reason="unpaired peer",
+    )
+    mode = stat.S_IMODE(path.stat().st_mode)
+    assert mode & 0o077 == 0, f"ask log is {oct(mode)}, readable beyond its owner"
+    loose = d / "loose.jsonl"
+    loose.write_text("{}\n", encoding="utf-8")
+    os.chmod(loose, 0o644)
+    asklog.append_ask(
+        loose,
+        dh_public_hex="00",
+        peer_fingerprint=None,
+        peer_label="",
+        kinds_requested=[],
+        since=0.0,
+        kinds_granted=[],
+        stage="unpaired",
+        decision="denied",
+        reason="x",
+    )
+    assert stat.S_IMODE(loose.stat().st_mode) & 0o077 == 0
 
 
 def test_ask_log_ordering_and_timestamps_are_sane():
@@ -1313,6 +1352,7 @@ def main() -> int:
         test_ask_is_logged_when_token_denies_all_kinds,
         test_ask_is_logged_with_partial_grant_when_token_filters_some_kinds,
         test_ask_log_survives_a_reload,
+        test_ask_log_file_is_never_group_or_world_readable,
         test_ask_log_ordering_and_timestamps_are_sane,
         test_ask_log_does_not_change_the_wire_reply,
         test_concurrent_asks_produce_clean_log_lines,

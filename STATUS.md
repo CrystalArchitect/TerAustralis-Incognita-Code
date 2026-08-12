@@ -1,10 +1,28 @@
 # STATUS
 
-Last updated: 2026-08-08 — a full re-verification pass at `4358ede`
-(every suite, the bridge self-test, compileall, the mesh stub tests, a
-webapp build, and two live terminal sessions against a scripted stand-in
-endpoint); entries below carry dated additions where something moved.
-Previous full update: 2026-07-31.
+Last updated: 2026-08-12 — night pass at `fe90e63` (merges #72–#75) plus
+owner-only ledger bits in this commit. Older paragraphs below are a
+2026-08-08 full pass at `4358ede`; **suite counts in those paragraphs
+are stale.** Use this header for current numbers.
+
+## 2026-08-12 (this cycle, surveyed)
+
+- `main` tip before this commit: `fe90e63` (merge #75).
+- `consent_transport.selftest` — **62/62** locally after #74+#73+#75
+  (then +1 in this commit for ask-log 0600).
+- `crystalcore.selftest` — **26/26** after #73 (then +1 here for
+  pending/audit 0600). Five doors. Spec restated implemented.
+- Merged this day: #70 five-door guest gate; #71 P2P ask log; #72
+  noise.py ML-DSA docstring; #73 the four (wrong-token charge,
+  unrecordable spend denies, visibility classes, spec tense); #74
+  connection lifetime budget; #75 arm the leftover deny send.
+- Ask log / pending / audit files are now created and tightened to
+  **0600**, same as `identity.json`. That was the default-umask minor.
+- Still open, not this commit: unrecordable *ask-log* still swallows
+  (policy lock vs guest gate); `three kinds` revocation vocabulary;
+  `--mint-token` non-atomic rewrite; SAT dedicated-repo split.
+
+## Running
 
 Full knowledge-base reconstruction: `knowledge-base/00-INDEX.md` in
 CrystalCore.OS-the-Crystal-Architecture-Archive.
@@ -13,7 +31,6 @@ This file describes the state of this repository, not the ambition of
 the system. Same ledger, same categories as the system ledger in
 CrystalCore.OS-the-Crystal-Architecture-Archive.
 
-## Running
 Executes, or can be opened and used by someone other than me.
 
 - Clementine · Voice (`vision/apps/clementine-voice/`) — a

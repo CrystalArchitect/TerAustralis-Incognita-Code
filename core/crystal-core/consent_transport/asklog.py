@@ -24,10 +24,21 @@ having actually seen what it is responding to.
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 
 DEFAULT_ASK_LOG_PATH = Path("starline_asks.jsonl")
+
+
+def _append_private(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    try:
+        os.write(fd, text.encode("utf-8"))
+    finally:
+        os.close(fd)
+    os.chmod(path, 0o600)
 
 
 def append_ask(
@@ -56,8 +67,7 @@ def append_ask(
         "since": since,
         "kinds_granted": list(kinds_granted),
     }
-    with log_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    _append_private(log_path, json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def read_asks(log_path: Path) -> list[dict]:

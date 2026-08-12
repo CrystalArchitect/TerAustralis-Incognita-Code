@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,21 @@ from typing import Any
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _append_private(path: Path, text: str) -> None:
+    """Append one record. New files are 0600; existing files are tightened.
+
+    Same discipline as identity.json — these lines name guests, tools, and
+    request ids. Default umask left them group/world readable.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    try:
+        os.write(fd, text.encode("utf-8"))
+    finally:
+        os.close(fd)
+    os.chmod(path, 0o600)
 
 
 def append_audit(
@@ -36,8 +52,7 @@ def append_audit(
     }
     if detail:
         record["detail"] = detail
-    with audit_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    _append_private(audit_path, json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def read_audit(audit_path: Path) -> list[dict[str, Any]]:
