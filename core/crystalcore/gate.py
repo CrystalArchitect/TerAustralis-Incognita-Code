@@ -71,7 +71,11 @@ class ConsentGate:
     refuses rather than acting unobservably (not a sixth door — the
     recorder failing, not consent deciding). The decision line in the
     audit log carries the same request id, and so does the refusal
-    payload a guest sees.
+    payload a guest sees. This refusal is scoped law, not a universal:
+    here the pending record is part of the consent chain, so it fails
+    closed; the Starline ask-log is knock telemetry over a chain that
+    already fails closed upstream, so it proceeds — decision 4 in
+    docs/CONSENT-GATE-SPEC.md, 2026-08-12.
 
     Spec: docs/CONSENT-GATE-SPEC.md. Provenance here is launcher
     authentication — possession of a per-guest minted secret — stated as

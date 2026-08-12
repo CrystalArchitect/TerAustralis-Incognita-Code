@@ -19,6 +19,14 @@ this module should reverse. What it gives instead: every ask becomes a
 durable, human-readable record, so revocation — already proven to take
 effect on the very next connection — is something the owner can act on
 having actually seen what it is responding to.
+
+One asymmetry with the guest gate is deliberate law rather than drift
+(CONSENT-GATE-SPEC.md, decision 4, 2026-08-12): the guest bridge refuses
+an ask it cannot record, because its pending record is part of the
+consent chain; this log proceeds on a failed write, because it is knock
+telemetry and every consent decision on this surface — pairing, grant,
+token verify, spend — fails closed on its own. A lost line here costs
+visibility of one knock, never an unaccounted movement of data.
 """
 
 from __future__ import annotations
