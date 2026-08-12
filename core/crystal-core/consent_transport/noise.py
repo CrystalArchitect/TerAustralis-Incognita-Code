@@ -43,12 +43,18 @@ computer arrives, ML-KEM still holds. That is the standard migration shape
 (TLS 1.3 hybrid key exchange does the same thing) and it is the reason not
 to simply swap the primitive out.
 
-**What this does not buy, stated plainly.** Authentication is still
-classical: static identities are X25519 and Ed25519. A future quantum
-adversary could not decrypt a recorded session, but could impersonate a
-peer in a *live* handshake. This closes harvest-now-decrypt-later on
-confidentiality. It does not make identity post-quantum, and post-quantum
-signatures (ML-DSA) would be a separate change to `identity.py`.
+**What this does not buy, stated plainly.** Handshake authentication
+is still classical X25519 for the Noise static keys. A future quantum
+adversary could not decrypt a recorded hybrid session, but could
+impersonate a peer in a *live* handshake if they recovered that static.
+This closes harvest-now-decrypt-later on confidentiality. It does **not**
+make the handshake identity post-quantum.
+
+Signing identity is already hybrid: `identity.py` requires Ed25519 +
+ML-DSA-65 for every signature (fragments, tokens, revocations), and the
+fingerprint commits to both public keys. ML-KEM (this module) and ML-DSA
+(`identity.py`) are separate legs — confidentiality vs authentication —
+and neither replaces the other.
 
 The protocol name differs between modes, and the name is mixed into the
 handshake hash, so a hybrid peer and a classical peer fail loudly instead
