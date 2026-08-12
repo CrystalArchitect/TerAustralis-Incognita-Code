@@ -99,9 +99,11 @@ Mechanism (v1, honest about its limits):
   the config, and gives the secret to that guest's launcher configuration
   only.
 - The bridge reads `CRYSTALBRIDGE_TOKEN` alongside `CRYSTALBRIDGE_GUEST`.
-  `ConsentGate.check()` verifies the token against the stored hash before
-  either existing check runs. No token, wrong token, or no stored hash →
-  refuse, with a distinct audit decision (`refuse-provenance`).
+  `ConsentGate.check()` verifies the token against the stored hash after
+  revocation and approval, before permission. No token, wrong token, or
+  no stored hash → refuse, with a distinct audit decision
+  (`refuse-provenance`). Approval runs first because there is no stored
+  hash to compare without a grant.
 - The audit record (`audit.jsonl`) gains a `provenance` block: whether the
   token verified, plus the transport (`stdio`) — so the append-only log
   can answer "who was that really?" after the fact.
@@ -124,16 +126,30 @@ instead of trust.
 
 ## Check order
 
-1. **Provenance** — is this really the named guest? (refuse-provenance)
-2. **Approval** — is the guest approved at all? (existing)
-3. **Permission** — may it call this tool? (existing)
-4. **Scope** — applied inside the tool: read filtering for `recall`,
-   write class for `teach`. (refuse-scope when a tool needs a scope the
-   grant lacks entirely)
+The order below is the order `gate.py` runs, pinned by
+`crystalcore/selftest.py`. An earlier draft of this section put
+provenance first and omitted revocation; that draft is superseded
+(reconciled 2026-08-13 to the code, not the other way around).
 
-Provenance runs first because the later checks are meaningless against an
-unverified name. `GateResult` gains a `check` field naming which stage
-refused, so audit and tests can distinguish the four.
+Ask-record (`pending.jsonl`) is written *before* any door. It is not a
+sixth door — the recorder failing, not consent deciding. A failed write
+refuses (decision 4).
+
+1. **Revocation** — has the human withdrawn this guest's consent?
+   (`refuse-revoked`). The ledger is read on every check. Unreadable ⇒
+   refuse all.
+2. **Approval** — is the guest approved at all? (`refuse`)
+3. **Provenance** — does the presented token prove this is the named
+   guest? (`refuse-provenance`). Approval runs first because there is
+   no `token_hash` to compare without a grant. Origin that cannot be
+   established still refuses; there is no fallback to the later checks.
+4. **Permission** — may it call this tool? (`refuse`)
+5. **Scope** — applied after `check()` allowed, inside `require_scope()`,
+   for tools that touch memory: visibility classes and memory types.
+   (`refuse-scope` when a tool needs a scope or type the grant lacks)
+
+`GateResult.check` names which stage refused, so audit and tests can
+distinguish the five (plus `ask-record`).
 
 ## Migration and compatibility
 
