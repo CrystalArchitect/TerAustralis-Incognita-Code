@@ -159,16 +159,17 @@ class StarlineServer:
                     decision=decision,
                     reason=reason,
                 )
-        except Exception:
+        except OSError:
             # Law, decided 2026-08-12 (CONSENT-GATE-SPEC.md, decision 4):
-            # this log is knock telemetry, and telemetry failure proceeds.
-            # The consent chain on this surface fails closed on its own —
-            # pairing, peer grant, token verify, and a spend that cannot
-            # be recorded denies the transfer. Contrast the guest gate,
-            # where the pending record is part of the consent chain
-            # (request_id joins ask to answer) and an unrecordable ask
-            # refuses. Same project, two records, two jobs — by decision,
-            # not by accident.
+            # this log is knock telemetry, and a *write* failure proceeds.
+            # TypeError and friends are bugs — they must surface. A full
+            # disk must not become a peer outage. The consent chain on
+            # this surface fails closed on its own — pairing, peer grant,
+            # token verify, and a spend that cannot be recorded denies
+            # the transfer. Contrast the guest gate, where the pending
+            # record is part of the consent chain (request_id joins ask
+            # to answer) and an unrecordable ask refuses. Same project,
+            # two records, two jobs — by decision, not by accident.
             pass
 
     def start(self) -> int:
@@ -236,6 +237,16 @@ class StarlineServer:
                 protocol.send_frame(conn, send_cs, protocol.denied("unpaired peer"), deadline=deadline)
                 return
             if frame.get("type") != "request":
+                # Paired, but not a request. Quieter than an unpaired
+                # stranger until this line existed — accidental silence,
+                # not Decision 4. The peer is known; the knock is real.
+                self._log_ask(
+                    dh_public_hex=hs.rs.hex(), peer=peer,
+                    kinds_requested=kinds_requested if isinstance(kinds_requested, list) else [],
+                    since=since if isinstance(since, (int, float)) else 0.0,
+                    kinds_granted=[], stage="malformed", decision="denied",
+                    reason="expected a request",
+                )
                 protocol.send_frame(conn, send_cs, protocol.denied("expected a request"), deadline=deadline)
                 return
             if not self.consent_engine.is_granted(peer.fingerprint):

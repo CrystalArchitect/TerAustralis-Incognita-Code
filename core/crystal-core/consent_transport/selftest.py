@@ -385,6 +385,82 @@ def test_concurrent_asks_produce_clean_log_lines():
         b.stop_serving()
 
 
+def _handshake_then_frame(identity, peer, host, port, frame: dict) -> dict:
+    """Open a real Noise session and send `frame` instead of a request."""
+    from . import protocol
+    from .noise import HandshakeState
+    from .transport import _recv_raw, _send_raw, _static_keypair
+
+    sock = socket.create_connection((host, port), timeout=5.0)
+    try:
+        deadline = time.monotonic() + 5.0
+        hs = HandshakeState(
+            initiator=True,
+            local_static=_static_keypair(identity),
+            remote_static=bytes.fromhex(peer.dh_public_hex),
+        )
+        _send_raw(sock, hs.write_message(b""), deadline=deadline)
+        hs.read_message(_recv_raw(sock, deadline=deadline))
+        send_cs, recv_cs = hs.split()
+        protocol.send_frame(sock, send_cs, frame, deadline=deadline)
+        return protocol.recv_frame(sock, recv_cs, deadline=deadline)
+    finally:
+        sock.close()
+
+
+def test_ask_is_logged_when_paired_frame_is_not_a_request():
+    """A known peer sending type != request used to be denied with no
+    line — quieter than an unpaired stranger. Accidental silence, not
+    Decision 4. stage=malformed, peer named.
+    """
+    a, b = _two_agents()
+    _pair(a, b)
+    port = b.serve()
+    try:
+        reply = _handshake_then_frame(
+            a.identity, a.peers.get(b.fingerprint),
+            "127.0.0.1", port, {"type": "ping"},
+        )
+        assert reply.get("type") == "denied"
+        asks = b.recent_asks()
+        assert len(asks) == 1
+        assert asks[0]["stage"] == "malformed"
+        assert asks[0]["decision"] == "denied"
+        assert asks[0]["peer_fingerprint"] == a.fingerprint
+        assert asks[0]["reason"] == "expected a request"
+    finally:
+        b.stop_serving()
+
+
+def test_ask_log_write_failure_still_serves():
+    """Decision 4: a full disk on the knock log is not a peer outage.
+    Fragments still move. Contrast record_use, which denies.
+    """
+    from . import asklog
+
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "a memory only b holds")
+    b.grant(a.fingerprint)
+
+    def boom(*_a, **_k):
+        raise OSError("disk full")
+
+    real = asklog.append_ask
+    asklog.append_ask = boom  # type: ignore[method-assign]
+    try:
+        port = b.serve()
+        try:
+            results = a.request_fragments(
+                a.peers.get(b.fingerprint), "127.0.0.1", port)
+            assert len(results) == 1
+            assert results[0].content == "a memory only b holds"
+        finally:
+            b.stop_serving()
+    finally:
+        asklog.append_ask = real  # type: ignore[method-assign]
+
+
 def test_forged_fragment_is_rejected_by_receiver():
     """Even if a hostile responder sends fragments 'signed' by someone
     else, the client must drop anything that doesn't verify — the wire
@@ -1356,6 +1432,8 @@ def main() -> int:
         test_ask_log_ordering_and_timestamps_are_sane,
         test_ask_log_does_not_change_the_wire_reply,
         test_concurrent_asks_produce_clean_log_lines,
+        test_ask_is_logged_when_paired_frame_is_not_a_request,
+        test_ask_log_write_failure_still_serves,
         test_forged_fragment_is_rejected_by_receiver,
         test_discovery_via_unicast_loopback,
         test_hybrid_identity_shape,
