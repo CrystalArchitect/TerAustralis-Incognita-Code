@@ -362,6 +362,28 @@ def test_ask_recorded_before_refusal():
         assert result.as_refusal_payload()["request_id"] == request_id
 
 
+def test_pending_and_audit_files_are_never_group_or_world_readable():
+    """Guest names, tools, and request ids. Same bits as identity.json."""
+    import os
+    import stat
+    import tempfile
+
+    from crystalcore.audit import append_audit
+
+    with tempfile.TemporaryDirectory() as tmp:
+        pending = Path(tmp) / "pending.jsonl"
+        append_audit(pending, guest="claude", tool="recall",
+                     arguments={}, decision="received")
+        mode = stat.S_IMODE(pending.stat().st_mode)
+        assert mode & 0o077 == 0, f"pending.jsonl is {oct(mode)}"
+        loose = Path(tmp) / "audit.jsonl"
+        loose.write_text("{}\n", encoding="utf-8")
+        os.chmod(loose, 0o644)
+        append_audit(loose, guest="claude", tool="recall",
+                     arguments={}, decision="refuse")
+        assert stat.S_IMODE(loose.stat().st_mode) & 0o077 == 0
+
+
 def test_ask_survives_evaluation_crash():
     """Even when the gate itself blows up mid-evaluation, the ask is
     already recorded — an observable ask is not conditional on the gate
@@ -558,6 +580,7 @@ def main() -> int:
         test_reinstate_restores_access,
         test_corrupt_revocation_ledger_refuses_all,
         test_ask_recorded_before_refusal,
+        test_pending_and_audit_files_are_never_group_or_world_readable,
         test_ask_survives_evaluation_crash,
         test_unrecordable_ask_refuses,
         test_missing_read_types_refuses,
