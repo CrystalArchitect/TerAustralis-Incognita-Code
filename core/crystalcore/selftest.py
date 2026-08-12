@@ -452,6 +452,57 @@ def test_unknown_type_name_stops_startup():
                 "an unknown memory type must stop startup, not load quietly")
 
 
+def test_unknown_visibility_class_stops_startup():
+    """The type axis was validated at load; the visibility axis was not.
+    A scope naming a class this gate does not govern loaded as a bare
+    string, and teach passes write_scope[0] straight to remember(). Same
+    rule as types: an unknown class stops the operator, loudly."""
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        profile_dir = Path(tmp) / "default"
+        profile_dir.mkdir()
+        (profile_dir / "bridge_config.json").write_text(json.dumps({
+            "profile": "default",
+            "guests": {"claude": {"approved": True,
+                                  "read_scope": ["public"]}},
+        }), encoding="utf-8")
+        try:
+            BridgeConfig.load("default", profiles_dir=Path(tmp))
+        except SystemExit as exc:
+            assert "public" in str(exc)
+        else:
+            raise AssertionError(
+                "an unknown visibility class must stop startup, not load quietly")
+
+
+def test_guest_may_never_be_configured_to_write_private():
+    """CONSENT-GATE-SPEC.md states it as an absolute: a guest is never able
+    to write private memories. teach() writes into write_scope[0], so a
+    config putting 'private' there would hand a guest the very class the
+    human's own conversation defaults to. Enforced at load, not just
+    documented."""
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        profile_dir = Path(tmp) / "default"
+        profile_dir.mkdir()
+        (profile_dir / "bridge_config.json").write_text(json.dumps({
+            "profile": "default",
+            "guests": {"claude": {"approved": True,
+                                  "write_scope": ["private"]}},
+        }), encoding="utf-8")
+        try:
+            BridgeConfig.load("default", profiles_dir=Path(tmp))
+        except SystemExit as exc:
+            assert "private" in str(exc)
+        else:
+            raise AssertionError(
+                "write_scope naming 'private' must stop startup")
+
+
 def test_layers_beyond_semantic_never_reach_guests():
     """recall serves notes and facts — the semantic layer — and nothing
     else. Summaries (episodic) and reflections (reflective) carry no
@@ -512,6 +563,8 @@ def main() -> int:
         test_missing_read_types_refuses,
         test_type_gate_refuses_layer_not_served,
         test_unknown_type_name_stops_startup,
+        test_unknown_visibility_class_stops_startup,
+        test_guest_may_never_be_configured_to_write_private,
         test_layers_beyond_semantic_never_reach_guests,
     ]
     for t in tests:

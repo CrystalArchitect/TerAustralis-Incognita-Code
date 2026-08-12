@@ -1,45 +1,59 @@
-# ConsentGate: Scope and Provenance — Design Spec (Draft for Review)
+# ConsentGate: Scope and Provenance — Design Spec
 
-Status: **draft — decisions pending with the maintainer.** No code changes
-accompany this document. It exists so the definitions can be argued with
-before anything is built.
+Status: **implemented and enforced**, 2026-08-12. All five checks live in
+`core/crystalcore/gate.py` and are covered by `crystalcore/selftest.py`
+(`cd core && python3 -m crystalcore.selftest`). This document began as a
+draft argued with the maintainer before anything was built; it is kept as
+the record of what was decided and why, and has been moved to past tense
+where it once described a system that did not yet exist. The three
+"Decisions" at the foot were taken — see that section. Where a section
+still describes a "hole", it is a hole this spec **closed**; each says so.
 
-## Why now
+## Why this was built
 
-`core/crystalcore/gate.py` enforces two checks, fail-closed: is the guest
-approved at all, and is it approved for this specific tool. Both work and
-both are tested. The other two checks — scope and provenance — are
-documented as intended in `vision/site/src/content/ARCHITECTURE.md` and
-explicitly *not implemented*, per the gate's own docstring: no spec for
-what either should concretely mean survived the loss of the original
-design docs.
+When this spec was written, `core/crystalcore/gate.py` enforced two checks,
+fail-closed: is the guest approved at all, and is it approved for this
+specific tool. Both worked and both were tested. The other two checks —
+scope and provenance — were documented as intended in
+`vision/site/src/content/ARCHITECTURE.md` but *not implemented*: no spec
+for what either should concretely mean had survived the loss of the
+original design docs. This document wrote that spec, and both checks (plus
+a memory-type dimension and durable revocation) are now enforced — the gate
+keeps five doors.
 
 As of 2026-07-31 the public Technical Brief
 (proposal.teraustralis.com.au/05-technical-brief.html) states that
 CrystalCore's contribution is "consent as an enforced runtime primitive
 rather than a privacy posture." Approval plus a tool allowlist is ordinary
-authorization; any RBAC system has it. Scope and provenance are the two
-checks that would make the public claim true. Under the Incognita Rule the
-gap resolves one of two ways — build them, or amend the claim. This spec
-is the first half of building them.
+authorisation; any RBAC system has it. Scope and provenance are the two
+checks that make the public claim true. Under the Incognita Rule the gap
+had to resolve one of two ways — build them, or amend the claim. It was
+resolved by building: this spec specified the two checks, and the gate now
+enforces them.
 
-## What the code does today (the two holes, precisely)
+## The two holes this closed (the state before)
 
-**Hole 1 — identity is self-asserted.** The bridge reads guest identity
+Both holes below described `gate.py` *before* this spec was built. Each is
+now closed; the closing mechanism is named after it.
+
+**Hole 1 — identity was self-asserted.** The bridge reads guest identity
 from the `CRYSTALBRIDGE_GUEST` environment variable
 (`core/crystalcore/bridge.py`, `main()`). Whoever launches the process
-types the name. Nothing distinguishes Claude launched by the maintainer
-from any process that sets `CRYSTALBRIDGE_GUEST=claude`. Approval attaches
-to a name, and the name is free.
+types the name, and nothing distinguished Claude launched by the
+maintainer from any process that set `CRYSTALBRIDGE_GUEST=claude`.
+**Closed by provenance:** the name still comes from the environment, but a
+guest must now also present a secret whose SHA-256 matches the stored
+`token_hash`, compared in constant time (`gate.py`, `hmac.compare_digest`).
+A free name without the minted token no longer reaches anything.
 
-**Hole 2 — `recall` reaches everything.** Memory is a single store per
-profile (`memory.json`). An approved guest's `recall` runs
+**Hole 2 — `recall` reached everything.** Memory is a single store per
+profile (`memory.json`), and an approved guest's `recall` ran
 `_memory_block(query)` over the whole of it — including memories formed in
-private conversation between the human and the companion that were never
-addressed to any guest. Consent to *talk to* the companion is currently
-consent to *read its life*.
-
-Scope closes hole 2. Provenance closes hole 1.
+private conversation that were never addressed to any guest. Consent to
+*talk to* the companion was consent to *read its life*. **Closed by
+scope:** `recall` now filters to the guest's `read_scope` classes before
+semantic search runs, and private-by-default means an unreviewed memory is
+invisible to every guest.
 
 ## Definitions
 
@@ -124,7 +138,7 @@ refused, so audit and tests can distinguish the four.
 ## Migration and compatibility
 
 - **Existing memories** predate the `visibility` field. On first load
-  they are classed `private`. This is a behavior change: guests that
+  they are classed `private`. This is a behaviour change: guests that
   could previously recall everything will recall nothing until the human
   shares or re-teaches. That is the fail-closed default working as
   designed, and it is the single most user-visible consequence of this
@@ -161,7 +175,10 @@ the real suite on 2026-08-12.
   `{timestamp, guest, action: revoke|reinstate, reason, by}`, latest
   record per guest wins, read on every check. Unreadable ⇒ refuse all.
 
-## Decisions needed before code
+## Decisions taken
+
+All three were resolved with the maintainer and are reflected in the code
+described above; each is kept here with its resolution.
 
 1. **Two visibility classes or named partitions?** ~~This spec says two
    (`private`/`shared`) on the argument that classes you can't explain in
@@ -174,11 +191,14 @@ the real suite on 2026-08-12.
    served to guests today, because only it has per-entry visibility
    consent; a type grant for an unserved layer refuses with a reason
    rather than returning silence.
-2. **Strict provenance from day one?** This spec says yes — all guests
-   need minted tokens immediately, breaking zero-config guest setups
-   once, deliberately. The alternative makes enforcement optional and
-   the public claim false by default.
-3. **Private-by-default migration?** This spec says yes — existing
-   memories become guest-invisible until reviewed. It is the honest
-   default and the disruptive one; it needs the maintainer's explicit
-   yes, not a quiet landing in a diff.
+2. **Strict provenance from day one?** **Decided, yes** — all guests need
+   minted tokens immediately, breaking zero-config guest setups once,
+   deliberately. The alternative would have made enforcement optional and
+   the public claim false by default. `gate.py` refuses at the provenance
+   check when a guest has no `token_hash`, and again when the presented
+   token does not match.
+3. **Private-by-default migration?** **Decided, yes** — memories without a
+   `visibility` field are read as `private`, so they are guest-invisible
+   until the human shares or re-teaches them. It is the honest default and
+   the disruptive one; it landed with the maintainer's explicit yes, not a
+   quiet diff.

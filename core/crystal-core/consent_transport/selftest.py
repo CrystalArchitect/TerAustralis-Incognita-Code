@@ -814,6 +814,76 @@ def test_byte_budget_stops_a_batch_midway_on_the_wire():
         b.stop_serving()
 
 
+def test_each_token_is_charged_for_what_it_authorised():
+    """A peer holding two tokens must have the *authorising* one consumed,
+    never whichever merely lives longest. The earlier code authorised per
+    kind but charged a kind-less authorize(), draining the broad long token
+    and never spending the narrow one-time grant -- voiding one_time_use for
+    anyone holding more than one token. Two tokens, because with the one per
+    peer every other usage test issues, the two queries coincide and the bug
+    hides."""
+    a, b = _two_agents()
+    _pair(a, b)
+    myth = "a myth b keeps, forty bytes long...."
+    b.add_local_fragment("mythic", myth)
+    b.grant(a.fingerprint)
+    a_pub = a.identity.sign_public_bytes.hex()
+
+    store = TokenStore(b.identity, Path(tempfile.mkdtemp(prefix="starline_test_2tok_")) / "t.json")
+    narrow = store.issue(a_pub, "one myth, once", kinds=("mythic",), constraints_one_time=True)
+    broad = store.issue(a_pub, "semantics for a month", kinds=("semantic",), ttl_seconds=30 * 24 * 3600)
+
+    port = b.serve(token_store=store)
+    try:
+        results = a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port, kinds=["mythic"])
+        assert len(results) == 1, "the mythic token admits the mythic fragment"
+
+        # The narrow token carried it and is now spent; the broad one, which
+        # never admits mythic, was not touched.
+        assert store.spent(narrow.token_id)["transfers"] == 1, "the authorising token must be charged"
+        assert store.spent(narrow.token_id)["bytes"] == len(myth.encode())
+        assert store.spent(broad.token_id) == {"transfers": 0, "bytes": 0}, \
+            "the longest-expiry token must not be charged for what it never authorised"
+        assert not store.is_authorized(a_pub, "mythic"), "one_time_use is now actually spent"
+
+        # And the one-time grant cannot be replayed on the next request.
+        try:
+            a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port, kinds=["mythic"])
+            assert False, "a spent one-time token must not serve the fragment again"
+        except Denied:
+            pass
+    finally:
+        b.stop_serving()
+
+
+def test_unrecordable_token_use_denies_rather_than_serving():
+    """If a transfer cannot be recorded, it must not happen: an unrecorded
+    one-time token would serve again after restart. consent.py states this
+    in prose; the server must enforce it, not trust it."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("mythic", "a myth that must not leak un-metered")
+    b.grant(a.fingerprint)
+    a_pub = a.identity.sign_public_bytes.hex()
+
+    store = TokenStore(b.identity, Path(tempfile.mkdtemp(prefix="starline_test_norec_")) / "t.json")
+    store.issue(a_pub, "one myth, once", kinds=("mythic",), constraints_one_time=True)
+
+    def _boom(*_args, **_kwargs):
+        raise OSError("disk full while recording token use")
+    store.record_use = _boom  # the accounting write fails
+
+    port = b.serve(token_store=store)
+    try:
+        try:
+            a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port, kinds=["mythic"])
+            assert False, "a transfer that cannot be recorded must be denied, not served"
+        except Denied as exc:
+            assert "record" in str(exc)
+    finally:
+        b.stop_serving()
+
+
 # --- hybrid post-quantum identity ------------------------------------------
 #
 # Same discipline as the handshake tests: prove the ML-DSA half is
@@ -1148,6 +1218,8 @@ def main() -> int:
         test_byte_budget_is_enforced_and_refuses_an_oversized_transfer,
         test_usage_survives_a_reload,
         test_byte_budget_stops_a_batch_midway_on_the_wire,
+        test_each_token_is_charged_for_what_it_authorised,
+        test_unrecordable_token_use_denies_rather_than_serving,
         test_token_scope_is_enforced_over_a_real_connection,
         test_expired_token_stops_the_exchange_that_a_live_one_allowed,
         test_fragment_sign_and_verify,

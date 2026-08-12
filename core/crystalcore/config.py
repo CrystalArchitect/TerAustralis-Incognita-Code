@@ -28,6 +28,12 @@ PROFILES_DIR = SRC_ROOT / "profiles"
 #: a grant may name.
 MEMORY_TYPES = ("episodic", "semantic", "reflective")
 
+#: The visibility classes a grant's scope may name (CONSENT-GATE-SPEC.md §
+#: "Two classes at first, deliberately no more"). An unknown class is a
+#: config error, the same as an unknown memory type — validated at load so
+#: the operator is stopped, not a guest surprised.
+VISIBILITY_CLASSES = ("private", "shared")
+
 
 @dataclass
 class GuestGrant:
@@ -100,11 +106,38 @@ class BridgeConfig:
                     f"type(s) {unknown} — valid types are {list(MEMORY_TYPES)}. "
                     "Fix the grant before starting the bridge."
                 )
+            read_scope = list(grant.get("read_scope", []))
+            write_scope = list(grant.get("write_scope", []))
+            # The visibility axis was validated for memory *types* but not for
+            # visibility *classes*: a scope naming an ungoverned class loaded
+            # as an arbitrary string, and `teach` passes write_scope[0]
+            # straight into remember(visibility=...). Same rule as types —
+            # unknown class stops startup.
+            unknown_scope = [c for c in read_scope + write_scope
+                             if c not in VISIBILITY_CLASSES]
+            if unknown_scope:
+                raise SystemExit(
+                    f"bridge_config.json: guest '{name}' names unknown "
+                    f"visibility class(es) {unknown_scope} — valid classes are "
+                    f"{list(VISIBILITY_CLASSES)}. Fix the grant before starting "
+                    "the bridge."
+                )
+            # And the spec's absolute (CONSENT-GATE-SPEC.md §Scope: "a guest is
+            # never able to write private memories") is enforced here, not
+            # merely documented: `private` in write_scope would make the very
+            # class the human's own conversation defaults to writable by a
+            # guest.
+            if "private" in write_scope:
+                raise SystemExit(
+                    f"bridge_config.json: guest '{name}' has write_scope naming "
+                    "'private' — a guest is never able to write private "
+                    "memories. Use 'shared'."
+                )
             guests[name.strip().lower()] = GuestGrant(
                 approved=bool(grant.get("approved", False)),
                 tools=list(grant.get("tools", [])),
-                read_scope=list(grant.get("read_scope", [])),
-                write_scope=list(grant.get("write_scope", [])),
+                read_scope=read_scope,
+                write_scope=write_scope,
                 read_types=read_types,
                 write_types=write_types,
                 token_hash=str(grant.get("token_hash", "")),

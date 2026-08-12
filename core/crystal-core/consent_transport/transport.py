@@ -22,6 +22,7 @@ from .fragment import MemoryFragment
 from .identity import Identity
 from .noise import HandshakeFailed, HandshakeState, StaticKeypair
 from .peers import Peer, PeerStore
+from .token import ConsentError
 
 DEFAULT_PORT = 8890
 
@@ -232,18 +233,45 @@ class StarlineServer:
                 # holding a token for one kind should get that kind, not a
                 # blanket denial because they also asked for another.
                 #
-                # Byte cost is charged per fragment as we go, so a token
-                # with a max_bytes budget stops mid-list rather than
-                # letting the whole batch through because the first one
-                # fitted.
-                allowed, spend = [], 0
+                # Each admitted fragment is charged to the *same* token that
+                # admitted it -- keyed by kind -- and a token's byte budget
+                # is accumulated across the batch for that token alone. The
+                # earlier version authorised per kind but charged a single
+                # kind-less authorize(), which returns whichever of the
+                # peer's live tokens expires latest; a peer holding two
+                # tokens therefore had its one-time / transfer / byte limits
+                # silently voided, the narrow grant never consumed and the
+                # broad one drained by bytes it never authorised.
+                #
+                # Conservative edge: authorize() picks the longest-expiry
+                # token that admits the kind for this fragment alone; if that
+                # token's budget is already spent by earlier fragments of the
+                # same batch, the fragment is dropped even where a second
+                # same-kind token could still carry it. That fails safe
+                # (deny, never over-serve) and only bites a peer holding
+                # multiple byte-budgeted tokens of one kind.
+                allowed = []
+                charged: dict[str, dict] = {}  # token_id -> {"bytes": int}
                 for frag in items:
                     cost = len(frag.content.encode())
-                    if self.token_store.is_authorized(
-                        peer.sign_public_hex, frag.kind, want_bytes=spend + cost
+                    try:
+                        tok = self.token_store.authorize(
+                            peer.sign_public_hex, frag.kind, want_bytes=cost
+                        )
+                    except ConsentError:
+                        continue
+                    running = charged.get(tok.token_id, {"bytes": 0})
+                    # Re-check the token that will actually be charged against
+                    # what this batch has already promised it, so a max_bytes
+                    # budget stops mid-list instead of letting every fragment
+                    # through on the same still-unspent persisted total.
+                    if not self.token_store.is_authorized(
+                        peer.sign_public_hex, frag.kind, want_bytes=running["bytes"] + cost
                     ):
-                        allowed.append(frag)
-                        spend += cost
+                        continue
+                    allowed.append(frag)
+                    running["bytes"] += cost
+                    charged[tok.token_id] = running
                 if not allowed and items:
                     try:
                         self.token_store.authorize(peer.sign_public_hex)
@@ -258,14 +286,24 @@ class StarlineServer:
                     protocol.send_frame(conn, send_cs, protocol.denied(reason))
                     return
                 if allowed:
-                    # Charge the token only once data is actually about to
-                    # move. A refused request must not consume a
-                    # one-time-use grant.
+                    # Charge each authorising token once for this exchange --
+                    # one transfer per token, the bytes it actually carried --
+                    # only as data is about to move, so a refused request
+                    # never consumes a grant. A transfer that cannot be
+                    # recorded must not happen: an unrecorded one-time token
+                    # would serve again after restart, which consent.py's
+                    # record_use() calls out in prose. Enforce it: deny.
                     try:
-                        tok = self.token_store.authorize(peer.sign_public_hex)
-                        self.token_store.record_use(tok.token_id, spend)
+                        for token_id, rec in charged.items():
+                            self.token_store.record_use(token_id, rec["bytes"])
                     except Exception:
-                        pass
+                        self._log_ask(
+                            dh_public_hex=hs.rs.hex(), peer=peer, kinds_requested=kinds_requested,
+                            since=since, kinds_granted=[], stage="token", decision="denied",
+                            reason="cannot record token use",
+                        )
+                        protocol.send_frame(conn, send_cs, protocol.denied("cannot record token use"))
+                        return
                 items = allowed
 
             self._log_ask(
