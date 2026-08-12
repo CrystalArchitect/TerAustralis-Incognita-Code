@@ -315,7 +315,7 @@ class StarlineServer:
                             since=since, kinds_granted=[], stage="token", decision="denied",
                             reason="cannot record token use",
                         )
-                        protocol.send_frame(conn, send_cs, protocol.denied("cannot record token use"))
+                        protocol.send_frame(conn, send_cs, protocol.denied("cannot record token use"), deadline=deadline)
                         return
                 items = allowed
 
