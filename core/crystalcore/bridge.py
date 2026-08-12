@@ -97,16 +97,22 @@ class Bridge:
         self.token = token
         self.gate = ConsentGate(config)
         self._companion = None
+        # The request_id of the most recent check(), so refuse_scope can
+        # join a door-5 decision to the pending.jsonl line doors 1–4 just
+        # wrote. Empty until the first check.
+        self.last_request_id = ""
 
     def refuse(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
         result = self.gate.check(self.guest, tool, arguments, token=self.token)
+        self.last_request_id = result.request_id
         return None if result.allowed else result.as_refusal_payload()
 
     def refuse_scope(self, tool: str, kind: str,
                      arguments: dict[str, Any],
                      types: tuple[str, ...] = ()) -> dict[str, Any]:
-        result = self.gate.require_scope(self.guest, tool, kind, arguments,
-                                         types=types)
+        result = self.gate.require_scope(
+            self.guest, tool, kind, arguments,
+            types=types, request_id=self.last_request_id)
         return None if result.allowed else result.as_refusal_payload()
 
     @property
