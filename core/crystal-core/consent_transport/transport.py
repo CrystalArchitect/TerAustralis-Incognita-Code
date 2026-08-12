@@ -33,17 +33,22 @@ DEFAULT_PORT = 8890
 # be able to size our allocations.
 MAX_HANDSHAKE_LEN = 4096
 
-# How long an unauthenticated connection may keep a worker thread before
-# we hang up, and how many such connections may be in flight at once.
-# Without these a peer that opens a socket and then says nothing holds a
-# thread forever, and enough of them exhaust the server.
-HANDSHAKE_TIMEOUT = 10.0
+# How long an unauthenticated (and then the whole one-request) connection
+# may keep a worker thread, and how many such connections may be in flight
+# at once. Per-recv socket timeouts reset on every successful read — a
+# 1-byte drip would never hit them — so CONNECTION_BUDGET is a monotonic
+# wall-clock from accept/connect that does not reset.
+CONNECTION_BUDGET = 10.0
+HANDSHAKE_TIMEOUT = CONNECTION_BUDGET  # alias: tests and older call sites
 MAX_CONCURRENT_CONNECTIONS = 32
 
 
-def _recv_exact(sock: socket.socket, n: int) -> bytes:
+def _recv_exact(
+    sock: socket.socket, n: int, deadline: float | None = None
+) -> bytes:
     buf = bytearray()
     while len(buf) < n:
+        protocol._arm(sock, deadline)
         chunk = sock.recv(n - len(buf))
         if not chunk:
             raise protocol.ProtocolError("connection closed mid-frame")
@@ -51,15 +56,22 @@ def _recv_exact(sock: socket.socket, n: int) -> bytes:
     return bytes(buf)
 
 
-def _send_raw(sock: socket.socket, data: bytes) -> None:
+def _send_raw(
+    sock: socket.socket, data: bytes, deadline: float | None = None
+) -> None:
+    protocol._arm(sock, deadline)
     sock.sendall(struct.pack(">I", len(data)) + data)
 
 
-def _recv_raw(sock: socket.socket, max_len: int = MAX_HANDSHAKE_LEN) -> bytes:
-    (length,) = struct.unpack(">I", _recv_exact(sock, 4))
+def _recv_raw(
+    sock: socket.socket,
+    max_len: int = MAX_HANDSHAKE_LEN,
+    deadline: float | None = None,
+) -> bytes:
+    (length,) = struct.unpack(">I", _recv_exact(sock, 4, deadline))
     if length > max_len:
         raise protocol.ProtocolError("peer announced an oversized handshake frame")
-    return _recv_exact(sock, length)
+    return _recv_exact(sock, length, deadline)
 
 
 def _static_keypair(identity: Identity) -> StaticKeypair:
@@ -187,20 +199,21 @@ class StarlineServer:
             threading.Thread(target=self._handle, args=(conn,), daemon=True).start()
 
     def _handle(self, conn: socket.socket) -> None:
+        deadline = time.monotonic() + CONNECTION_BUDGET
         try:
             hs = HandshakeState(
                 initiator=False, local_static=_static_keypair(self.identity), remote_static=None
             )
-            msg1 = _recv_raw(conn)
+            msg1 = _recv_raw(conn, deadline=deadline)
             hs.read_message(msg1)
             msg2 = hs.write_message(b"")
-            _send_raw(conn, msg2)
+            _send_raw(conn, msg2, deadline=deadline)
 
             c1, c2 = hs.split()  # c1 = initiator->responder, c2 = responder->initiator
             recv_cs, send_cs = c1, c2
 
             peer = self.peer_store.find_by_dh(hs.rs.hex())
-            frame = protocol.recv_frame(conn, recv_cs)
+            frame = protocol.recv_frame(conn, recv_cs, deadline=deadline)
             kinds_requested = frame.get("kinds", [])
             since = frame.get("since", 0.0)
 
@@ -210,10 +223,10 @@ class StarlineServer:
                     since=since, kinds_granted=[], stage="unpaired", decision="denied",
                     reason="unpaired peer",
                 )
-                protocol.send_frame(conn, send_cs, protocol.denied("unpaired peer"))
+                protocol.send_frame(conn, send_cs, protocol.denied("unpaired peer"), deadline=deadline)
                 return
             if frame.get("type") != "request":
-                protocol.send_frame(conn, send_cs, protocol.denied("expected a request"))
+                protocol.send_frame(conn, send_cs, protocol.denied("expected a request"), deadline=deadline)
                 return
             if not self.consent_engine.is_granted(peer.fingerprint):
                 self._log_ask(
@@ -221,7 +234,7 @@ class StarlineServer:
                     since=since, kinds_granted=[], stage="consent", decision="denied",
                     reason="consent not granted",
                 )
-                protocol.send_frame(conn, send_cs, protocol.denied("consent not granted"))
+                protocol.send_frame(conn, send_cs, protocol.denied("consent not granted"), deadline=deadline)
                 return
 
             items = self.fragment_provider(frame.get("kinds", []), frame.get("since", 0.0), peer.fingerprint)
@@ -255,7 +268,7 @@ class StarlineServer:
                         since=since, kinds_granted=[], stage="token", decision="denied",
                         reason=reason,
                     )
-                    protocol.send_frame(conn, send_cs, protocol.denied(reason))
+                    protocol.send_frame(conn, send_cs, protocol.denied(reason), deadline=deadline)
                     return
                 if allowed:
                     # Charge the token only once data is actually about to
@@ -273,7 +286,7 @@ class StarlineServer:
                 since=since, kinds_granted=sorted({f.kind for f in items}), stage="served",
                 decision="granted", reason="ok",
             )
-            protocol.send_frame(conn, send_cs, protocol.fragments([f.to_dict() for f in items]))
+            protocol.send_frame(conn, send_cs, protocol.fragments([f.to_dict() for f in items]), deadline=deadline)
         except (HandshakeFailed, protocol.ProtocolError, OSError):
             pass  # a failed/hostile connection just gets dropped, no diagnostic leak
         finally:
@@ -295,21 +308,22 @@ class StarlineClient:
     ) -> list[MemoryFragment]:
         sock = socket.create_connection((host, port), timeout=timeout)
         try:
+            deadline = time.monotonic() + timeout
             hs = HandshakeState(
                 initiator=True,
                 local_static=_static_keypair(self.identity),
                 remote_static=bytes.fromhex(peer.dh_public_hex),
             )
             msg1 = hs.write_message(b"")
-            _send_raw(sock, msg1)
-            msg2 = _recv_raw(sock)
+            _send_raw(sock, msg1, deadline=deadline)
+            msg2 = _recv_raw(sock, deadline=deadline)
             hs.read_message(msg2)  # raises HandshakeFailed if this isn't really `peer`
 
             c1, c2 = hs.split()
             send_cs, recv_cs = c1, c2
 
-            protocol.send_frame(sock, send_cs, protocol.request(kinds, since))
-            reply = protocol.recv_frame(sock, recv_cs)
+            protocol.send_frame(sock, send_cs, protocol.request(kinds, since), deadline=deadline)
+            reply = protocol.recv_frame(sock, recv_cs, deadline=deadline)
 
             if reply.get("type") == "denied":
                 raise Denied(reply.get("reason", "denied"))
