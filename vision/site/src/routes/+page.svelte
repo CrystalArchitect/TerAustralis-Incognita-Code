@@ -321,7 +321,9 @@
   <h2>The Chronicle</h2>
   <p>
     The development record, dated from the repositories' own history — survey, not legend. The
-    full detail behind every entry lives in <a href="/docs">the Archive</a>.
+    full detail behind every entry lives in <a href="/docs">the Archive</a>. What came before the
+    first commit — stages, short-form video, industrial years — is kept to the same standard in
+    <a href="/ledger">the Journey Ledger</a>.
   </p>
   <ol class="timeline">
     {#each chronicle as entry (entry.when + entry.what)}
