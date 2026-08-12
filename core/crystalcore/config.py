@@ -18,6 +18,7 @@ Unknown type names fail loud at load ("Told, or stopped.").
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -33,6 +34,34 @@ MEMORY_TYPES = ("episodic", "semantic", "reflective")
 #: config error, the same as an unknown memory type — validated at load so
 #: the operator is stopped, not a guest surprised.
 VISIBILITY_CLASSES = ("private", "shared")
+
+
+def write_json_atomic(path: Path, obj: object) -> None:
+    """Replace `path` with JSON only after the new bytes are complete.
+
+    A crash mid-write used to leave a half-written `bridge_config.json`
+    — the grants file — and lose the previous one. Write beside it,
+    fsync, then `os.replace`. New files are 0600 (hashes of guest
+    secrets live here).
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(obj, fh, indent=2)
+            fh.write("\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+    try:
+        os.chmod(tmp, 0o600)
+    except OSError:
+        pass
+    os.replace(tmp, path)
 
 
 @dataclass

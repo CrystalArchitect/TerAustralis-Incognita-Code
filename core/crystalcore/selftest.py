@@ -174,6 +174,29 @@ def test_status_is_always_allowed_for_a_proven_approved_guest():
     assert result.allowed, "status must be allowed for any proven, approved guest"
 
 
+def test_status_is_refused_when_provenance_fails():
+    """`status` is not a side door. Wrong token and missing token both
+    refuse at provenance — the implicit tool grant is after the name is
+    proven."""
+    result = _gate(tools=[]).check("claude", "status", token="wrong", audit=False)
+    assert not result.allowed and result.check == "provenance"
+    result = _gate(tools=[]).check("claude", "status", audit=False)
+    assert not result.allowed and result.check == "provenance"
+
+
+def test_status_is_refused_when_revoked():
+    import tempfile
+
+    from crystalcore.revocation import append_revocation, revocations_path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        append_revocation(revocations_path(Path(tmp)),
+                          guest="claude", action="revoke", reason="test")
+        result = _gate(tools=[], profile_dir=Path(tmp)).check(
+            "claude", "status", token=SECRET, audit=False)
+        assert not result.allowed and result.check == "revocation"
+
+
 def test_unknown_guest_is_refused():
     result = _gate(tools=["recall"]).check(
         "stranger", "recall", token=SECRET, audit=False)
@@ -560,6 +583,46 @@ def test_layers_beyond_semantic_never_reach_guests():
         assert "working memory line" not in guest_view
 
 
+def test_write_json_atomic_replaces_only_after_the_bytes_are_complete():
+    """`--mint-token` used to write_text the grants file in place.
+    A crash mid-write destroyed the previous consent document."""
+    import json
+    import os
+    import stat
+    import tempfile
+
+    from crystalcore.config import write_json_atomic
+
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "bridge_config.json"
+        path.write_text('{"keep": true}\n', encoding="utf-8")
+        write_json_atomic(path, {"guests": {"claude": {"token_hash": "abc"}}})
+        data = json.loads(path.read_text(encoding="utf-8"))
+        assert data["guests"]["claude"]["token_hash"] == "abc"
+        assert not path.with_name(path.name + ".tmp").exists()
+        mode = stat.S_IMODE(path.stat().st_mode)
+        assert mode & 0o077 == 0, f"grants file is {oct(mode)}"
+
+        original = path.read_text(encoding="utf-8")
+
+        def boom(*_a, **_k):
+            raise OSError("disk full")
+
+        real_fsync = os.fsync
+        os.fsync = boom  # type: ignore[assignment]
+        try:
+            try:
+                write_json_atomic(path, {"destroyed": True})
+            except OSError:
+                pass
+            else:
+                raise AssertionError("fsync was supposed to raise")
+        finally:
+            os.fsync = real_fsync
+        assert path.read_text(encoding="utf-8") == original
+        assert "destroyed" not in path.read_text(encoding="utf-8")
+
+
 def main() -> int:
     tests = [
         test_bridge_refuses_to_run_without_a_nominated_memory_folder,
@@ -567,6 +630,8 @@ def main() -> int:
         test_approved_guest_with_allowed_tool_and_token_is_allowed,
         test_approved_guest_with_disallowed_tool_is_refused,
         test_status_is_always_allowed_for_a_proven_approved_guest,
+        test_status_is_refused_when_provenance_fails,
+        test_status_is_refused_when_revoked,
         test_unknown_guest_is_refused,
         test_present_but_unapproved_guest_is_refused,
         test_missing_token_refuses_as_provenance,
@@ -589,6 +654,7 @@ def main() -> int:
         test_unknown_visibility_class_stops_startup,
         test_guest_may_never_be_configured_to_write_private,
         test_layers_beyond_semantic_never_reach_guests,
+        test_write_json_atomic_replaces_only_after_the_bytes_are_complete,
     ]
     for t in tests:
         t()

@@ -16,7 +16,7 @@ vision app at `vision/`; CrystalBridge lives here, at
 status ledger) · three frozen-provenance repos, none touched since
 2026-07-17: **The-Crystal-Vision** (codex site + the companion's
 ancestor), **crystal-vision** (this shell's interface-demo ancestor),
-and **crystalcore** (the Songline protocol pack). Full map: the
+and **crystalcore** (frozen protocol sketches, sealed 2026-07-17 — not a living component). Full map: the
 umbrella's `docs/governance/Project-Boundaries.md`, "Repositories,
 today."  
 **License:** CC BY-NC-ND 4.0 — see `LICENSE` (portfolio-wide, per ADR-0013)
