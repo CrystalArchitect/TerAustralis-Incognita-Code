@@ -491,6 +491,83 @@ def test_stalled_connections_cannot_exhaust_the_server():
         a.stop_serving()
 
 
+def test_deadline_already_passed_refuses_without_reading():
+    """A spent budget must fail closed before the next recv, not wait
+    on the socket. Otherwise the 1-byte drip still wins."""
+    from . import protocol as P
+
+    try:
+        P.remaining(time.monotonic() - 1)
+        assert False, "a past deadline must refuse"
+    except P.ProtocolError as exc:
+        assert "budget" in str(exc)
+
+
+def test_drip_cannot_reset_the_connection_budget():
+    """Regression: settimeout resets on every successful recv, so a
+    1-byte drip of a legal-length body would occupy a worker for
+    body_len * timeout. The monotonic deadline must cut that off."""
+    a, _b = _two_agents()
+    original = transport.CONNECTION_BUDGET
+    transport.CONNECTION_BUDGET = 0.35
+    transport.HANDSHAKE_TIMEOUT = 0.35
+    port = a.serve(port=0)
+    try:
+        sock = socket.create_connection(("127.0.0.1", port), timeout=5)
+        try:
+            sock.sendall(struct.pack(">I", 200))  # legal length, body never finishes
+            t0 = time.monotonic()
+            while time.monotonic() - t0 < 1.2:
+                try:
+                    sock.sendall(b"x")
+                except OSError:
+                    break
+                time.sleep(0.05)
+            sock.settimeout(0.4)
+            # Server must have hung up — a live worker would keep the
+            # socket open and recv would time out rather than return b"".
+            leftover = sock.recv(1)
+            assert leftover == b"", "drip kept the connection alive past the budget"
+            assert time.monotonic() - t0 < 1.0, "budget must fire well before a per-recv reset would"
+        finally:
+            sock.close()
+    finally:
+        transport.CONNECTION_BUDGET = original
+        transport.HANDSHAKE_TIMEOUT = original
+        a.stop_serving()
+
+
+def test_budget_releases_slots_so_an_honest_exchange_completes():
+    """Age-out, not just refuse-not-queue: after stalled peers expire,
+    a real request must get a worker."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "still here after the flood")
+    b.grant(a.fingerprint)
+    original = transport.CONNECTION_BUDGET
+    transport.CONNECTION_BUDGET = 0.3
+    transport.HANDSHAKE_TIMEOUT = 0.3
+    port = b.serve(port=0)
+    stalled = []
+    try:
+        for _ in range(transport.MAX_CONCURRENT_CONNECTIONS):
+            try:
+                s = socket.create_connection(("127.0.0.1", port), timeout=2)
+                stalled.append(s)
+            except OSError:
+                break
+        time.sleep(0.55)
+        results = a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+        assert len(results) == 1
+        assert results[0].content == "still here after the flood"
+    finally:
+        for s in stalled:
+            s.close()
+        transport.CONNECTION_BUDGET = original
+        transport.HANDSHAKE_TIMEOUT = original
+        b.stop_serving()
+
+
 def _store(tmp_prefix="starline_test_tok_"):
     d = Path(tempfile.mkdtemp(prefix=tmp_prefix))
     ident = Identity.generate()
@@ -1201,6 +1278,9 @@ def main() -> int:
         test_failed_save_leaves_the_old_identity_intact,
         test_oversized_handshake_frame_is_refused,
         test_stalled_connections_cannot_exhaust_the_server,
+        test_deadline_already_passed_refuses_without_reading,
+        test_drip_cannot_reset_the_connection_budget,
+        test_budget_releases_slots_so_an_honest_exchange_completes,
         test_token_grants_only_what_its_scope_names,
         test_token_with_no_kinds_admits_every_kind,
         test_token_expires,

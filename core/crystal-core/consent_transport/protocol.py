@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import socket
 import struct
+import time
 
 from .noise import CipherState
 
@@ -30,17 +31,40 @@ class ProtocolError(Exception):
     """A peer sent something malformed, oversized, or out of sequence."""
 
 
-def send_frame(sock: socket.socket, cs: CipherState, obj: dict) -> None:
+def remaining(deadline: float | None) -> None:
+    """Raise if the connection's wall-clock budget is gone.
+
+    Per-recv socket timeouts reset on every successful read. A 1-byte
+    drip would never hit them. The deadline is monotonic time from
+    accept/connect and does not reset.
+    """
+    if deadline is None:
+        return
+    if time.monotonic() >= deadline:
+        raise ProtocolError("connection lifetime budget exhausted")
+
+
+def _arm(sock: socket.socket, deadline: float | None) -> None:
+    remaining(deadline)
+    if deadline is not None:
+        sock.settimeout(max(deadline - time.monotonic(), 1e-3))
+
+
+def send_frame(
+    sock: socket.socket, cs: CipherState, obj: dict, deadline: float | None = None
+) -> None:
     plaintext = json.dumps(obj, separators=(",", ":")).encode()
     ciphertext = cs.encrypt_with_ad(b"", plaintext)
     if len(ciphertext) > MAX_FRAME_LEN:
         raise ProtocolError("frame too large")
+    _arm(sock, deadline)
     sock.sendall(struct.pack(">I", len(ciphertext)) + ciphertext)
 
 
-def _recv_exact(sock: socket.socket, n: int) -> bytes:
+def _recv_exact(sock: socket.socket, n: int, deadline: float | None = None) -> bytes:
     buf = bytearray()
     while len(buf) < n:
+        _arm(sock, deadline)
         chunk = sock.recv(n - len(buf))
         if not chunk:
             raise ProtocolError("connection closed mid-frame")
@@ -48,11 +72,13 @@ def _recv_exact(sock: socket.socket, n: int) -> bytes:
     return bytes(buf)
 
 
-def recv_frame(sock: socket.socket, cs: CipherState) -> dict:
-    (length,) = struct.unpack(">I", _recv_exact(sock, 4))
+def recv_frame(
+    sock: socket.socket, cs: CipherState, deadline: float | None = None
+) -> dict:
+    (length,) = struct.unpack(">I", _recv_exact(sock, 4, deadline))
     if length > MAX_FRAME_LEN:
         raise ProtocolError("peer announced an oversized frame")
-    ciphertext = _recv_exact(sock, length)
+    ciphertext = _recv_exact(sock, length, deadline)
     plaintext = cs.decrypt_with_ad(b"", ciphertext)
     try:
         obj = json.loads(plaintext)
