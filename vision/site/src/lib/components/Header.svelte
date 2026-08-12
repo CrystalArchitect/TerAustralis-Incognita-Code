@@ -11,6 +11,7 @@
     <a href="/clementine">Clementine</a>
     <a href="/gallery">Gallery</a>
     <a href="/music">Music</a>
+    <a href="/ledger">Ledger</a>
     <a href="/ordinals">Ordinals</a>
     <a href="/provenance">Provenance</a>
     <a href="/starline">Consent Transport</a>
