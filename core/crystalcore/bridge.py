@@ -214,7 +214,7 @@ def mint_token(profile: str, guest: str) -> None:
     import json
     import secrets
 
-    from crystalcore.config import PROFILES_DIR
+    from crystalcore.config import PROFILES_DIR, write_json_atomic
     from crystalcore.gate import token_hash
 
     guest = guest.strip().lower()
@@ -225,7 +225,7 @@ def mint_token(profile: str, guest: str) -> None:
                          "grant first, then mint its token")
     secret = secrets.token_urlsafe(32)
     raw["guests"][guest]["token_hash"] = token_hash(secret)
-    config_path.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
+    write_json_atomic(config_path, raw)
     print(f"Minted for '{guest}' (hash stored in {config_path.name}).")
     print("Give this secret to that guest's launcher config only — it is")
     print("shown once and not stored:\n")
