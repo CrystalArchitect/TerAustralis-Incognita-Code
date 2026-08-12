@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import discovery
+from . import asklog, discovery
 from .consent import ConsentEngine
 from .discovery import Announcement
 from .fragment import MemoryFragment
@@ -29,6 +29,7 @@ class StarlineAgent:
         self.identity = Identity.load_or_generate(state_dir / "starline_identity.json")
         self.peers = PeerStore(state_dir / "starline_peers.json")
         self.consent = ConsentEngine(self.identity, state_dir / "starline_consent.json")
+        self.ask_log_path = state_dir / "starline_asks.jsonl"
         self._server: StarlineServer | None = None
         self._local_fragments: list[MemoryFragment] = []  # in-memory demo store; a real
         # companion would back this with its own persistent memory (e.g. the mind's
@@ -93,7 +94,7 @@ class StarlineAgent:
         enforced per fragment. Omitted, behaviour is unchanged."""
         self._server = StarlineServer(
             self.identity, self.peers, self.consent, self._provide_fragments, host, port,
-            token_store=token_store,
+            token_store=token_store, ask_log_path=self.ask_log_path,
         )
         return self._server.start()
 
@@ -101,6 +102,18 @@ class StarlineAgent:
         if self._server:
             self._server.stop()
             self._server = None
+
+    # ---------- observability ----------
+
+    def recent_asks(self, limit: int | None = None, peer_fingerprint: str | None = None) -> list[dict]:
+        """Every ask this node has received while serving, newest first --
+        granted or denied. See who has been knocking, not just who you
+        yourself have granted or revoked."""
+        rows = asklog.read_asks(self.ask_log_path)
+        if peer_fingerprint is not None:
+            rows = [r for r in rows if r["peer_fingerprint"] == peer_fingerprint]
+        rows.sort(key=lambda r: r["timestamp"], reverse=True)
+        return rows[:limit] if limit is not None else rows
 
     # ---------- requesting ----------
 

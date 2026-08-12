@@ -17,6 +17,7 @@ import socket
 import stat
 import struct
 import tempfile
+import threading
 import time
 from pathlib import Path
 
@@ -153,6 +154,194 @@ def test_fragment_kind_and_since_filtering():
 
         only_emotional = a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port, kinds=["emotional"])
         assert len(only_emotional) == 1 and only_emotional[0].kind == "emotional"
+    finally:
+        b.stop_serving()
+
+
+def test_ask_is_logged_when_peer_is_unpaired():
+    """Not just refused -- seen. A stranger's knock is exactly the kind
+    of ask the owner most needs to know happened."""
+    a, b = _two_agents()
+    port = b.serve()
+    try:
+        from .peers import Peer
+        fake_peer = Peer(
+            fingerprint=b.fingerprint,
+            sign_public_hex=b.identity.sign_public_bytes.hex(),
+            dh_public_hex=b.identity.dh_public_bytes.hex(),
+        )
+        try:
+            a.request_fragments(fake_peer, "127.0.0.1", port)
+            assert False, "an agent b has never paired with must be rejected"
+        except Denied:
+            pass
+        asks = b.recent_asks()
+        assert len(asks) == 1
+        assert asks[0]["stage"] == "unpaired"
+        assert asks[0]["decision"] == "denied"
+        assert asks[0]["peer_fingerprint"] is None, "b never learned who this was"
+    finally:
+        b.stop_serving()
+
+
+def test_ask_is_logged_when_consent_not_granted():
+    """A paired peer asking before consent is a real, observable event --
+    not the same silence as no peer at all."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "a memory only b holds")
+    port = b.serve()
+    try:
+        try:
+            a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+            assert False, "must be denied before consent is granted"
+        except Denied:
+            pass
+        asks = b.recent_asks()
+        assert len(asks) == 1
+        assert asks[0]["stage"] == "consent"
+        assert asks[0]["decision"] == "denied"
+        assert asks[0]["peer_fingerprint"] == a.fingerprint
+    finally:
+        b.stop_serving()
+
+
+def test_ask_is_logged_when_token_denies_all_kinds():
+    """The boolean gate saying yes is not the whole answer once a
+    TokenStore is attached -- a token-level refusal must be just as
+    visible as a consent-level one."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "an episode b remembers")
+    b.grant(a.fingerprint)
+    store = TokenStore(b.identity, Path(tempfile.mkdtemp(prefix="starline_test_asklog_")) / "t.json")
+    store.issue(a.identity.sign_public_bytes.hex(), "myth only", kinds=("mythic",))
+    port = b.serve(token_store=store)
+    try:
+        try:
+            a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+            assert False, "a token scoped to mythic must not admit episodic"
+        except Denied:
+            pass
+        asks = b.recent_asks()
+        assert len(asks) == 1
+        assert asks[0]["stage"] == "token"
+        assert asks[0]["decision"] == "denied"
+        assert asks[0]["kinds_granted"] == []
+    finally:
+        b.stop_serving()
+
+
+def test_ask_is_logged_with_partial_grant_when_token_filters_some_kinds():
+    """A mixed request must log what was actually granted, not just what
+    was asked -- the two are the whole point of a filtered reply."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "an episode b remembers")
+    b.add_local_fragment("mythic", "a myth b keeps")
+    b.grant(a.fingerprint)
+    store = TokenStore(b.identity, Path(tempfile.mkdtemp(prefix="starline_test_asklog_")) / "t.json")
+    store.issue(a.identity.sign_public_bytes.hex(), "myth only", kinds=("mythic",))
+    port = b.serve(token_store=store)
+    try:
+        results = a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port, kinds=["episodic", "mythic"])
+        assert [f.kind for f in results] == ["mythic"]
+        asks = b.recent_asks()
+        assert len(asks) == 1
+        assert asks[0]["stage"] == "served"
+        assert asks[0]["decision"] == "granted"
+        assert set(asks[0]["kinds_requested"]) == {"episodic", "mythic"}
+        assert asks[0]["kinds_granted"] == ["mythic"], "logged grant must match what actually moved"
+    finally:
+        b.stop_serving()
+
+
+def test_ask_log_survives_a_reload():
+    """A log the owner can only see until the process restarts is not an
+    audit trail -- same convention as tokens and revocations."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "a memory only b holds")
+    b.grant(a.fingerprint)
+    port = b.serve()
+    try:
+        a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+    finally:
+        b.stop_serving()
+
+    reloaded = StarlineAgent(b.ask_log_path.parent)
+    asks = reloaded.recent_asks()
+    assert len(asks) == 1
+    assert asks[0]["decision"] == "granted"
+
+
+def test_ask_log_ordering_and_timestamps_are_sane():
+    """The owner reads this newest-first, and a strictly increasing clock
+    is what makes 'who asked most recently' a meaningful question."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "a memory only b holds")
+    b.grant(a.fingerprint)
+    port = b.serve()
+    try:
+        for _ in range(3):
+            a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+            time.sleep(0.01)
+        asks = b.recent_asks()
+        assert len(asks) == 3
+        timestamps = [row["timestamp"] for row in asks]
+        assert timestamps == sorted(timestamps, reverse=True), "recent_asks() must be newest-first"
+    finally:
+        b.stop_serving()
+
+
+def test_ask_log_does_not_change_the_wire_reply():
+    """Observability is a side effect. The same request must get the
+    same fragments back whether or not an ask log is attached."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "a memory only b holds")
+    b.grant(a.fingerprint)
+    server = transport.StarlineServer(
+        b.identity, b.peers, b.consent, b._provide_fragments, ask_log_path=None,
+    )
+    port = server.start()
+    try:
+        results = a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+        assert len(results) == 1 and results[0].content == "a memory only b holds"
+        assert not b.ask_log_path.exists(), "ask_log_path=None must write nothing"
+    finally:
+        server.stop()
+
+
+def test_concurrent_asks_produce_clean_log_lines():
+    """_handle() runs one thread per connection -- the ask log must not
+    interleave partial JSON lines when several land at once."""
+    a, b = _two_agents()
+    _pair(a, b)
+    b.add_local_fragment("episodic", "shared memory")
+    b.grant(a.fingerprint)
+    port = b.serve()
+    try:
+        errors = []
+
+        def _ask():
+            try:
+                a.request_fragments(a.peers.get(b.fingerprint), "127.0.0.1", port)
+            except Exception as exc:  # noqa: BLE001 - captured for the assertion below
+                errors.append(exc)
+
+        threads = [threading.Thread(target=_ask) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=5)
+        assert not errors, errors
+
+        lines = b.ask_log_path.read_text(encoding="utf-8").splitlines()
+        assert len(lines) == 10
+        for line in lines:
+            json.loads(line)  # must not raise -- a torn write would break this
     finally:
         b.stop_serving()
 
@@ -967,6 +1156,14 @@ def main() -> int:
         test_revocation_takes_effect_next_request,
         test_unpaired_peer_is_rejected,
         test_fragment_kind_and_since_filtering,
+        test_ask_is_logged_when_peer_is_unpaired,
+        test_ask_is_logged_when_consent_not_granted,
+        test_ask_is_logged_when_token_denies_all_kinds,
+        test_ask_is_logged_with_partial_grant_when_token_filters_some_kinds,
+        test_ask_log_survives_a_reload,
+        test_ask_log_ordering_and_timestamps_are_sane,
+        test_ask_log_does_not_change_the_wire_reply,
+        test_concurrent_asks_produce_clean_log_lines,
         test_forged_fragment_is_rejected_by_receiver,
         test_discovery_via_unicast_loopback,
         test_hybrid_identity_shape,

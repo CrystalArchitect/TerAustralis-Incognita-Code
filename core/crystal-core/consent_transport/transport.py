@@ -14,8 +14,9 @@ import socket
 import struct
 import threading
 import time
+from pathlib import Path
 
-from . import protocol
+from . import asklog, protocol
 from .consent import ConsentEngine
 from .fragment import MemoryFragment
 from .identity import Identity
@@ -88,6 +89,7 @@ class StarlineServer:
         host: str = "127.0.0.1",
         port: int = DEFAULT_PORT,
         token_store=None,
+        ask_log_path: Path | None = asklog.DEFAULT_ASK_LOG_PATH,
     ):
         self.identity = identity
         self.peer_store = peer_store
@@ -104,12 +106,48 @@ class StarlineServer:
         # tokens and checks them before releasing anything, the same shape
         # as the consent check above it.
         self.token_store = token_store
+        # Every ask this node receives, granted or not, appended here so
+        # the human can see who has been knocking -- not just the grants
+        # and revocations they themselves made. None disables logging.
+        self.ask_log_path = ask_log_path
+        self._ask_log_lock = threading.Lock()
         self.host = host
         self.port = port
         self._sock: socket.socket | None = None
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._slots = threading.BoundedSemaphore(MAX_CONCURRENT_CONNECTIONS)
+
+    def _log_ask(
+        self,
+        *,
+        dh_public_hex: str,
+        peer: Peer | None,
+        kinds_requested: list[str],
+        since: float,
+        kinds_granted: list[str],
+        stage: str,
+        decision: str,
+        reason: str,
+    ) -> None:
+        if self.ask_log_path is None:
+            return
+        try:
+            with self._ask_log_lock:
+                asklog.append_ask(
+                    self.ask_log_path,
+                    dh_public_hex=dh_public_hex,
+                    peer_fingerprint=peer.fingerprint if peer else None,
+                    peer_label=peer.label if peer else "",
+                    kinds_requested=kinds_requested,
+                    since=since,
+                    kinds_granted=kinds_granted,
+                    stage=stage,
+                    decision=decision,
+                    reason=reason,
+                )
+        except Exception:
+            pass  # observability must never be why a real request fails
 
     def start(self) -> int:
         """Bind and begin serving in a background thread. Returns the
@@ -163,14 +201,26 @@ class StarlineServer:
 
             peer = self.peer_store.find_by_dh(hs.rs.hex())
             frame = protocol.recv_frame(conn, recv_cs)
+            kinds_requested = frame.get("kinds", [])
+            since = frame.get("since", 0.0)
 
             if peer is None:
+                self._log_ask(
+                    dh_public_hex=hs.rs.hex(), peer=None, kinds_requested=kinds_requested,
+                    since=since, kinds_granted=[], stage="unpaired", decision="denied",
+                    reason="unpaired peer",
+                )
                 protocol.send_frame(conn, send_cs, protocol.denied("unpaired peer"))
                 return
             if frame.get("type") != "request":
                 protocol.send_frame(conn, send_cs, protocol.denied("expected a request"))
                 return
             if not self.consent_engine.is_granted(peer.fingerprint):
+                self._log_ask(
+                    dh_public_hex=hs.rs.hex(), peer=peer, kinds_requested=kinds_requested,
+                    since=since, kinds_granted=[], stage="consent", decision="denied",
+                    reason="consent not granted",
+                )
                 protocol.send_frame(conn, send_cs, protocol.denied("consent not granted"))
                 return
 
@@ -200,6 +250,11 @@ class StarlineServer:
                         reason = "no token admits the requested kinds"
                     except Exception as exc:
                         reason = str(exc)
+                    self._log_ask(
+                        dh_public_hex=hs.rs.hex(), peer=peer, kinds_requested=kinds_requested,
+                        since=since, kinds_granted=[], stage="token", decision="denied",
+                        reason=reason,
+                    )
                     protocol.send_frame(conn, send_cs, protocol.denied(reason))
                     return
                 if allowed:
@@ -213,6 +268,11 @@ class StarlineServer:
                         pass
                 items = allowed
 
+            self._log_ask(
+                dh_public_hex=hs.rs.hex(), peer=peer, kinds_requested=kinds_requested,
+                since=since, kinds_granted=sorted({f.kind for f in items}), stage="served",
+                decision="granted", reason="ok",
+            )
             protocol.send_frame(conn, send_cs, protocol.fragments([f.to_dict() for f in items]))
         except (HandshakeFailed, protocol.ProtocolError, OSError):
             pass  # a failed/hostile connection just gets dropped, no diagnostic leak

@@ -1,0 +1,72 @@
+# Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
+# SPDX-License-Identifier: CC-BY-NC-ND-4.0
+
+"""Append-only log of every ask this node has received.
+
+Mirrors `crystalcore/audit.py`'s pattern — the same discipline the
+AI-guest-facing ConsentGate already holds itself to, extended to the
+peer-to-peer side. `ConsentEngine` and `TokenStore` record what the human
+decided (grants, revocations, tokens); nothing before this recorded what a
+peer *asked for*, whether the answer was yes or no. A closed-by-default
+gate that nobody can see anyone knocking on is half-observable.
+
+This does not let the owner interrupt the specific request that triggered
+an entry — `StarlineServer._handle()` answers a request within one
+connection, synchronously, and that is a deliberate design commitment
+elsewhere in this package (see `protocol.py`'s docstring and
+`test_stalled_connections_cannot_exhaust_the_server`), not an oversight
+this module should reverse. What it gives instead: every ask becomes a
+durable, human-readable record, so revocation — already proven to take
+effect on the very next connection — is something the owner can act on
+having actually seen what it is responding to.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+from pathlib import Path
+
+DEFAULT_ASK_LOG_PATH = Path("starline_asks.jsonl")
+
+
+def append_ask(
+    log_path: Path,
+    *,
+    dh_public_hex: str,
+    peer_fingerprint: str | None,
+    peer_label: str,
+    kinds_requested: list[str],
+    since: float,
+    kinds_granted: list[str],
+    stage: str,
+    decision: str,
+    reason: str,
+) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "timestamp": time.time(),
+        "stage": stage,
+        "decision": decision,
+        "reason": reason,
+        "dh_public_hex": dh_public_hex,
+        "peer_fingerprint": peer_fingerprint,
+        "peer_label": peer_label,
+        "kinds_requested": list(kinds_requested),
+        "since": since,
+        "kinds_granted": list(kinds_granted),
+    }
+    with log_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def read_asks(log_path: Path) -> list[dict]:
+    if not log_path.exists():
+        return []
+    rows: list[dict] = []
+    for line in log_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        rows.append(json.loads(line))
+    return rows
