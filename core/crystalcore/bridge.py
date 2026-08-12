@@ -103,8 +103,10 @@ class Bridge:
         return None if result.allowed else result.as_refusal_payload()
 
     def refuse_scope(self, tool: str, kind: str,
-                     arguments: dict[str, Any]) -> dict[str, Any]:
-        result = self.gate.require_scope(self.guest, tool, kind, arguments)
+                     arguments: dict[str, Any],
+                     types: tuple[str, ...] = ()) -> dict[str, Any]:
+        result = self.gate.require_scope(self.guest, tool, kind, arguments,
+                                         types=types)
         return None if result.allowed else result.as_refusal_payload()
 
     @property
@@ -145,6 +147,8 @@ def build_server(bridge: Bridge) -> FastMCP:
             "guest": bridge.guest,
             "profile": bridge.config.profile,
             "tools": grant.tools if grant else [],
+            "read_types": grant.read_types if grant else [],
+            "write_types": grant.write_types if grant else [],
         }
 
     @mcp.tool()
@@ -153,7 +157,13 @@ def build_server(bridge: Bridge) -> FastMCP:
         refusal = bridge.refuse("recall", {"query": query})
         if refusal:
             return refusal
-        refusal = bridge.refuse_scope("recall", "read", {"query": query})
+        # recall serves the semantic layer (notes and facts) — the only
+        # layer with per-entry visibility consent today. Episodic and
+        # reflective grants gain content only when per-entry sharing
+        # reaches those layers; until then this declaration keeps the
+        # refusal honest about what is actually behind the door.
+        refusal = bridge.refuse_scope("recall", "read", {"query": query},
+                                      types=("semantic",))
         if refusal:
             return refusal
         grant = bridge.config.guest(bridge.guest)
@@ -167,7 +177,8 @@ def build_server(bridge: Bridge) -> FastMCP:
         refusal = bridge.refuse("teach", {"text": text})
         if refusal:
             return refusal
-        refusal = bridge.refuse_scope("teach", "write", {"text": text})
+        refusal = bridge.refuse_scope("teach", "write", {"text": text},
+                                      types=("semantic",))
         if refusal:
             return refusal
         grant = bridge.config.guest(bridge.guest)
@@ -221,6 +232,41 @@ def mint_token(profile: str, guest: str) -> None:
     print(f"  CRYSTALBRIDGE_TOKEN={secret}")
 
 
+def set_revocation(profile: str, guest: str, action: str, reason: str) -> None:
+    """Append a revocation or reinstatement to the profile's ledger.
+
+    Runtime and durable: the gate reads the ledger on every check, so this
+    takes effect immediately for a bridge already running, and survives any
+    restart. It needs no memory dir — consent state is the profile's, not
+    the companion's.
+    """
+    from crystalcore.audit import append_audit
+    from crystalcore.config import PROFILES_DIR
+    from crystalcore.revocation import append_revocation, revocations_path
+
+    guest = guest.strip().lower()
+    profile_dir = PROFILES_DIR / profile
+    config = BridgeConfig.load(profile)
+    if config.guest(guest) is None:
+        # Revoking an unknown name is allowed — a guest removed from the
+        # config can still be on the ledger — but say so, since a typo here
+        # would otherwise revoke nobody in silence.
+        print(f"note: '{guest}' is not in {profile}/bridge_config.json — "
+              "recording the ledger entry anyway.")
+    append_revocation(revocations_path(profile_dir),
+                      guest=guest, action=action, reason=reason)
+    append_audit(config.audit_path, guest=guest, tool=action,
+                 arguments={"reason": reason}, decision=f"{action}d",
+                 reason=reason, detail={"by": "human"})
+    if action == "revoke":
+        print(f"Revoked '{guest}'. Takes effect on their next request — no "
+              "restart needed. Reinstate with:\n"
+              f"  python -m crystalcore.bridge --reinstate {guest}")
+    else:
+        print(f"Reinstated '{guest}'. Their standing grant applies again; "
+              "nothing was minted or widened.")
+
+
 def review_memories(profile: str) -> None:
     """One-time migration helper: walk private memories and let the human
     mark chosen ones shared. Everything stays private unless marked."""
@@ -266,6 +312,13 @@ def main() -> None:
                              "human's memory lives.")
     parser.add_argument("--mint-token", metavar="GUEST",
                         help="mint a provenance secret for GUEST and exit")
+    parser.add_argument("--revoke", metavar="GUEST",
+                        help="withdraw GUEST's consent — immediate, durable, "
+                             "no restart needed — and exit")
+    parser.add_argument("--reinstate", metavar="GUEST",
+                        help="lift a revocation for GUEST and exit")
+    parser.add_argument("--reason", default="",
+                        help="recorded alongside --revoke/--reinstate")
     parser.add_argument("--review-memories", action="store_true",
                         help="interactively mark private memories as shared")
     args = parser.parse_args()
@@ -274,6 +327,12 @@ def main() -> None:
 
     if args.mint_token:
         mint_token(args.profile, args.mint_token)
+        return
+    if args.revoke:
+        set_revocation(args.profile, args.revoke, "revoke", args.reason)
+        return
+    if args.reinstate:
+        set_revocation(args.profile, args.reinstate, "reinstate", args.reason)
         return
     if args.review_memories:
         review_memories(args.profile)

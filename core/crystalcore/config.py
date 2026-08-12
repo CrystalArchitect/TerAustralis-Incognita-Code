@@ -1,13 +1,18 @@
 # Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita)
 # SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
-"""Configuration loader for CrystalBridge — reads src/profiles/<name>/bridge_config.json.
+"""Configuration loader for CrystalBridge — reads profiles/<name>/bridge_config.json.
 
-Reconstructed spec: there is no design doc for this file (it was lost when the
-project moved off the machine it was written on). The shape below is inferred
-from the only two things that constrain it — `src/crystalcore/gate.py`, which
-expects a `BridgeConfig` with a `.guest(name)` lookup and a `.audit_path`, and
-the existing `src/profiles/default/bridge_config.json` on disk.
+Guest grants carry two independent consent axes:
+  - visibility scope (private|shared) — which visibility classes a guest may touch
+  - memory types (episodic|semantic|reflective) — which memory *layers* a guest may touch
+
+The memory structure *is* the taxonomy (no per-entry type field):
+  summaries → episodic, notes+facts → semantic, reflections → reflective,
+  conversation → working (never guest-readable, and deliberately not grantable).
+
+Empty scope or empty types is absence of consent, not legacy full access.
+Unknown type names fail loud at load ("Told, or stopped.").
 """
 
 from __future__ import annotations
@@ -19,6 +24,10 @@ from pathlib import Path
 SRC_ROOT = Path(__file__).resolve().parent.parent
 PROFILES_DIR = SRC_ROOT / "profiles"
 
+#: The documented memory taxonomy (Clementine content/MEMORY.md): the layers
+#: a grant may name.
+MEMORY_TYPES = ("episodic", "semantic", "reflective")
+
 
 @dataclass
 class GuestGrant:
@@ -29,6 +38,12 @@ class GuestGrant:
     # absence of scope is absence of consent, not legacy full access.
     read_scope: list[str] = field(default_factory=list)
     write_scope: list[str] = field(default_factory=list)
+    # Types: which memory layers (MEMORY_TYPES) this guest may read from and
+    # write into. Empty means none — a config written before this dimension
+    # existed has not consented to it, and the gate refuses with a reason
+    # that says exactly what to add. Fail-closed, like everything here.
+    read_types: list[str] = field(default_factory=list)
+    write_types: list[str] = field(default_factory=list)
     # Provenance: SHA-256 hex of this guest's minted secret. Empty means no
     # provenance is configured, and the gate refuses — mint one with
     # `python -m crystalcore.bridge --mint-token <guest>`.
@@ -47,30 +62,53 @@ class BridgeConfig:
     def audit_path(self) -> Path:
         return self.profile_dir / "audit.jsonl"
 
+    @property
+    def revocations_path(self) -> Path:
+        return self.profile_dir / "revocations.jsonl"
+
+    @property
+    def pending_path(self) -> Path:
+        return self.profile_dir / "pending.jsonl"
+
     def guest(self, name: str) -> GuestGrant | None:
         return self.guests.get((name or "").strip().lower())
 
     @classmethod
-    def load(cls, profile: str = "default") -> "BridgeConfig":
-        profile_dir = PROFILES_DIR / profile
+    def load(cls, profile: str = "default",
+             profiles_dir: Path | None = None) -> "BridgeConfig":
+        profile_dir = (profiles_dir or PROFILES_DIR) / profile
         config_path = profile_dir / "bridge_config.json"
         if not config_path.exists():
             raise FileNotFoundError(
                 f"No bridge config at {config_path}. Copy "
-                f"src/profiles/default/bridge_config.json to a new profile folder and "
+                f"profiles/default/bridge_config.json to a new profile folder and "
                 f"edit it, or pass --profile default."
             )
         raw = json.loads(config_path.read_text(encoding="utf-8"))
-        guests = {
-            name.strip().lower(): GuestGrant(
+        guests = {}
+        for name, grant in raw.get("guests", {}).items():
+            read_types = list(grant.get("read_types", []))
+            write_types = list(grant.get("write_types", []))
+            # An unknown type name is a config error, not a silent drop: a
+            # grant naming a layer this gate does not govern must stop the
+            # operator, loudly, before any guest is served. Told, or stopped.
+            unknown = [t for t in read_types + write_types
+                       if t not in MEMORY_TYPES]
+            if unknown:
+                raise SystemExit(
+                    f"bridge_config.json: guest '{name}' names unknown memory "
+                    f"type(s) {unknown} — valid types are {list(MEMORY_TYPES)}. "
+                    "Fix the grant before starting the bridge."
+                )
+            guests[name.strip().lower()] = GuestGrant(
                 approved=bool(grant.get("approved", False)),
                 tools=list(grant.get("tools", [])),
                 read_scope=list(grant.get("read_scope", [])),
                 write_scope=list(grant.get("write_scope", [])),
+                read_types=read_types,
+                write_types=write_types,
                 token_hash=str(grant.get("token_hash", "")),
             )
-            for name, grant in raw.get("guests", {}).items()
-        }
         return cls(
             profile=raw.get("profile", profile),
             human_name=raw.get("human_name", ""),

@@ -1,100 +1,87 @@
 # CrystalBridge
 
-A fail-closed MCP server that lets a guest AI (Claude, Grok, Cursor, ...)
-meet the companion — with only the access you've explicitly granted it.
+MCP consent gate for guest access to companion memory.
 
-**Provenance note:** `config.py` and `bridge.py` were rebuilt from scratch —
-the machine this project was originally written on is gone, and with it the
-design doc (`docs/CRYSTALBRIDGE.md`) that would have specified this
-precisely. What's here was reconstructed from `gate.py` (which was intact),
-the sample `src/profiles/default/bridge_config.json`, and the CLI/env-var
-contract already assumed by `docs/guides/MCP-Guest.md` and `docs/guides/Access.md`. Treat
-`recall`/`teach`/`message` as a first pass, not settled design.
+See repository docs for full architecture, and
+`docs/CONSENT-GATE-SPEC.md` for the gate's specification.
 
-## How it works
+## Config
 
-Every tool call passes through `ConsentGate.check()` before anything runs.
-Four checks, fail-closed: is the guest approved at all, is it approved for
-*this* tool, and (implicitly, via `gate.py`) every decision is written to an
-append-only audit log — allowed and refused calls alike.
+Guest grants in `profiles/<name>/bridge_config.json`.
 
-```
-guest calls a tool
-      │
-      ▼
-ConsentGate.check(guest, tool, arguments)
-      │
-  ┌───┴────┐
-refused   allowed
-  │         │
-  ▼         ▼
-return    run the tool, then
-refusal   log the decision
-payload
-```
+Add a guest by adding a key under `guests`. Nothing is granted by default.
+Each grant carries two independent consent axes: `read_scope`/`write_scope`
+name the visibility classes (`private`/`shared`), and
+`read_types`/`write_types` name the memory layers.
 
-## Running it
+### Durable revoke / reinstate
 
 ```bash
-cd TeraAustralis-Incognita   # repo root — matters, see note below
-pip install -r requirements-bridge.txt
-CRYSTALBRIDGE_GUEST=claude python3 -m crystalcore.bridge --profile default
+python3 -m crystalcore --revoke claude --reason "session ended"
+python3 -m crystalcore --reinstate claude --reason "restored"
 ```
 
-`CRYSTALBRIDGE_GUEST` identifies who's connecting for the life of the
-process — one guest per bridge invocation, matching how MCP stdio servers
-are normally launched (once per client). `--profile` selects which
-`src/profiles/<name>/bridge_config.json` to load, and also which of the
-companion's own profiles (the folder named by CRYSTALBRIDGE_MEMORY_DIR)
-to give access to — the two share a name on purpose, so a bridge profile
-always points at one specific companion.
+Appends to `profiles/<name>/revocations.jsonl` (append-only, latest record
+per guest wins). Takes effect on the guest's next request — no restart —
+and survives every restart. Reinstate restores the standing grant; it mints
+no token. A ledger that cannot be read refuses **all** guests until
+repaired: a gate that cannot know who is revoked must not guess. Every
+revocation and reinstatement is mirrored into the audit log.
 
-**Run it from `core/`.** The mind's own memory-directory resolution is
-relative to the calling process's working directory, which would silently
-point the bridge at a different (empty) memory location than the one you use
-day to day. `bridge.py` works around this by resolving the path explicitly
-relative to a nominated memory folder rather than trusting the relative
-helper — see `_profiles_root()` and the comment on `Bridge.companion` if
-you're touching that code. It honours an existing `lumina_profiles/` folder
-too, so an install predating the rename keeps its memory.
+### Memory type-gates
 
-## Config: `src/profiles/<name>/bridge_config.json`
+`read_types` / `write_types` are subsets of `{episodic, semantic,
+reflective}` (summaries / notes+facts / reflections — the documented
+taxonomy; the memory structure *is* the taxonomy). Working memory (the live
+conversation) is never guest-readable and deliberately not grantable.
+Missing type fields load as `[]` and refuse with a reason that says what to
+add (breaking, fail-closed). Unknown type names stop startup.
 
-```json
-{
-  "profile": "default",
-  "human_name": "crystal",
-  "interactive_approval": false,
-  "guests": {
-    "claude": { "approved": true, "tools": ["status", "recall", "teach", "message"] },
-    "restricted": { "approved": true, "tools": ["status", "recall"] }
-  }
-}
-```
+Today only the semantic layer (notes and facts) is actually served to
+guests, because it is the only layer with per-entry visibility consent;
+episodic and reflective grants gain content only when per-entry sharing
+reaches those layers — until then a grant for an unserved layer refuses
+honestly rather than returning silence. The default profile grants the
+full guests all three read types (forward consent) and semantic write;
+`restricted` reads semantic only.
 
-Add a guest by adding a key under `guests`. Revoke access by setting
-`"approved": false` or removing the entry — nothing is granted by default.
-`interactive_approval` is read but not yet acted on by anything (reserved
-for a future "ask before allowing" mode).
+### The observable ask
+
+`pending.jsonl` records each ask *before* evaluation (`status: received`),
+so a request is on disk even when fulfilment never happens — and an ask
+that cannot be recorded refuses rather than acting unobservably. The audit
+decision line and the refusal payload a guest sees carry the same
+`request_id`, joining ask to answer. `interactive_approval` remains a
+reserved hook for a future hold-for-approval mode; the pending record's
+`status` field is where that mode will live.
 
 ## Tools
 
 | Tool | What it does | Touches the companion's memory? |
 |---|---|---|
-| `status` | Reports the calling guest's identity and granted tools | No |
-| `recall` | Returns what the companion remembers, optionally filtered by a query (wraps the existing `_memory_block`) | Read-only |
-| `teach` | Tells the companion something to remember permanently (wraps the existing `remember`) | Writes |
-| `message` | Leaves a note for the human | No — written to `src/profiles/<name>/messages.jsonl`, deliberately **not** folded into the companion's memory automatically |
+| `status` | Reports the calling guest's identity, granted tools and memory types | No |
+| `recall` | Returns what the companion remembers, optionally filtered by a query (wraps the existing `_memory_block`) | Read-only, semantic layer |
+| `teach` | Tells the companion something to remember permanently (wraps the existing `remember`) | Writes, semantic layer |
+| `message` | Leaves a note for the human | No — written to `profiles/<name>/messages.jsonl`, deliberately **not** folded into the companion's memory automatically |
 
 `message` is kept separate from `teach` on purpose: a note left by a guest
-AI shouldn't silently become one of the companion's permanent memories without
-a human choosing that.
+AI shouldn't silently become one of the companion's permanent memories
+without a human choosing that.
 
 ## Audit trail
 
 Every decision — allowed or refused — is appended to
-`src/profiles/<name>/audit.jsonl`, one JSON object per line: timestamp, guest,
-tool, arguments (long text fields truncated), decision, reason. Guest
-messages land in the separate `src/profiles/<name>/messages.jsonl`. Neither file
-is committed to git (see `.gitignore`) — they're real conversation content,
-not config.
+`profiles/<name>/audit.jsonl`, one JSON object per line: timestamp, guest,
+tool, arguments (long text fields truncated), decision, reason, and the
+`request_id` of the ask it answers. Guest messages land in the separate
+`profiles/<name>/messages.jsonl`. None of these runtime files is committed
+to git (see `.gitignore`) — they're real conversation content, not config.
+
+## Prove it
+
+```bash
+cd core && python3 -m crystalcore.selftest
+```
+
+24 checks; the gate keeps five doors — revocation, approval, provenance,
+permission, scope (visibility × memory types).

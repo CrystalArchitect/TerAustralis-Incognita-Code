@@ -6,7 +6,7 @@
     cd core && python3 -m crystalcore.selftest
 
 Covers the two bugs this suite was written to catch and keep caught, and
-the four-check gate specified in docs/CONSENT-GATE-SPEC.md:
+the five-check gate specified in docs/CONSENT-GATE-SPEC.md:
 
   1. The bridge must reach the same memory the human sees. It once loaded
      the mind by file path, from core/apps/lumina/crystalcore — a
@@ -17,13 +17,15 @@ the four-check gate specified in docs/CONSENT-GATE-SPEC.md:
      path-dependent is only the *profiles folder*, which still lives
      beside the interface, so that is what is checked here.
 
-  2. ConsentGate.check() enforces provenance, approval, and permission in
-     that order, and require_scope() enforces the fourth check for
-     memory-touching tools. These tests pin the order — a wrong token
-     from an approved guest must refuse as provenance, never as
-     permission — and pin fail-closed defaults: no stored hash refuses,
-     empty scope refuses, and memories without a visibility field are
-     private.
+  2. ConsentGate.check() enforces revocation, approval, provenance, and
+     permission in that order, and require_scope() enforces the fifth
+     check — visibility scope and memory types — for memory-touching
+     tools. These tests pin the order — a wrong token from an approved
+     guest must refuse as provenance, never as permission — and pin
+     fail-closed defaults: no stored hash refuses, empty scope refuses,
+     empty types refuse, memories without a visibility field are private,
+     a corrupt revocation ledger refuses everyone, and the ask is on disk
+     before the answer exists.
 
 Stdlib-only except for `mcp`, which importing crystalcore.bridge
 requires (see requirements-bridge.txt). The mind additionally needs
@@ -48,11 +50,16 @@ def _gate(
     secret: str | None = SECRET,
     read_scope: list[str] | None = None,
     write_scope: list[str] | None = None,
+    read_types: list[str] | None = None,
+    write_types: list[str] | None = None,
+    profile_dir: Path | None = None,
 ) -> ConsentGate:
     """A ConsentGate over an in-memory config for one guest 'claude'.
 
-    profile_dir points nowhere real on purpose — every check below passes
-    audit=False, so the gate never writes, and the fake path is never touched.
+    By default profile_dir points nowhere real — checks that pass
+    audit=False never write, and the revocation ledger read treats an
+    absent file as the empty ledger. Tests exercising the ledger or the
+    pending record pass a real tmp `profile_dir` instead.
     `secret=None` models a guest with no provenance configured.
     """
     config = BridgeConfig(
@@ -64,9 +71,11 @@ def _gate(
             tools=list(tools or []),
             read_scope=list(read_scope or []),
             write_scope=list(write_scope or []),
+            read_types=list(read_types or []),
+            write_types=list(write_types or []),
             token_hash=token_hash(secret) if secret else "",
         )},
-        profile_dir=Path("/nonexistent-selftest-profile"),
+        profile_dir=profile_dir or Path("/nonexistent-selftest-profile"),
     )
     return ConsentGate(config)
 
@@ -210,8 +219,10 @@ def test_empty_scope_refuses_even_after_the_gate_allows():
 
 
 def test_granted_scope_passes():
-    gate = _gate(tools=["recall"], read_scope=["shared"])
-    result = gate.require_scope("claude", "recall", "read", audit=False)
+    gate = _gate(tools=["recall"], read_scope=["shared"],
+                 read_types=["semantic"])
+    result = gate.require_scope("claude", "recall", "read",
+                                types=("semantic",), audit=False)
     assert result.allowed
 
 
@@ -251,6 +262,231 @@ def test_memories_without_visibility_are_private():
             "the human's own unfiltered view must still see everything")
 
 
+# ---- the fifth door: revocation, durable and restart-free ----
+
+
+def test_revoked_guest_refuses_without_restart():
+    """Revocation is a runtime property: the same gate instance that just
+    allowed a guest must refuse it the moment the ledger says so, with no
+    restart in between."""
+    import tempfile
+
+    from crystalcore.revocation import append_revocation, revocations_path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        gate = _gate(tools=["recall"], profile_dir=Path(tmp))
+        assert gate.check("claude", "recall", token=SECRET, audit=False).allowed
+        append_revocation(revocations_path(Path(tmp)),
+                          guest="claude", action="revoke", reason="test")
+        result = gate.check("claude", "recall", token=SECRET, audit=False)
+        assert not result.allowed and result.check == "revocation"
+        assert result.decision == "refuse-revoked"
+
+
+def test_revocation_survives_restart():
+    """A revocation is durable: a brand-new gate over the same profile —
+    the restart, modelled — still refuses. Hand-editing config and
+    restarting used to be the only mechanism; now the restart is the case
+    that must NOT clear it."""
+    import tempfile
+
+    from crystalcore.revocation import append_revocation, revocations_path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        append_revocation(revocations_path(Path(tmp)),
+                          guest="claude", action="revoke", reason="test")
+        fresh_gate = _gate(tools=["recall"], profile_dir=Path(tmp))
+        result = fresh_gate.check("claude", "recall", token=SECRET, audit=False)
+        assert not result.allowed and result.check == "revocation"
+
+
+def test_reinstate_restores_access():
+    """Latest record per guest wins: revoke then reinstate allows again,
+    and the ledger keeps both records — reinstatement is an appended act,
+    never an erased one."""
+    import tempfile
+
+    from crystalcore.revocation import append_revocation, revocations_path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        path = revocations_path(Path(tmp))
+        append_revocation(path, guest="claude", action="revoke", reason="test")
+        append_revocation(path, guest="claude", action="reinstate", reason="ok")
+        gate = _gate(tools=["recall"], profile_dir=Path(tmp))
+        assert gate.check("claude", "recall", token=SECRET, audit=False).allowed
+        assert len(path.read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_corrupt_revocation_ledger_refuses_all():
+    """Fail-closed at its sharpest: a ledger that cannot be parsed refuses
+    every guest — even one with a perfect token — because a gate that
+    cannot know who is revoked must not guess."""
+    import tempfile
+
+    from crystalcore.revocation import revocations_path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        revocations_path(Path(tmp)).write_text("not json at all\n",
+                                               encoding="utf-8")
+        gate = _gate(tools=["recall"], profile_dir=Path(tmp))
+        result = gate.check("claude", "recall", token=SECRET, audit=False)
+        assert not result.allowed and result.check == "revocation"
+        assert "cannot be read" in result.reason
+
+
+# ---- the observable ask: recorded before anything is decided ----
+
+
+def test_ask_recorded_before_refusal():
+    """The ask is on disk before the answer exists. A refused request must
+    leave a `received` line in pending.jsonl, and the audit decision line
+    must carry the same request id, joining ask to answer."""
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        gate = _gate(tools=["recall"], profile_dir=Path(tmp))
+        result = gate.check("claude", "recall", token="wrong-token")
+        assert not result.allowed
+        pending_lines = [json.loads(l) for l in
+                         (Path(tmp) / "pending.jsonl").read_text(
+                             encoding="utf-8").splitlines()]
+        assert pending_lines and pending_lines[0]["decision"] == "received"
+        request_id = pending_lines[0]["detail"]["request_id"]
+        audit_lines = [json.loads(l) for l in
+                       (Path(tmp) / "audit.jsonl").read_text(
+                           encoding="utf-8").splitlines()]
+        assert audit_lines[-1]["detail"]["request_id"] == request_id
+        assert result.request_id == request_id, (
+            "the refusal a guest sees must carry the id of its recorded ask")
+        assert result.as_refusal_payload()["request_id"] == request_id
+
+
+def test_ask_survives_evaluation_crash():
+    """Even when the gate itself blows up mid-evaluation, the ask is
+    already recorded — an observable ask is not conditional on the gate
+    surviving to answer it."""
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        gate = _gate(tools=["recall"], profile_dir=Path(tmp))
+
+        def explode(name):
+            raise RuntimeError("config lookup exploded")
+
+        gate.config.guest = explode
+        try:
+            gate.check("claude", "recall", token=SECRET)
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError("the sabotaged lookup should have raised")
+        pending = (Path(tmp) / "pending.jsonl").read_text(encoding="utf-8")
+        assert '"received"' in pending, (
+            "the ask must be on disk even though evaluation crashed")
+
+
+def test_unrecordable_ask_refuses():
+    """The dual of the crash test: when the ask itself cannot be written,
+    the gate refuses rather than fulfilling a request no record shows was
+    ever made. Neither swallowing the error nor crashing — a stated
+    refusal. profile_dir is a *file* here, so the pending write's mkdir
+    fails."""
+    import tempfile
+
+    with tempfile.NamedTemporaryFile() as blocked:
+        gate = _gate(tools=["recall"], profile_dir=Path(blocked.name))
+        result = gate.check("claude", "recall", token=SECRET)
+        assert not result.allowed and result.check == "ask-record"
+        assert "could not be recorded" in result.reason
+
+
+# ---- the type dimension: layers as consent, not labels ----
+
+
+def test_missing_read_types_refuses():
+    """A grant written before the type dimension existed has not consented
+    to it. Empty read_types refuses, and the reason says what to add."""
+    gate = _gate(tools=["recall"], read_scope=["shared"])
+    result = gate.require_scope("claude", "recall", "read",
+                                types=("semantic",), audit=False)
+    assert not result.allowed and result.check == "scope"
+    assert "read_types" in result.reason
+
+
+def test_type_gate_refuses_layer_not_served():
+    """A grant for a layer a tool does not serve is an honest refusal, not
+    a silently empty result: recall serves semantic; an episodic-only
+    grant finds nothing behind that door and is told so."""
+    gate = _gate(tools=["recall"], read_scope=["shared"],
+                 read_types=["episodic"])
+    result = gate.require_scope("claude", "recall", "read",
+                                types=("semantic",), audit=False)
+    assert not result.allowed and result.decision == "refuse-scope"
+    assert "episodic" in result.reason and "semantic" in result.reason
+
+
+def test_unknown_type_name_stops_startup():
+    """'mythic' is a wire-protocol fragment kind in STARLINE.md, not a
+    local memory type — and no ungoverned class may enter through config.
+    Loading a grant naming an unknown type stops the operator, loudly,
+    before any guest is served. Told, or stopped."""
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        profile_dir = Path(tmp) / "default"
+        profile_dir.mkdir()
+        (profile_dir / "bridge_config.json").write_text(json.dumps({
+            "profile": "default",
+            "guests": {"claude": {"approved": True,
+                                  "read_types": ["mythic"]}},
+        }), encoding="utf-8")
+        try:
+            BridgeConfig.load("default", profiles_dir=Path(tmp))
+        except SystemExit as exc:
+            assert "mythic" in str(exc)
+        else:
+            raise AssertionError(
+                "an unknown memory type must stop startup, not load quietly")
+
+
+def test_layers_beyond_semantic_never_reach_guests():
+    """recall serves notes and facts — the semantic layer — and nothing
+    else. Summaries (episodic) and reflections (reflective) carry no
+    per-entry visibility consent yet, so no grant may surface them; the
+    conversation (working memory) is never guest-readable at all. Pinned
+    at `_memory_block` itself, so a future widening of the guest surface
+    trips this test and becomes a decision instead of a side effect.
+    Skips when the mind's deps are missing, like the other mind-backed
+    check."""
+    try:
+        from crystalcore.mind import CrystalCore
+    except ModuleNotFoundError as exc:
+        if exc.name in {"requests", "flask"}:
+            print(f"  SKIP mind-backed check — dep '{exc.name}' not installed")
+            return
+        raise
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        companion = CrystalCore(memory_dir=tmp)
+        companion._embed_ok = False
+        companion.memory.notes.append(
+            {"text": "a shared note", "tags": [], "visibility": "shared"})
+        companion.memory.summaries = "an episodic summary of private talk"
+        companion.memory.reflections.append(
+            {"text": "a reflective insight about the human"})
+        companion.memory.conversation.append(
+            {"role": "user", "content": "working memory line"})
+        guest_view = companion._memory_block(visible={"shared"})
+        assert "a shared note" in guest_view
+        assert "episodic summary" not in guest_view
+        assert "reflective insight" not in guest_view
+        assert "working memory line" not in guest_view
+
+
 def main() -> int:
     tests = [
         test_bridge_refuses_to_run_without_a_nominated_memory_folder,
@@ -266,11 +502,22 @@ def main() -> int:
         test_empty_scope_refuses_even_after_the_gate_allows,
         test_granted_scope_passes,
         test_memories_without_visibility_are_private,
+        test_revoked_guest_refuses_without_restart,
+        test_revocation_survives_restart,
+        test_reinstate_restores_access,
+        test_corrupt_revocation_ledger_refuses_all,
+        test_ask_recorded_before_refusal,
+        test_ask_survives_evaluation_crash,
+        test_unrecordable_ask_refuses,
+        test_missing_read_types_refuses,
+        test_type_gate_refuses_layer_not_served,
+        test_unknown_type_name_stops_startup,
+        test_layers_beyond_semantic_never_reach_guests,
     ]
     for t in tests:
         t()
         print(f"PASS {t.__name__}")
-    print(f"\n{len(tests)}/{len(tests)} passed. The gate keeps four doors, honestly.")
+    print(f"\n{len(tests)}/{len(tests)} passed. The gate keeps five doors, honestly.")
     return 0
 
 

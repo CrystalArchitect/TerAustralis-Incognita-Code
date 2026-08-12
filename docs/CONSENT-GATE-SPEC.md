@@ -140,23 +140,40 @@ refused, so audit and tests can distinguish the four.
 
 ## Testing
 
-Extend the existing suites rather than inventing a harness:
+The gate's suite is `crystalcore/selftest.py` — 23 plain-function tests
+(`cd core && python3 -m crystalcore.selftest`), covering the five checks,
+fail-closed defaults, the revocation ledger (runtime effect, restart
+survival, reinstatement, corrupt-ledger refuse-all), the pending record
+(written before evaluation, survives a mid-gate crash, request id joins
+ask to answer), and the type dimension (empty types refuse, unserved
+layers refuse honestly, unknown names stop startup, layers beyond
+semantic never reach guests). An earlier revision of this section cited
+suite counts that never matched the file; this one was corrected against
+the real suite on 2026-08-12.
 
-- `consent_transport` (32 tests today): token mint/verify round-trip,
-  refuse on absent/wrong/unhashed token, audit `provenance` block shape.
-- `bridge` (7 tests today): scope filtering in `recall` (private memory
-  absent from results *and* from semantic candidates), `teach` lands in
-  the grant's write class, empty scope refuses, check-order (a wrong
-  token from an approved guest refuses as provenance, not permission).
-- `selftest.py` gains one end-to-end: fresh profile, minted token,
-  private + shared memories, guest sees only shared.
+## Records beside the profile
+
+- `audit.jsonl` — every decision, allow and refuse alike, append-only.
+- `pending.jsonl` — every ask, written **before** evaluation, with a
+  `request_id` the decision line repeats. The `status` field (`received`
+  today) is where a future hold-for-approval mode will live.
+- `revocations.jsonl` — consent withdrawal as an append-only ledger:
+  `{timestamp, guest, action: revoke|reinstate, reason, by}`, latest
+  record per guest wins, read on every check. Unreadable ⇒ refuse all.
 
 ## Decisions needed before code
 
-1. **Two visibility classes or named partitions?** This spec says two
+1. **Two visibility classes or named partitions?** ~~This spec says two
    (`private`/`shared`) on the argument that classes you can't explain in
    one sentence won't be used correctly. Named partitions (e.g.
-   per-project) are a compatible later extension.
+   per-project) are a compatible later extension.~~ **Decided, 2026-08-12:**
+   two visibility classes stay, and the compatible extension arrived as a
+   second, orthogonal dimension — memory *types* (`episodic` / `semantic`
+   / `reflective`, the documented taxonomy), enforced at `require_scope`
+   and empty-refuses like everything else. Only the semantic layer is
+   served to guests today, because only it has per-entry visibility
+   consent; a type grant for an unserved layer refuses with a reason
+   rather than returning silence.
 2. **Strict provenance from day one?** This spec says yes — all guests
    need minted tokens immediately, breaking zero-config guest setups
    once, deliberately. The alternative makes enforcement optional and
