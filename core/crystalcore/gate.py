@@ -7,15 +7,16 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import json
-import secrets
+import secrets as _secrets
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from crystalcore.audit import append_audit
-from crystalcore.config import BridgeConfig
+from crystalcore.config import MEMORY_TYPES, BridgeConfig
+from crystalcore.revocation import (
+    RevocationLedgerUnreadable,
+    revoked_guests,
+)
 
 
 def token_hash(secret: str) -> str:
@@ -23,24 +24,14 @@ def token_hash(secret: str) -> str:
     return hashlib.sha256(secret.encode("utf-8")).hexdigest()
 
 
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def _safe_args(arguments: dict[str, Any]) -> dict[str, Any]:
-    safe_args = dict(arguments)
-    for key in ("text", "query"):
-        if key in safe_args and isinstance(safe_args[key], str) and len(safe_args[key]) > 200:
-            safe_args[key] = safe_args[key][:200] + "..."
-    return safe_args
-
-
 @dataclass
 class GateResult:
     allowed: bool
     reason: str
-    decision: str
-    check: str = ""
+    decision: str  # allow | refuse | refuse-revoked | refuse-provenance | refuse-scope
+    check: str = ""  # stage that decided: revocation | approval | provenance | permission | scope | ok
+    # The id of the ask this result answers, echoed to the guest so a
+    # refusal can be matched to its pending.jsonl line.
     request_id: str = ""
 
     def as_refusal_payload(self) -> dict[str, Any]:
@@ -54,104 +45,111 @@ class GateResult:
         }
 
 
-def read_revocation_ledger(path: Path) -> tuple[dict[str, str], bool]:
-    if not path.exists():
-        return {}, True
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError:
-        return {}, False
-    latest: dict[str, str] = {}
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            return {}, False
-        guest = str(row.get("guest", "")).strip().lower()
-        action = str(row.get("action", "")).strip().lower()
-        if not guest or action not in ("revoke", "reinstate"):
-            return {}, False
-        latest[guest] = action
-    return latest, True
-
-
-def append_revocation(
-    path: Path, *, guest: str, action: str, reason: str = "", by: str = "human",
-) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    record = {
-        "timestamp": _now(),
-        "guest": guest.strip().lower(),
-        "action": action,
-        "reason": reason,
-        "by": by,
-    }
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-
-def append_pending(
-    path: Path, *, request_id: str, guest: str, tool: str,
-    arguments: dict[str, Any], status: str = "received",
-) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    record = {
-        "timestamp": _now(),
-        "id": request_id,
-        "guest": guest,
-        "tool": tool,
-        "arguments": _safe_args(arguments),
-        "status": status,
-    }
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-
 class ConsentGate:
-    """Five checks, fail-closed: revocation, approval, provenance, permission, scope."""
+    """Five checks, fail-closed, in this order:
+
+    1. Revocation — has the human withdrawn this guest's consent? Read
+       from the append-only revocation ledger on every check, so a
+       revocation bites without a restart and survives every restart. A
+       ledger that cannot be read refuses everyone: a gate that cannot
+       know who is revoked must not guess. (An earlier version of this
+       docstring also claimed provenance ran first when approval did —
+       the order stated here is the order the code runs, pinned by tests.)
+    2. Approval — is the guest approved at all.
+    3. Provenance — does the presented token prove this is really the
+       named guest? No stored hash, no token, or a mismatch all refuse.
+       Origin that cannot be established is treated exactly like absent
+       consent; there is no fallback to the later checks.
+    4. Permission — may it call this specific tool.
+    5. Scope — applied where a tool touches memory (`require_scope`):
+       which visibility classes a grant may read or write, and which
+       memory *types* (episodic / semantic / reflective) it is granted.
+
+    Every check() call also records the ask itself — a `pending.jsonl`
+    line written *before* any evaluation, so the request is observable
+    even when fulfilment never happens. An ask that cannot be recorded
+    refuses rather than acting unobservably (not a sixth door — the
+    recorder failing, not consent deciding). The decision line in the
+    audit log carries the same request id, and so does the refusal
+    payload a guest sees.
+
+    Spec: docs/CONSENT-GATE-SPEC.md. Provenance here is launcher
+    authentication — possession of a per-guest minted secret — stated as
+    exactly that, not cryptographic identity of a remote model.
+    """
 
     def __init__(self, config: BridgeConfig):
         self.config = config
 
     def check(
-        self, guest: str, tool: str, arguments: dict[str, Any] | None = None,
-        *, token: str = "", audit: bool = True,
+        self,
+        guest: str,
+        tool: str,
+        arguments: dict[str, Any] | None = None,
+        *,
+        token: str = "",
+        audit: bool = True,
     ) -> GateResult:
         guest = (guest or "").strip().lower()
         tool = (tool or "").strip().lower()
         arguments = arguments or {}
-        request_id = f"req-{secrets.token_hex(6)}"
 
+        # The ask, recorded before anything is evaluated. If evaluation
+        # crashes, refuses, or the process dies, the request is already on
+        # disk — an observable ask is not conditional on a fulfilment. And
+        # if the ask itself cannot be recorded, the gate refuses rather
+        # than fulfilling a request no record shows was ever made.
+        request_id = f"req-{_secrets.token_hex(6)}"
         if audit:
             try:
-                append_pending(
-                    self.config.pending_path, request_id=request_id,
-                    guest=guest or "(missing)", tool=tool,
-                    arguments=arguments, status="received",
+                append_audit(
+                    self.config.pending_path,
+                    guest=guest or "(missing)",
+                    tool=tool,
+                    arguments=self._truncate(arguments),
+                    decision="received",
+                    detail={"request_id": request_id, "status": "received"},
                 )
-            except OSError:
-                pass
+            except OSError as exc:
+                return GateResult(
+                    allowed=False,
+                    reason=("the ask could not be recorded — refusing rather "
+                            f"than acting unobservably ({exc})"),
+                    decision="refuse",
+                    check="ask-record",
+                    request_id=request_id,
+                )
 
-        latest, ledger_ok = read_revocation_ledger(self.config.revocations_path)
-        if not ledger_ok:
+        # Check 1 — revocation. The ledger is read per call: no restart is
+        # needed for a revocation to take effect, and it survives restarts
+        # by living on disk rather than in this process.
+        try:
+            revoked = revoked_guests(self.config.revocations_path)
+        except RevocationLedgerUnreadable as exc:
             result = GateResult(
                 allowed=False,
-                reason="revocation ledger is unreadable — refusing all guests until it is fixed",
-                decision="refuse-revoked", check="revocation", request_id=request_id,
+                reason=("the revocation ledger cannot be read — refusing all "
+                        f"guests until it is repaired ({exc})"),
+                decision="refuse-revoked",
+                check="revocation",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest or "(missing)", tool, arguments, result, token_verified=False)
+                self._log(guest or "(missing)", tool, arguments, result,
+                          token_verified=False, request_id=request_id)
             return result
-        if guest and latest.get(guest) == "revoke":
+        if guest in revoked:
             result = GateResult(
-                allowed=False, reason=f"guest '{guest}' is revoked",
-                decision="refuse-revoked", check="revocation", request_id=request_id,
+                allowed=False,
+                reason=(f"guest '{guest}' has been revoked by the human — "
+                        "reinstate with --reinstate before it can act again"),
+                decision="refuse-revoked",
+                check="revocation",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest, tool, arguments, result, token_verified=False)
+                self._log(guest, tool, arguments, result,
+                          token_verified=False, request_id=request_id)
             return result
 
         grant = self.config.guest(guest)
@@ -159,31 +157,42 @@ class ConsentGate:
             result = GateResult(
                 allowed=False,
                 reason=f"guest '{guest or '(missing)'}' is not approved",
-                decision="refuse", check="approval", request_id=request_id,
+                decision="refuse",
+                check="approval",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest or "(missing)", tool, arguments, result, token_verified=False)
+                self._log(guest or "(missing)", tool, arguments, result,
+                          token_verified=False, request_id=request_id)
             return result
 
+        # Provenance runs before anything the grant permits: the later
+        # checks are meaningless against an unverified name.
         if not grant.token_hash:
             result = GateResult(
                 allowed=False,
                 reason=(f"guest '{guest}' has no provenance configured — "
                         "mint a token (--mint-token) before this guest can act"),
-                decision="refuse-provenance", check="provenance", request_id=request_id,
+                decision="refuse-provenance",
+                check="provenance",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest, tool, arguments, result, token_verified=False)
+                self._log(guest, tool, arguments, result,
+                          token_verified=False, request_id=request_id)
             return result
         if not token or not hmac.compare_digest(token_hash(token), grant.token_hash):
             result = GateResult(
                 allowed=False,
                 reason=(f"provenance for guest '{guest}' could not be "
                         "established — token missing or wrong"),
-                decision="refuse-provenance", check="provenance", request_id=request_id,
+                decision="refuse-provenance",
+                check="provenance",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest, tool, arguments, result, token_verified=False)
+                self._log(guest, tool, arguments, result,
+                          token_verified=False, request_id=request_id)
             return result
 
         allowed_tools = set(grant.tools) | {"status"}
@@ -191,78 +200,123 @@ class ConsentGate:
             result = GateResult(
                 allowed=False,
                 reason=f"guest '{guest}' has no permission for tool '{tool}'",
-                decision="refuse", check="permission", request_id=request_id,
+                decision="refuse",
+                check="permission",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest, tool, arguments, result, token_verified=True)
+                self._log(guest, tool, arguments, result,
+                          token_verified=True, request_id=request_id)
             return result
 
-        result = GateResult(
-            allowed=True, reason="ok", decision="allow", check="ok", request_id=request_id,
-        )
+        result = GateResult(allowed=True, reason="ok", decision="allow",
+                            check="ok", request_id=request_id)
         if audit:
-            self._log(guest, tool, arguments, result, token_verified=True)
+            self._log(guest, tool, arguments, result,
+                      token_verified=True, request_id=request_id)
         return result
 
     def require_scope(
-        self, guest: str, tool: str, kind: str,
-        arguments: dict[str, Any] | None = None, *,
-        audit: bool = True, request_id: str = "",
+        self,
+        guest: str,
+        tool: str,
+        kind: str,  # "read" | "write"
+        arguments: dict[str, Any] | None = None,
+        *,
+        types: tuple[str, ...] = (),
+        audit: bool = True,
     ) -> GateResult:
+        """The fifth check, for tools that touch memory — two dimensions.
+
+        Visibility: an empty scope list is absence of consent — the guest
+        may reach the tool's door but finds nothing behind it, and the
+        refusal says so rather than returning a silently empty result.
+
+        Type: `types` names the memory layers the calling tool actually
+        serves (episodic / semantic / reflective), for reads and writes
+        alike — declared at the call site rather than hard-coded per tool
+        here, so a read-side hole cannot open when a new tool forgets the
+        gate knows nothing about it. The grant must hold at least one of
+        the served layers. A grant with no types at all refuses — a config
+        written before the type dimension existed has not consented to it,
+        and the refusal says what to add. Call only after check() allowed."""
         guest = (guest or "").strip().lower()
         grant = self.config.guest(guest)
         scope = (grant.read_scope if kind == "read" else grant.write_scope) if grant else []
-        types = (grant.read_types if kind == "read" else grant.write_types) if grant else []
-
-        if not types:
-            result = GateResult(
-                allowed=False,
-                reason=(f"guest '{guest}' has no memory types granted — "
-                        f"no {kind} types are shared with it"),
-                decision="refuse-scope", check="scope", request_id=request_id,
-            )
-            if audit:
-                self._log(guest, tool, arguments or {}, result, token_verified=True)
-            return result
-
         if not scope:
             result = GateResult(
                 allowed=False,
                 reason=(f"guest '{guest}' has no {kind} scope — no memory "
                         "class is shared with it"),
-                decision="refuse-scope", check="scope", request_id=request_id,
+                decision="refuse-scope",
+                check="scope",
             )
             if audit:
                 self._log(guest, tool, arguments or {}, result, token_verified=True)
             return result
 
-        if kind == "write" and "semantic" not in types:
+        granted_types = (
+            grant.read_types if kind == "read" else grant.write_types
+        ) if grant else []
+        if not granted_types:
             result = GateResult(
                 allowed=False,
-                reason=(f"guest '{guest}' cannot write memory — "
-                        "'semantic' is not in write_types (notes are the "
-                        "semantic layer)"),
-                decision="refuse-scope", check="scope", request_id=request_id,
+                reason=(f"guest '{guest}' has no {kind} memory types granted "
+                        f"— add {kind}_types (subset of "
+                        f"{list(MEMORY_TYPES)}) to its grant"),
+                decision="refuse-scope",
+                check="scope",
             )
             if audit:
                 self._log(guest, tool, arguments or {}, result, token_verified=True)
             return result
+        if types and not set(types) & set(granted_types):
+            result = GateResult(
+                allowed=False,
+                reason=(f"tool '{tool}' serves the "
+                        f"{'/'.join(types)} layer and guest '{guest}' is "
+                        f"granted only {'/'.join(granted_types)} — nothing "
+                        "behind this door for that grant"),
+                decision="refuse-scope",
+                check="scope",
+            )
+            if audit:
+                self._log(guest, tool, arguments or {}, result, token_verified=True)
+            return result
+        return GateResult(allowed=True, reason="ok", decision="allow", check="ok")
 
-        return GateResult(
-            allowed=True, reason="ok", decision="allow", check="ok", request_id=request_id,
-        )
+    @staticmethod
+    def _truncate(arguments: dict[str, Any]) -> dict[str, Any]:
+        safe_args = dict(arguments)
+        for key in ("text", "query"):
+            if key in safe_args and isinstance(safe_args[key], str) and len(safe_args[key]) > 200:
+                safe_args[key] = safe_args[key][:200] + "..."
+        return safe_args
 
     def _log(
-        self, guest: str, tool: str, arguments: dict[str, Any], result: GateResult,
-        *, token_verified: bool,
+        self,
+        guest: str,
+        tool: str,
+        arguments: dict[str, Any],
+        result: GateResult,
+        *,
+        token_verified: bool,
+        request_id: str = "",
     ) -> None:
-        detail: dict[str, Any] = {
-            "check": result.check,
-            "request_id": result.request_id,
-            "provenance": {"token_verified": token_verified, "transport": "stdio"},
-        }
+        safe_args = self._truncate(arguments)
         append_audit(
-            self.config.audit_path, guest=guest, tool=tool,
-            arguments=_safe_args(arguments), decision=result.decision,
-            reason=result.reason, detail=detail,
+            self.config.audit_path,
+            guest=guest,
+            tool=tool,
+            arguments=safe_args,
+            decision=result.decision,
+            reason=result.reason,
+            detail={
+                "check": result.check,
+                **({"request_id": request_id} if request_id else {}),
+                "provenance": {
+                    "token_verified": token_verified,
+                    "transport": "stdio",
+                },
+            },
         )

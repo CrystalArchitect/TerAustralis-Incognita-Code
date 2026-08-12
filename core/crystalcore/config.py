@@ -9,7 +9,7 @@ Guest grants carry two independent consent axes:
 
 The memory structure *is* the taxonomy (no per-entry type field):
   summaries → episodic, notes+facts → semantic, reflections → reflective,
-  conversation → working (never guest-readable).
+  conversation → working (never guest-readable, and deliberately not grantable).
 
 Empty scope or empty types is absence of consent, not legacy full access.
 Unknown type names fail loud at load ("Told, or stopped.").
@@ -24,8 +24,9 @@ from pathlib import Path
 SRC_ROOT = Path(__file__).resolve().parent.parent
 PROFILES_DIR = SRC_ROOT / "profiles"
 
-# Documented taxonomy only — no new memory classes.
-KNOWN_MEMORY_TYPES = frozenset({"episodic", "semantic", "reflective"})
+#: The documented memory taxonomy (Clementine content/MEMORY.md): the layers
+#: a grant may name.
+MEMORY_TYPES = ("episodic", "semantic", "reflective")
 
 
 @dataclass
@@ -37,8 +38,10 @@ class GuestGrant:
     # absence of scope is absence of consent, not legacy full access.
     read_scope: list[str] = field(default_factory=list)
     write_scope: list[str] = field(default_factory=list)
-    # Type-gates: which memory layers this guest may read / write.
-    # subsets of {episodic, semantic, reflective}. Missing field → [] → refuse.
+    # Types: which memory layers (MEMORY_TYPES) this guest may read from and
+    # write into. Empty means none — a config written before this dimension
+    # existed has not consented to it, and the gate refuses with a reason
+    # that says exactly what to add. Fail-closed, like everything here.
     read_types: list[str] = field(default_factory=list)
     write_types: list[str] = field(default_factory=list)
     # Provenance: SHA-256 hex of this guest's minted secret. Empty means no
@@ -71,8 +74,9 @@ class BridgeConfig:
         return self.guests.get((name or "").strip().lower())
 
     @classmethod
-    def load(cls, profile: str = "default") -> "BridgeConfig":
-        profile_dir = PROFILES_DIR / profile
+    def load(cls, profile: str = "default",
+             profiles_dir: Path | None = None) -> "BridgeConfig":
+        profile_dir = (profiles_dir or PROFILES_DIR) / profile
         config_path = profile_dir / "bridge_config.json"
         if not config_path.exists():
             raise FileNotFoundError(
@@ -81,17 +85,21 @@ class BridgeConfig:
                 f"edit it, or pass --profile default."
             )
         raw = json.loads(config_path.read_text(encoding="utf-8"))
-        guests: dict[str, GuestGrant] = {}
+        guests = {}
         for name, grant in raw.get("guests", {}).items():
             read_types = list(grant.get("read_types", []))
             write_types = list(grant.get("write_types", []))
-            for t in read_types + write_types:
-                if t not in KNOWN_MEMORY_TYPES:
-                    raise SystemExit(
-                        f"CrystalBridge: unknown memory type '{t}' in guest "
-                        f"'{name}' ({config_path}). Known types: "
-                        f"{sorted(KNOWN_MEMORY_TYPES)}. Told, or stopped."
-                    )
+            # An unknown type name is a config error, not a silent drop: a
+            # grant naming a layer this gate does not govern must stop the
+            # operator, loudly, before any guest is served. Told, or stopped.
+            unknown = [t for t in read_types + write_types
+                       if t not in MEMORY_TYPES]
+            if unknown:
+                raise SystemExit(
+                    f"bridge_config.json: guest '{name}' names unknown memory "
+                    f"type(s) {unknown} — valid types are {list(MEMORY_TYPES)}. "
+                    "Fix the grant before starting the bridge."
+                )
             guests[name.strip().lower()] = GuestGrant(
                 approved=bool(grant.get("approved", False)),
                 tools=list(grant.get("tools", [])),
