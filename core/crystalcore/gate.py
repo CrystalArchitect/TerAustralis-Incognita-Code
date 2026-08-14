@@ -64,6 +64,9 @@ class ConsentGate:
     5. Scope — applied where a tool touches memory (`require_scope`):
        which visibility classes a grant may read or write, and which
        memory *types* (episodic / semantic / reflective) it is granted.
+       The caller threads `request_id` from the preceding check() so a
+       scope refuse or allow joins the pending.jsonl line. An empty id
+       is a missing argument, not a new door.
 
     Every check() call also records the ask itself — a `pending.jsonl`
     line written *before* any evaluation, so the request is observable
@@ -228,9 +231,14 @@ class ConsentGate:
         arguments: dict[str, Any] | None = None,
         *,
         types: tuple[str, ...] = (),
+        request_id: str = "",
         audit: bool = True,
     ) -> GateResult:
         """The fifth check, for tools that touch memory — two dimensions.
+
+        `request_id` is the id check() already wrote to pending.jsonl.
+        Threaded through so a scope decision joins its ask. Empty is
+        allowed for isolated tests; the bridge always passes the live id.
 
         Visibility: an empty scope list is absence of consent — the guest
         may reach the tool's door but finds nothing behind it, and the
@@ -254,9 +262,11 @@ class ConsentGate:
                         "class is shared with it"),
                 decision="refuse-scope",
                 check="scope",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest, tool, arguments or {}, result, token_verified=True)
+                self._log(guest, tool, arguments or {}, result,
+                          token_verified=True, request_id=request_id)
             return result
 
         granted_types = (
@@ -270,9 +280,11 @@ class ConsentGate:
                         f"{list(MEMORY_TYPES)}) to its grant"),
                 decision="refuse-scope",
                 check="scope",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest, tool, arguments or {}, result, token_verified=True)
+                self._log(guest, tool, arguments or {}, result,
+                          token_verified=True, request_id=request_id)
             return result
         if types and not set(types) & set(granted_types):
             result = GateResult(
@@ -283,11 +295,18 @@ class ConsentGate:
                         "behind this door for that grant"),
                 decision="refuse-scope",
                 check="scope",
+                request_id=request_id,
             )
             if audit:
-                self._log(guest, tool, arguments or {}, result, token_verified=True)
+                self._log(guest, tool, arguments or {}, result,
+                          token_verified=True, request_id=request_id)
             return result
-        return GateResult(allowed=True, reason="ok", decision="allow", check="ok")
+        result = GateResult(allowed=True, reason="ok", decision="allow",
+                            check="ok", request_id=request_id)
+        if audit:
+            self._log(guest, tool, arguments or {}, result,
+                      token_verified=True, request_id=request_id)
+        return result
 
     @staticmethod
     def _truncate(arguments: dict[str, Any]) -> dict[str, Any]:

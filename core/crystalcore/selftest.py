@@ -249,6 +249,58 @@ def test_granted_scope_passes():
     assert result.allowed
 
 
+def test_scope_refusal_carries_check_request_id():
+    """Door 5 joins the ask check() already recorded. A scope refuse
+    without that id was the hole: as_refusal_payload() carried "".
+    """
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        gate = _gate(tools=["recall"], profile_dir=Path(tmp))
+        checked = gate.check("claude", "recall", token=SECRET)
+        assert checked.allowed
+        result = gate.require_scope(
+            "claude", "recall", "read", request_id=checked.request_id)
+        assert not result.allowed and result.check == "scope"
+        assert result.request_id == checked.request_id
+        assert result.as_refusal_payload()["request_id"] == checked.request_id
+        pending = [json.loads(l) for l in
+                   (Path(tmp) / "pending.jsonl").read_text(
+                       encoding="utf-8").splitlines()]
+        assert pending[0]["detail"]["request_id"] == checked.request_id
+        audit = [json.loads(l) for l in
+                 (Path(tmp) / "audit.jsonl").read_text(
+                     encoding="utf-8").splitlines()]
+        scope_lines = [a for a in audit if a["detail"].get("check") == "scope"]
+        assert scope_lines, "a scope refuse must be audited"
+        assert scope_lines[-1]["detail"]["request_id"] == checked.request_id
+
+
+def test_scope_allow_is_audited_with_request_id():
+    """Successful require_scope used to skip the audit. An allow is a
+    decision too; it carries the same id as the pending line.
+    """
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        gate = _gate(tools=["recall"], read_scope=["shared"],
+                     read_types=["semantic"], profile_dir=Path(tmp))
+        checked = gate.check("claude", "recall", token=SECRET)
+        assert checked.allowed
+        result = gate.require_scope(
+            "claude", "recall", "read", types=("semantic",),
+            request_id=checked.request_id)
+        assert result.allowed and result.request_id == checked.request_id
+        audit = [json.loads(l) for l in
+                 (Path(tmp) / "audit.jsonl").read_text(
+                     encoding="utf-8").splitlines()]
+        assert audit[-1]["detail"]["request_id"] == checked.request_id
+        assert audit[-1]["detail"]["check"] == "ok"
+        assert audit[-1]["decision"] == "allow"
+
+
 def test_memories_without_visibility_are_private():
     """The migration default, pinned at the filter itself: an entry with no
     visibility field must not survive a shared-only view. Runs against the
@@ -639,6 +691,8 @@ def main() -> int:
         test_guest_with_no_minted_token_refuses_fail_closed,
         test_empty_scope_refuses_even_after_the_gate_allows,
         test_granted_scope_passes,
+        test_scope_refusal_carries_check_request_id,
+        test_scope_allow_is_audited_with_request_id,
         test_memories_without_visibility_are_private,
         test_revoked_guest_refuses_without_restart,
         test_revocation_survives_restart,
