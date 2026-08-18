@@ -18,6 +18,7 @@ const ORIGIN = 'https://www.teraustralis.com.au';
 const PAGES = [
   '/',
   '/apocryphon',
+  '/bridge-to-the-light',
   '/clementine',
   '/codex',
   '/crystalcore',

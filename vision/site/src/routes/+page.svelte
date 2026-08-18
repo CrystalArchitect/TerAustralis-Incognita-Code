@@ -158,6 +158,14 @@
 
   const visionCards = [
     {
+      href: '/bridge-to-the-light',
+      title: 'Bridge to the Light',
+      body: 'You start in the fog. One fixed glow. A hush page — Vision, labelled as such. Not a star.',
+      cta: '→ The hush',
+      status: 'Vision · the hush',
+      st: 'var(--gold)'
+    },
+    {
       href: '/codex',
       title: 'The Codex',
       body: 'The canonical mythic work — Chapters I through V of the Crystal universe story.',
