@@ -18,6 +18,7 @@
     <a href="/crystalcore-os">CrystalCore.OS</a>
     <a href="/docs">Archive</a>
     <a href="/repositories">Repositories</a>
+    <a href="/review">Review pack</a>
     <a href="/join">Join</a>
     <a href="/#support">Support</a>
   </nav>

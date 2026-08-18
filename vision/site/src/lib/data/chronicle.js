@@ -80,5 +80,11 @@ export const chronicle = [
     what: 'The metaphor is run, and people say yes',
     note: 'The Quantum Lattice enters canon as labelled Vision — beside a case study that ran all four delivered code versions and recorded claim against output until the two converged. The sixth Bitcoin anchor covers both. And the first credits arrive by their own words: dated, evidenced, reversible.',
     tl: 'var(--cyan)'
+  },
+  {
+    when: '2026-08-18',
+    what: 'The review pack is published',
+    note: 'A fifteen-minute sitting for a technical reader lands on the proposal site: a fail-closed consent and light-time demo (one second equals one minute, labelled), a two-page geographic brief that names only surveyed facts, and a thirty-day evaluation licence covering CrystalCore and Clementine software — not the proposal, which stays All Rights Reserved.',
+    tl: 'var(--cyan)'
   }
 ];

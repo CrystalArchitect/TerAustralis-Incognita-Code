@@ -120,6 +120,14 @@
       st: 'var(--green)'
     },
     {
+      href: '/review',
+      title: 'Review Pack',
+      body: 'One fifteen-minute sitting for a technical reader: a labelled latency-and-consent gym, a two-page geographic brief with no mythos, and a thirty-day evaluation licence covering the software only.',
+      cta: '→ Open the sitting',
+      status: 'Built · one sitting',
+      st: 'var(--cyan)'
+    },
+    {
       href: '/provenance',
       title: 'Provenance',
       body: 'Every artwork, recording and canon text hashed into one manifest, anchored to Bitcoin via OpenTimestamps. No token, no wallet — and verifiable by anyone with the repository.',

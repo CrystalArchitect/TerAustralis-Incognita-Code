@@ -30,6 +30,7 @@ const PAGES = [
   '/ordinals',
   '/provenance',
   '/repositories',
+  '/review',
   '/starline',
   '/stories'
 ];
