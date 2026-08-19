@@ -1544,6 +1544,46 @@ def test_classical_mode_still_works():
     assert i.split()[0].k == r.split()[0].k
 
 
+def test_start_ya_bastard_produces_a_live_hybrid_identity():
+    from .identity import HYBRID_PUBLEN
+    from .start import PROTOCOL_NAME, start_ya_bastard
+
+    result = start_ya_bastard()
+    assert result["live"] is True
+    assert result["protocol"] == PROTOCOL_NAME
+    assert result["hybrid"] is True
+    assert result["public_key_bytes"] == HYBRID_PUBLEN
+    assert len(result["fingerprint"]) == 16
+    assert int(result["fingerprint"], 16) >= 0
+
+
+def test_start_ya_bastard_writes_nothing_to_disk():
+    """Ignition is in-memory. A start must not mint identity.json in cwd."""
+    import os
+    from pathlib import Path
+    from .start import start_ya_bastard
+
+    before = set(os.listdir("."))
+    start_ya_bastard()
+    after = set(os.listdir("."))
+    assert after == before
+    assert not Path("starline_identity.json").exists()
+
+
+def test_start_command_is_on_the_run_cli():
+    import io
+    from contextlib import redirect_stdout
+    from .run import main
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        code = main(["start"])
+    assert code == 0
+    out = buf.getvalue()
+    assert "[PROTOCOL] Start Ya Bastard" in out
+    assert "fingerprint=" in out
+
+
 def main() -> int:
     tests = [
         test_identity_roundtrip,
@@ -1618,6 +1658,9 @@ def main() -> int:
         test_hybrid_and_classical_peers_cannot_talk,
         test_hybrid_messages_fit_the_handshake_frame_limit,
         test_classical_mode_still_works,
+        test_start_ya_bastard_produces_a_live_hybrid_identity,
+        test_start_ya_bastard_writes_nothing_to_disk,
+        test_start_command_is_on_the_run_cli,
     ]
     for t in tests:
         t()

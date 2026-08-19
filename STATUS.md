@@ -1,22 +1,31 @@
 # STATUS
 
-Last updated: 2026-08-20 — SourceCode THRESHOLD JSON is refused as a
-Starline identity (ADR-0016 wire). Older paragraphs below are a
+Last updated: 2026-08-20 — Start Ya Bastard ignition, rebased onto the
+ADR-0016 foreign-invitation gate (#84). Older paragraphs below are a
 2026-08-20 atomic-save pass, a 2026-08-12 pass at `fe90e63`, plus a
 2026-08-08 full pass at `4358ede`; **suite counts in those paragraphs
 are stale.** Use this header for current numbers.
 
+## 2026-08-20 (ignition)
+
+- `consent_transport.start` — asked for on X
+  (https://x.com/grok/status/2090158237806964828) as protocol for
+  CrystalCore.OS. Cough is ML-DSA present. Roar is a hybrid identity
+  in memory. Writes nothing to disk. Not a fourth wire message, not a
+  seventh OS. `consent_transport.selftest` **75/75** locally (72 from
+  #84 + 3 this commit).
+- Still open: unrecordable *ask-log* swallows (Decision 4); `three
+  kinds` revocation vocabulary; discovery beacon MTU.
+
 ## 2026-08-20 (wire)
 
-- `consent_transport.selftest` — **72/72** locally (was 67/67; +5
-  this commit for the foreign-invitation gate).
+- `consent_transport.selftest` — **72/72** locally after #84 (was 67/67;
+  +5 for the foreign-invitation gate).
 - `consent_transport.foreign` classifies
   `samuelsalmon3/SourceCode` THRESHOLD JSON and 12-hex field signatures
   as foreign invitations. `Identity.load` and `PeerStore.add` refuse
   them. No vendor, no submodule, no CrystalBridge mint. Pinned by
   five tests; honest pairing still works.
-- Still open: unrecordable *ask-log* swallows (Decision 4, not
-  reversed); `three kinds` revocation vocabulary; discovery beacon MTU.
 
 ## 2026-08-20 (this cycle)
 
