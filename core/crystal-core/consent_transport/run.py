@@ -71,10 +71,20 @@ def demo() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Consent Transport demo")
-    parser.add_argument("command", choices=["demo"], nargs="?", default="demo")
-    parser.parse_args(argv)
+    parser.add_argument(
+        "command",
+        choices=["demo", "start", "start-ya-bastard"],
+        nargs="?",
+        default="demo",
+    )
+    args = parser.parse_args(argv)
+    if args.command in ("start", "start-ya-bastard"):
+        from .start import main as start_main
+
+        return start_main()
     demo()
     return 0
+
 
 
 if __name__ == "__main__":
