@@ -225,6 +225,9 @@ class Identity:
     def load(cls, path: Path = DEFAULT_IDENTITY_PATH) -> "Identity":
         _require_mldsa()
         payload = json.loads(path.read_text())
+        from .foreign import refuse_as_starline_identity
+
+        refuse_as_starline_identity(payload, source=str(path))
         if "mldsa_key" not in payload:
             # Refused, not silently upgraded. Generating the missing key here
             # would change this identity's fingerprint — every peer would

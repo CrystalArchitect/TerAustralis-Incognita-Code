@@ -49,6 +49,9 @@ class PeerStore:
         # shared function rather than a second copy of the rule here. A
         # truncation of the key hex (the old rule) would not commit to the
         # ML-DSA half, which is the whole point of the change.
+        from .foreign import refuse_pairing_material
+
+        refuse_pairing_material(sign_public_hex)
         fingerprint = fingerprint_for(bytes.fromhex(sign_public_hex))
         peer = self.peers.get(fingerprint)
         if peer is None:

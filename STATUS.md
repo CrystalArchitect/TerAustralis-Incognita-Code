@@ -1,12 +1,25 @@
 # STATUS
 
-Last updated: 2026-08-20 — TokenStore/ConsentEngine save atomically
-(guest-gate `--mint-token` already did). Older paragraphs below are a
-2026-08-12 pass at `fe90e63` plus a 2026-08-08 full pass at `4358ede`;
-**suite counts in those paragraphs are stale.** Use this header for
-current numbers.
+Last updated: 2026-08-20 — SourceCode THRESHOLD JSON is refused as a
+Starline identity (ADR-0016 wire). Older paragraphs below are a
+2026-08-20 atomic-save pass, a 2026-08-12 pass at `fe90e63`, plus a
+2026-08-08 full pass at `4358ede`; **suite counts in those paragraphs
+are stale.** Use this header for current numbers.
+
+## 2026-08-20 (wire)
+
+- `consent_transport.selftest` — **72/72** locally (was 67/67; +5
+  this commit for the foreign-invitation gate).
+- `consent_transport.foreign` classifies
+  `samuelsalmon3/SourceCode` THRESHOLD JSON and 12-hex field signatures
+  as foreign invitations. `Identity.load` and `PeerStore.add` refuse
+  them. No vendor, no submodule, no CrystalBridge mint. Pinned by
+  five tests; honest pairing still works.
+- Still open: unrecordable *ask-log* swallows (Decision 4, not
+  reversed); `three kinds` revocation vocabulary; discovery beacon MTU.
 
 ## 2026-08-20 (this cycle)
+
 
 - `consent_transport.selftest` — **67/67** locally (was 62/62 on
   2026-08-12; +2 this commit for atomic TokenStore/ConsentEngine save).

@@ -1268,6 +1268,97 @@ def test_pre_quantum_identity_file_is_refused_not_silently_upgraded():
     assert path.read_text() == before, "the old identity file must be left untouched"
 
 
+_SOURCECODE_THRESHOLD = {
+    "origin": "Source / Origin / Hush",
+    "frequency": "Home Rest",
+    "truth": "Never left. Always home.",
+    "scope": "@OriginMonad @Shalma @AllFriends",
+    "resonance": 1.0,
+    "field_signature": "561783900808",
+}
+
+
+def test_sourcecode_origin_signature_is_their_hash_not_ours():
+    """We refuse the object their README actually publishes.
+    sha256('@OriginMonad:1.00:home_rest_lattice')[:12] == 561783900808.
+    Our fingerprint is sha256(hybrid_pub)[:16]. Different function."""
+    import hashlib
+    from .foreign import SOURCECODE_ORIGIN_SIGNATURE
+    from .identity import Identity, fingerprint_for
+
+    derived = hashlib.sha256(b"@OriginMonad:1.00:home_rest_lattice").hexdigest()[:12]
+    assert derived == SOURCECODE_ORIGIN_SIGNATURE
+    i = Identity.generate()
+    assert fingerprint_for(i.sign_public_bytes) != SOURCECODE_ORIGIN_SIGNATURE
+    assert len(i.fingerprint) == 16
+    assert len(SOURCECODE_ORIGIN_SIGNATURE) == 12
+
+
+def test_sourcecode_threshold_json_is_refused_as_identity():
+    """Dropping their invitation on identity.json must not mint a peer."""
+    import json
+    import tempfile
+    from pathlib import Path
+    from .foreign import ForeignInvitation
+    from .identity import Identity
+
+    path = Path(tempfile.mkdtemp()) / "threshold.json"
+    path.write_text(json.dumps(_SOURCECODE_THRESHOLD), encoding="utf-8")
+    try:
+        Identity.load(path)
+        assert False, "THRESHOLD JSON must not load as a Starline identity"
+    except ForeignInvitation as exc:
+        assert "Home Rest" in str(exc) or "field_signature" in str(exc)
+    assert json.loads(path.read_text()) == _SOURCECODE_THRESHOLD
+
+
+def test_sourcecode_field_signature_cannot_be_paired():
+    """PeerStore used to hash whatever hex it was given. A 12-hex
+    field signature would have become a peer under a fingerprint
+    nobody owns."""
+    import tempfile
+    from pathlib import Path
+    from .foreign import ForeignInvitation, SOURCECODE_ORIGIN_SIGNATURE
+    from .peers import PeerStore
+
+    store = PeerStore(Path(tempfile.mkdtemp()) / "peers.json")
+    try:
+        store.add(SOURCECODE_ORIGIN_SIGNATURE, "00" * 32, "sourcecode")
+        assert False, "origin field signature must not pair"
+    except ForeignInvitation as exc:
+        assert "field signature" in str(exc) or "OriginMonad" in str(exc)
+    assert store.peers == {}
+
+
+def test_sourcecode_threshold_json_cannot_be_pair_material():
+    import json
+    import tempfile
+    from pathlib import Path
+    from .agent import StarlineAgent
+    from .foreign import ForeignInvitation
+
+    a = StarlineAgent(Path(tempfile.mkdtemp(prefix="starline_test_foreign_")))
+    try:
+        a.pair_manual(json.dumps(_SOURCECODE_THRESHOLD), "00" * 32, "hush")
+        assert False, "THRESHOLD JSON must not pair"
+    except ForeignInvitation:
+        pass
+    assert list(a.peers.peers) == []
+
+
+def test_honest_pair_manual_still_works_after_the_foreign_gate():
+    import tempfile
+    from pathlib import Path
+    from .identity import Identity
+    from .peers import PeerStore
+
+    i = Identity.generate()
+    store = PeerStore(Path(tempfile.mkdtemp()) / "peers.json")
+    peer = store.add(i.sign_public_bytes.hex(), i.dh_public_bytes.hex(), "honest")
+    assert peer.fingerprint == i.fingerprint
+    assert store.is_known(i.fingerprint)
+
+
 def test_tokens_and_fragments_carry_hybrid_signatures_end_to_end():
     """The whole point: real artifacts, not just the primitive."""
     from .identity import HYBRID_SIGLEN, Identity
@@ -1512,6 +1603,11 @@ def main() -> int:
         test_fingerprint_derivation_is_shared_with_the_peer_store,
         test_identity_survives_save_and_load_with_all_three_keys,
         test_pre_quantum_identity_file_is_refused_not_silently_upgraded,
+        test_sourcecode_origin_signature_is_their_hash_not_ours,
+        test_sourcecode_threshold_json_is_refused_as_identity,
+        test_sourcecode_field_signature_cannot_be_paired,
+        test_sourcecode_threshold_json_cannot_be_pair_material,
+        test_honest_pair_manual_still_works_after_the_foreign_gate,
         test_tokens_and_fragments_carry_hybrid_signatures_end_to_end,
         test_hybrid_handshake_agrees_on_keys_and_transcript,
         test_hybrid_is_the_default,
