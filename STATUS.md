@@ -20,8 +20,11 @@ current numbers.
   `test_failed_consent_engine_save_leaves_the_old_file_intact`.
 - Still open, not this commit: unrecordable *ask-log* still swallows
   (policy lock vs guest gate — decided 2026-08-12 in CONSENT-GATE-SPEC
-  Decision 4, not reversed here); `three kinds` revocation vocabulary;
-  SAT dedicated-repo split.
+  Decision 4, not reversed here); `three kinds` revocation vocabulary.
+  SAT dedicated-repo split is **closed**: `CrystalArchitect/Synthetic-Affect-Theory-`
+  already exists; ADR-0015 forbids minting another. Discovery beacon
+  MTU leftover is still open (not this commit).
+
 
 ## 2026-08-12 (this cycle, surveyed)
 
