@@ -24,7 +24,7 @@ from pathlib import Path
 
 from . import transport
 from .agent import StarlineAgent
-from .consent import TokenStore
+from .consent import ConsentEngine, TokenStore
 from .token import ConsentError, ConsentToken, Revocation, Scope
 from .fragment import MemoryFragment
 from .identity import Identity
@@ -1076,6 +1076,73 @@ def test_unrecordable_token_use_denies_rather_than_serving():
         b.stop_serving()
 
 
+def test_failed_token_store_save_leaves_the_old_file_intact():
+    """A crash mid-write must not take issued tokens with it.
+
+    `--mint-token` on the guest gate already writes atomically
+    (`crystalcore.config.write_json_atomic`). TokenStore.save() still
+    used write_text — same defect, other surface.
+    """
+    d = Path(tempfile.mkdtemp(prefix="starline_test_tokatomic_"))
+    path = d / "t.json"
+    ident = Identity.generate()
+    store = TokenStore(ident, path)
+    peer = Identity.generate().sign_public_bytes.hex()
+    store.issue(peer, "keep this grant")
+    before = path.read_bytes()
+
+    def explode(*_a, **_k):
+        raise OSError("disk full")
+
+    real_dump = json.dump
+    json.dump = explode
+    try:
+        try:
+            store.issue(peer, "must not land")
+        except OSError:
+            pass
+        else:
+            raise AssertionError("save() should have propagated the write failure")
+    finally:
+        json.dump = real_dump
+
+    assert path.read_bytes() == before, "a failed save overwrote the live token store"
+    reloaded = TokenStore(ident, path)
+    assert len(reloaded.tokens) == 1
+    assert not path.with_name(path.name + ".tmp").exists()
+
+
+def test_failed_consent_engine_save_leaves_the_old_file_intact():
+    """Peer grant/revoke receipts are the other consent document.
+    Same atomic write as TokenStore.save()."""
+    d = Path(tempfile.mkdtemp(prefix="starline_test_cnsatomic_"))
+    path = d / "c.json"
+    ident = Identity.generate()
+    engine = ConsentEngine(ident, path)
+    engine.grant("peer-keep")
+    before = path.read_bytes()
+
+    def explode(*_a, **_k):
+        raise OSError("disk full")
+
+    real_dump = json.dump
+    json.dump = explode
+    try:
+        try:
+            engine.revoke("peer-keep")
+        except OSError:
+            pass
+        else:
+            raise AssertionError("save() should have propagated the write failure")
+    finally:
+        json.dump = real_dump
+
+    assert path.read_bytes() == before
+    reloaded = ConsentEngine(ident, path)
+    assert reloaded.is_granted("peer-keep")
+    assert not path.with_name(path.name + ".tmp").exists()
+
+
 # --- hybrid post-quantum identity ------------------------------------------
 #
 # Same discipline as the handshake tests: prove the ML-DSA half is
@@ -1415,6 +1482,8 @@ def main() -> int:
         test_byte_budget_stops_a_batch_midway_on_the_wire,
         test_each_token_is_charged_for_what_it_authorised,
         test_unrecordable_token_use_denies_rather_than_serving,
+        test_failed_token_store_save_leaves_the_old_file_intact,
+        test_failed_consent_engine_save_leaves_the_old_file_intact,
         test_token_scope_is_enforced_over_a_real_connection,
         test_expired_token_stops_the_exchange_that_a_live_one_allowed,
         test_fragment_sign_and_verify,

@@ -15,6 +15,7 @@ plainly to the human rather than implying a stronger guarantee.
 from __future__ import annotations
 
 import json
+import os
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -24,6 +25,35 @@ from .token import ConsentError, Constraints, ConsentToken, Revocation, Scope
 
 DEFAULT_CONSENT_PATH = Path("starline_consent.json")
 DEFAULT_TOKEN_PATH = Path("starline_tokens.json")
+
+
+def _write_json_atomic(path: Path, obj: object) -> None:
+    """Replace `path` only after the new bytes are complete.
+
+    TokenStore and ConsentEngine used to `write_text` in place. A crash
+    mid-write destroyed the previous consent document — the same defect
+    `--mint-token` used to have on the guest gate (now
+    `write_json_atomic` in `crystalcore.config`). Write beside it,
+    fsync, then `os.replace`. New files are 0600.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(obj, fh, indent=2)
+            fh.write("\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+    try:
+        os.chmod(tmp, 0o600)
+    except OSError:
+        pass
+    os.replace(tmp, path)
 
 
 @dataclass
@@ -56,7 +86,7 @@ class ConsentEngine:
             self.receipts = [ConsentReceipt(**r) for r in raw]
 
     def save(self) -> None:
-        self.path.write_text(json.dumps([asdict(r) for r in self.receipts], indent=2))
+        _write_json_atomic(self.path, [asdict(r) for r in self.receipts])
 
     def grant(self, peer_fingerprint: str) -> ConsentReceipt:
         receipt = ConsentReceipt(peer_fingerprint, granted=True, ts=time.time()).sign(self.identity)
@@ -122,11 +152,11 @@ class TokenStore:
                     self.revocations[rev.token_id] = rev
 
     def save(self) -> None:
-        self.path.write_text(json.dumps({
+        _write_json_atomic(self.path, {
             "tokens": [t.to_dict() for t in self.tokens.values()],
             "revocations": [r.to_dict() for r in self.revocations.values()],
             "usage": self.usage,
-        }, indent=2))
+        })
 
     @property
     def revoked_ids(self) -> set[str]:

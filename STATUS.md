@@ -1,9 +1,27 @@
 # STATUS
 
-Last updated: 2026-08-12 — night pass at `fe90e63` (merges #72–#75) plus
-owner-only ledger bits in this commit. Older paragraphs below are a
-2026-08-08 full pass at `4358ede`; **suite counts in those paragraphs
-are stale.** Use this header for current numbers.
+Last updated: 2026-08-20 — TokenStore/ConsentEngine save atomically
+(guest-gate `--mint-token` already did). Older paragraphs below are a
+2026-08-12 pass at `fe90e63` plus a 2026-08-08 full pass at `4358ede`;
+**suite counts in those paragraphs are stale.** Use this header for
+current numbers.
+
+## 2026-08-20 (this cycle)
+
+- `consent_transport.selftest` — **67/67** locally (was 62/62 on
+  2026-08-12; +2 this commit for atomic TokenStore/ConsentEngine save).
+- Guest-gate `--mint-token` was already atomic (`write_json_atomic` +
+  `test_write_json_atomic_replaces_only_after_the_bytes_are_complete`).
+  STATUS still listed it as open. The same defect was still live on
+  Starline: `TokenStore.save()` and `ConsentEngine.save()` used
+  `write_text`. A crash mid-write destroyed the previous consent
+  document. Both now write beside, fsync, replace. Pinned by
+  `test_failed_token_store_save_leaves_the_old_file_intact` and
+  `test_failed_consent_engine_save_leaves_the_old_file_intact`.
+- Still open, not this commit: unrecordable *ask-log* still swallows
+  (policy lock vs guest gate — decided 2026-08-12 in CONSENT-GATE-SPEC
+  Decision 4, not reversed here); `three kinds` revocation vocabulary;
+  SAT dedicated-repo split.
 
 ## 2026-08-12 (this cycle, surveyed)
 
