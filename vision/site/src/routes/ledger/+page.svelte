@@ -27,7 +27,7 @@
 </svelte:head>
 
 <article class="page node" style="--node:var(--silver)">
-  <div class="eyebrow">Before first light · Archives &amp; footprints</div>
+  <div class="eyebrow">Before first light · Archives & footprints</div>
   <h1>The Journey Ledger</h1>
   <p class="attribution">
     The work that came before this work. Singing in South-Western Sydney, short-form
@@ -38,8 +38,8 @@
   <section class="chapter node" style="--node:var(--purple)">
     <h2>Why this page exists</h2>
     <p>
-      The <a href="/#chronicle">Chronicle</a> opens on 14 July 2026 — first light, the oldest
-      commit anywhere in the portfolio. This page is what precedes it.
+      The dated commit record in the <a href="/docs">Archive</a> opens on 14 July 2026 — first
+      light, the oldest commit anywhere in the portfolio. This page is what precedes it.
     </p>
     <p>
       Some of this material sits on accounts I no longer hold the keys to. That is ordinary —
