@@ -1,3 +1,19 @@
+# H2 Extreme-Context Primitive — Experimental Branch
+
+**Status:** Development phase  
+**Methodology:** Fully frozen  
+**Performance claims:** Prohibited until final test
+
+This branch is isolated experimental work only. It must not modify production CrystalCore architecture.
+
+Locked methodology:
+
+* [`docs/H2/SPEC-V0.1.md`](docs/H2/SPEC-V0.1.md)
+* [`docs/H2/DATASET-PROTOCOL-V0.1.md`](docs/H2/DATASET-PROTOCOL-V0.1.md)
+* [`docs/H2/GOVERNANCE.md`](docs/H2/GOVERNANCE.md)
+
+---
+
 # TerAustralis Incognita — Code
 
 Engineering repository for **TerAustralis Incognita**. Canon, ADRs, and
@@ -16,6 +32,7 @@ The name is **TerAustralis** — one *a* ([ADR-0007](https://github.com/CrystalA
 | [`core/crystal-core/`](core/crystal-core/) | Bus, RDP, receipts, services |
 | [`vision/`](vision/) | Public site source, demo shells, voice page |
 | [`docs/CONSENT-GATE-SPEC.md`](docs/CONSENT-GATE-SPEC.md) | Gate spec — **implemented**, not a draft |
+| [`docs/H2/`](docs/H2/) | H2 extreme-context primitive — locked V0.1 methodology (this branch only) |
 
 The flagship companion that actually gates model calls is
 [`Clementine-ai-companion`](https://github.com/CrystalArchitect/Clementine-ai-companion).
