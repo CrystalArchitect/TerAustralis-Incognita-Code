@@ -1,9 +1,6 @@
 <!-- Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita) -->
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
-<script>
-  import Footer from '$lib/components/Footer.svelte';
-</script>
 
 <svelte:head>
   <title>TerAustralis Incognita</title>
@@ -46,22 +43,22 @@
   <p>Working software is labelled Built. Industrial documents are labelled Vision. They are listed separately.</p>
   <div class="cards">
     <a class="card" href="/clementine" style="--st:var(--green)">
-      <h3>Clementine</h3>
+      <p class="card-title">Clementine</p>
       <p>Local-first companion. Fail-closed consent. Working software.</p>
       <span class="status">Built</span>
     </a>
     <a class="card" href="/provenance" style="--st:var(--green)">
-      <h3>Provenance</h3>
+      <p class="card-title">Provenance</p>
       <p>File hashes anchored. No token. No wallet.</p>
       <span class="status">Built</span>
     </a>
     <a class="card" href="https://proposal.teraustralis.com.au/16-catch.html" style="--st:var(--gold)">
-      <h3>Catch<span class="vh">, proposal site</span></h3>
+      <p class="card-title">Catch<span class="vh">, proposal site</span></p>
       <p>Recover, refurbish, fuel. Pilbara proposed. Not selected.</p>
       <span class="status">Vision · industrial brief</span>
     </a>
     <a class="card" href="https://proposal.teraustralis.com.au/17-gate.html" style="--st:var(--gold)">
-      <h3>Gate<span class="vh">, proposal site</span></h3>
+      <p class="card-title">Gate<span class="vh">, proposal site</span></p>
       <p>CrystalCore as specified: consent enforced at the interface, not by training.</p>
       <span class="status">Vision · design brief</span>
     </a>
@@ -79,7 +76,6 @@
   </p>
 </section>
 
-<Footer />
 
 <style>
   .bleed {

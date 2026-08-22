@@ -3,7 +3,6 @@
 
 <script>
   import { onMount } from 'svelte';
-  import Footer from '$lib/components/Footer.svelte';
 
   let { data } = $props();
   let selectedImage = $state(null);
@@ -68,7 +67,6 @@
   </div>
 </div>
 
-<Footer />
 
 {#if selectedImage}
   <div class="lightbox-modal" onclick={() => (selectedImage = null)} role="dialog" aria-modal="true" tabindex="-1">
