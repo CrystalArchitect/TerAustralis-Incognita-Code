@@ -6,6 +6,7 @@
   import '$lib/styles/tokens.css';
   import '$lib/styles/typography.css';
   import '$lib/styles/motion.css';
+  import '$lib/styles/a11y.css';
   import Header from '$lib/components/Header.svelte';
   import { onMount } from 'svelte';
   import { afterNavigate } from '$app/navigation';
@@ -39,9 +40,11 @@
 <div class="wrap">
   <div class="starline" aria-hidden="true"></div>
 
+  <a class="skip" href="#main">Skip to main content</a>
+
   <Header />
 
-  <main>
+  <main id="main" tabindex="-1">
     {@render children()}
   </main>
 </div>

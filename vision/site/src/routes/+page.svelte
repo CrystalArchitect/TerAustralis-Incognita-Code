@@ -29,9 +29,15 @@
     <figcaption>Australia at night. NASA Black Marble, Suomi NPP VIIRS, 2016 composite.</figcaption>
   </figure>
   <nav class="quiet" aria-label="Proposal documents">
-    <a href="https://proposal.teraustralis.com.au/">Proposal</a>
-    <a href="https://proposal.teraustralis.com.au/16-catch.html">Catch</a>
-    <a href="https://proposal.teraustralis.com.au/17-gate.html">Gate</a>
+    <a href="https://proposal.teraustralis.com.au/"
+      >Proposal<span class="vh">, proposal site</span></a
+    >
+    <a href="https://proposal.teraustralis.com.au/16-catch.html"
+      >Catch<span class="vh">, proposal site</span></a
+    >
+    <a href="https://proposal.teraustralis.com.au/17-gate.html"
+      >Gate<span class="vh">, proposal site</span></a
+    >
   </nav>
 </section>
 
@@ -50,12 +56,12 @@
       <span class="status">Built</span>
     </a>
     <a class="card" href="https://proposal.teraustralis.com.au/16-catch.html" style="--st:var(--gold)">
-      <h3>Catch</h3>
+      <h3>Catch<span class="vh">, proposal site</span></h3>
       <p>Recover, refurbish, fuel. Pilbara proposed. Not selected.</p>
       <span class="status">Vision · industrial brief</span>
     </a>
     <a class="card" href="https://proposal.teraustralis.com.au/17-gate.html" style="--st:var(--gold)">
-      <h3>Gate</h3>
+      <h3>Gate<span class="vh">, proposal site</span></h3>
       <p>CrystalCore as specified: consent enforced at the interface, not by training.</p>
       <span class="status">Vision · design brief</span>
     </a>
@@ -90,18 +96,22 @@
     margin-top: 10px;
     font-size: 0.95rem;
     letter-spacing: 0.02em;
-    color: var(--muted, #9a958c);
+    color: var(--muted);
   }
   .quiet {
     margin-top: 28px;
-    font-size: 0.78rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
   }
   .quiet a {
-    color: var(--ink, #e8e4dc);
-    text-decoration: none;
-    margin-right: 1.4em;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 4px;
+    color: var(--ink);
+    text-decoration: underline;
+    margin-right: 1.2em;
   }
   .quiet a:hover {
     text-decoration: underline;
