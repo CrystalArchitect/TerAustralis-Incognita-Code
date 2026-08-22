@@ -2,7 +2,6 @@
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
 <script>
-  import Footer from '$lib/components/Footer.svelte';
 
   /** @type {{ data: { tracks: any[] } }} */
   let { data } = $props();
@@ -138,7 +137,6 @@
   </nav>
 </article>
 
-<Footer />
 
 <style>
   .tracktable-scroll {

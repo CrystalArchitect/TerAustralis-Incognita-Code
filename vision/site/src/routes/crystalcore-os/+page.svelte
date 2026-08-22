@@ -3,7 +3,6 @@
 
 <script>
   import { onMount } from 'svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import Motifs from '$lib/components/Motifs.svelte';
 
   let { data } = $props();
@@ -334,7 +333,6 @@
   <Motifs />
 </div>
 
-<Footer />
 
 <style>
   .crystalcore-container {

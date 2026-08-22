@@ -2,7 +2,6 @@
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
 <script>
-  import Footer from '$lib/components/Footer.svelte';
   import { repositories, stateLabels } from '$lib/data/repositories.js';
 
   const stateAccent = {
@@ -91,7 +90,6 @@ founding laptop (pre-git)
   </p>
 </div>
 
-<Footer />
 
 <style>
   .lineage {

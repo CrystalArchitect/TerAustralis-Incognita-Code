@@ -2,7 +2,6 @@
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
 <script>
-  import Footer from '$lib/components/Footer.svelte';
   import { entries } from '$lib/data/ledger.js';
 
   /**
@@ -122,7 +121,6 @@
   </section>
 </article>
 
-<Footer />
 
 <style>
   .ledger-meta {

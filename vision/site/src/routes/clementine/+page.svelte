@@ -2,7 +2,6 @@
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
 <script>
-  import Footer from '$lib/components/Footer.svelte';
 
   const setup = `# 1. Install Ollama (the local model engine) from ollama.com
 
@@ -159,4 +158,3 @@ cd webapp && npm install && npm run dev   # open 127.0.0.1:5174`;
   </nav>
 </article>
 
-<Footer />

@@ -2,7 +2,6 @@
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
 <script>
-  import Footer from '$lib/components/Footer.svelte';
 
   let { data } = $props();
 </script>
@@ -90,4 +89,3 @@
   </div>
 </section>
 
-<Footer />

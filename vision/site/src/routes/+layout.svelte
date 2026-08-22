@@ -8,6 +8,7 @@
   import '$lib/styles/motion.css';
   import '$lib/styles/a11y.css';
   import Header from '$lib/components/Header.svelte';
+  import Footer from '$lib/components/Footer.svelte';
   import { onMount } from 'svelte';
   import { afterNavigate } from '$app/navigation';
 
@@ -47,4 +48,6 @@
   <main id="main" tabindex="-1">
     {@render children()}
   </main>
+
+  <Footer />
 </div>

@@ -2,7 +2,6 @@
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
 <script>
-  import Footer from '$lib/components/Footer.svelte';
 
   /** @type {{ data: { slug: string, title: string, description: string, html: string } }} */
   let { data } = $props();
@@ -30,7 +29,6 @@
   </p>
 </section>
 
-<Footer showVoices />
 
 <style>
   .markdown {

@@ -1,9 +1,6 @@
 <!-- Copyright 2026 Crystal Arena-Turner (TerAustralis Incognita) -->
 <!-- SPDX-License-Identifier: CC-BY-NC-ND-4.0 -->
 
-<script>
-  import Footer from '$lib/components/Footer.svelte';
-</script>
 
 <svelte:head>
   <title>Stories of Presence — TerAustralis Incognita</title>
@@ -191,4 +188,3 @@
   </nav>
 </article>
 
-<Footer />
