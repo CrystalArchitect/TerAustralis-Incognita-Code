@@ -1,6 +1,6 @@
 # H2 Extreme-Context Primitive — Experimental Branch
 
-**Status:** Development phase  
+**Status:** Validation recorded · configs not frozen · no performance claims  
 **Methodology:** Fully frozen  
 **Performance claims:** Prohibited until final test
 
@@ -15,7 +15,8 @@ Locked methodology:
 Execution:
 
 1. 32k/64k reference-fidelity — recorded under [`results/reference-fidelity-32k-64k/`](results/reference-fidelity-32k-64k/)
-2. Development sweep — recorded under [`results/dev-sweep-v0.1/`](results/dev-sweep-v0.1/). **Not a configuration freeze.** Not a 1M dual-gate decision.
+2. Development sweep — recorded under [`results/dev-sweep-v0.1/`](results/dev-sweep-v0.1/). **Not a configuration freeze.**
+3. Validation — recorded under [`results/validation-v0.1/`](results/validation-v0.1/). **Not a configuration freeze.** Not a 1M dual-gate decision.
 
 ---
 
