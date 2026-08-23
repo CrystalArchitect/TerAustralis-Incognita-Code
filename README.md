@@ -1,8 +1,8 @@
 # H2 Extreme-Context Primitive — Experimental Branch
 
-**Status:** Configuration freeze recorded · no 1M dual-gate · no performance claims  
+**Status:** Immutable final test recorded · dual-gate **fail** (quality pass, bandwidth fail) · no extra claims  
 **Methodology:** Fully frozen  
-**Performance claims:** Prohibited until final test
+**Performance claims:** Dual-gate evaluated. Result is fail on this encoder. Not a product claim.
 
 This branch is isolated experimental work only. It must not modify production CrystalCore architecture.
 
@@ -18,7 +18,9 @@ Execution:
 1. 32k/64k reference-fidelity — recorded under [`results/reference-fidelity-32k-64k/`](results/reference-fidelity-32k-64k/)
 2. Development sweep — recorded under [`results/dev-sweep-v0.1/`](results/dev-sweep-v0.1/). **Not a configuration freeze.**
 3. Validation — recorded under [`results/validation-v0.1/`](results/validation-v0.1/).
-4. Configuration freeze — recorded under [`results/config-freeze-v0.1/`](results/config-freeze-v0.1/). **Not a 1M dual-gate decision.**
+4. Configuration freeze — recorded under [`results/config-freeze-v0.1/`](results/config-freeze-v0.1/).
+5. Immutable final test — recorded under [`results/final-test-v0.1/`](results/final-test-v0.1/). Dual-gate at 1M: **fail** for both frozen configs (quality LCB ≥ 0.90; BW/ref ≰ 0.40).
+6. Decision — fail. Not a CrystalCore product claim.
 
 ---
 
