@@ -66,7 +66,7 @@ It exists so the Vision layer has a canonical image that **labels the split** in
 
 In order, and not sooner:
 
-1. H2 validation recorded (this is a protocol step, not a proof).
+1. H2 validation recorded on `research/h2-extreme-context-v0.1` (protocol step, not a proof).
 2. One config frozen per candidate.
 3. Immutable final test, 32k → 1M, dual gate.
 4. Independent reproduction of the encoder result.
@@ -84,7 +84,7 @@ H2 currently records wall-clock on the experimental runner and analytical fp32 e
 | Track | Status |
 |---|---|
 | H1 | Frozen · Unproven |
-| H2 | Methodology locked · Steps 1–2 recorded; validation is a later protocol step · configs not frozen · no claims |
+| H2 | Methodology locked · Steps 1–3 recorded on `research/h2-extreme-context-v0.1` · configs not frozen · no claims |
 | CrystalCore vs dense @ 1M | Unproven |
 | External / xAI pitch | Hold |
 
