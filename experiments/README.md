@@ -33,5 +33,12 @@ Validation seed family only (`VAL_CORPUS_SEED`). Refuses `development`
 from each candidate's own published sweep ranking plus the Step-1
 development default. See `benchmarks/validation_configs.py`.
 
-**No performance claims. No 1M dual-gate decision. No configuration freeze.**
-Every report includes an Interpretation Boundary.
+## 4. Configuration freeze — recorded (not a 1M decision)
+
+One config per candidate, selected from the validation record by the
+rule in `docs/H2/FROZEN-CONFIGS-V0.1.md`. Machine copy:
+`benchmarks/frozen_configs.py`. Record: `results/config-freeze-v0.1/`.
+
+**No performance claims. No 1M dual-gate decision.** Final seed family
+remains sealed until step 5 is ordered. Every report includes an
+Interpretation Boundary.

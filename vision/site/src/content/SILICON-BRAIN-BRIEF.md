@@ -68,8 +68,8 @@ It exists so the Vision layer has a canonical image that **labels the split** in
 
 In order, and not sooner:
 
-1. H2 validation recorded on `research/h2-extreme-context-v0.1` (protocol step, not a proof).
-2. One config frozen per candidate.
+1. H2 validation recorded (protocol step, not a proof).
+2. One config frozen per candidate — recorded 2026-08-23; see `docs/H2/FROZEN-CONFIGS-V0.1.md`.
 3. Immutable final test, 32k → 1M, dual gate.
 4. Independent reproduction of the encoder result.
 5. A separate, later decision — not implied by (3) — about whether any primitive belongs near production CrystalCore.
@@ -86,7 +86,7 @@ H2 currently records wall-clock on the experimental runner and analytical fp32 e
 | Track | Status |
 |---|---|
 | H1 | Frozen · Unproven |
-| H2 | Methodology locked · Steps 1–3 recorded on `research/h2-extreme-context-v0.1` · configs not frozen · no claims |
+| H2 | Methodology locked · Steps 1–4 recorded · one frozen config per candidate · **no 1M dual-gate** · no claims |
 | CrystalCore vs dense @ 1M | Unproven |
 | External / xAI pitch | Hold |
 
