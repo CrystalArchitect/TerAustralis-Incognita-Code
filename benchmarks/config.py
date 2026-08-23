@@ -43,7 +43,8 @@ BUCKETS = (
     ("extreme", 524288, 1_048_576),
 )
 
-# Development defaults — not frozen candidate configs
+# Development defaults — historical. Frozen configs live in frozen_configs.py
+# (GOVERNANCE step 4). Do not treat DEV as frozen.
 CANDIDATE_A_DEV = {
     "block_size": 1024,
     "local_window": 2,

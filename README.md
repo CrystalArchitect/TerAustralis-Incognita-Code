@@ -1,6 +1,6 @@
 # H2 Extreme-Context Primitive — Experimental Branch
 
-**Status:** Validation recorded · configs not frozen · no performance claims  
+**Status:** Configuration freeze recorded · no 1M dual-gate · no performance claims  
 **Methodology:** Fully frozen  
 **Performance claims:** Prohibited until final test
 
@@ -11,12 +11,14 @@ Locked methodology:
 * [`docs/H2/SPEC-V0.1.md`](docs/H2/SPEC-V0.1.md)
 * [`docs/H2/DATASET-PROTOCOL-V0.1.md`](docs/H2/DATASET-PROTOCOL-V0.1.md)
 * [`docs/H2/GOVERNANCE.md`](docs/H2/GOVERNANCE.md)
+* [`docs/H2/FROZEN-CONFIGS-V0.1.md`](docs/H2/FROZEN-CONFIGS-V0.1.md)
 
 Execution:
 
 1. 32k/64k reference-fidelity — recorded under [`results/reference-fidelity-32k-64k/`](results/reference-fidelity-32k-64k/)
 2. Development sweep — recorded under [`results/dev-sweep-v0.1/`](results/dev-sweep-v0.1/). **Not a configuration freeze.**
-3. Validation — recorded under [`results/validation-v0.1/`](results/validation-v0.1/). **Not a configuration freeze.** Not a 1M dual-gate decision.
+3. Validation — recorded under [`results/validation-v0.1/`](results/validation-v0.1/).
+4. Configuration freeze — recorded under [`results/config-freeze-v0.1/`](results/config-freeze-v0.1/). **Not a 1M dual-gate decision.**
 
 ---
 
