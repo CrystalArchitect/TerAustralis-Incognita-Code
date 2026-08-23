@@ -57,12 +57,12 @@
   --observatory-surface-deep: #0b1010;
   --observatory-line: rgba(232, 224, 207, .16);
   --observatory-line-strong: rgba(232, 224, 207, .34);
-  --observatory-copper: #91a9c2;
-  --observatory-sand: #c2c8df;
+  --observatory-copper: #aa91c9;
+  --observatory-sand: #d0c2e8;
   --observatory-green: #88b6a6;
   --observatory-violet: #a89bc5;
-  --observatory-warning: #a7b4cf;
-  --observatory-contested: #b79eaf;
+  --observatory-warning: #b5a5d2;
+  --observatory-contested: #c1a8c0;
   --observatory-built: var(--observatory-green);
   --observatory-vision: var(--observatory-violet);
   --observatory-proposed: var(--observatory-copper);
