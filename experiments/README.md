@@ -21,5 +21,17 @@ Independent systems: `reference`, `candidate_a`, `candidate_b`.
 Development partition only. Final seed family is refused.
 Receiver fidelity is the ranking axis. Bandwidth is recorded, not gated.
 
+## 3. Validation — not a configuration freeze
+
+```
+python3 experiments/run_validation.py --selftest
+python3 experiments/run_validation.py
+```
+
+Validation seed family only (`VAL_CORPUS_SEED`). Refuses `development`
+(already used in steps 1–2) and `final`. Configs under test are taken
+from each candidate's own published sweep ranking plus the Step-1
+development default. See `benchmarks/validation_configs.py`.
+
 **No performance claims. No 1M dual-gate decision. No configuration freeze.**
 Every report includes an Interpretation Boundary.
