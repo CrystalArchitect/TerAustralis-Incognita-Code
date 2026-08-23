@@ -1,8 +1,8 @@
 """H2 V0.1 frozen measurement + development defaults.
 
 Changing frozen fields is a protocol change (H2 V0.2).
-Candidate hyperparameters below are DEVELOPMENT defaults only —
-configuration freeze is GOVERNANCE step 4 and has not occurred.
+Candidate hyperparameters CANDIDATE_*_DEV below are DEVELOPMENT defaults only.
+Frozen configs live in frozen_configs.py (GOVERNANCE step 4, recorded).
 """
 
 PROTOCOL_VERSION = "H2-V0.1"
@@ -21,10 +21,12 @@ ATTN_BETA = 16.0
 WEIGHT_SEED = 0xC15A1001
 DEV_CORPUS_SEED = 0xC15A2001
 VAL_CORPUS_SEED = 0xC15A2002
-# Independent seed family. Do not use until the immutable final test.
+# Independent seed family. Unsealed only by experiments/run_final_test.py.
 FINAL_CORPUS_SEED = 0xC15A2F01
 
 FIDELITY_LENGTHS = (32768, 65536)
+# Immutable final test (GOVERNANCE step 5): 32k → 1M. Six lengths × 1000 = 6000.
+FINAL_LENGTHS = (32768, 65536, 131072, 262144, 524288, 1_048_576)
 QUESTIONS_PER_LENGTH = 1000
 QUESTION_CLASSES = (
     "single_distant_fact",

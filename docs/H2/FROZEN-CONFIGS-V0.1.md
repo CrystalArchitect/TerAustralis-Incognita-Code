@@ -18,9 +18,11 @@ This freeze does **not** demonstrate:
 - CrystalCore production quality or an xAI-relevant advantage
 - Anything about H1, Optimus, or non-local coupling
 
-Bandwidth ratios remain ~0.70. The 1M gate requires ≤ 0.40 **and** quality LCB
-≥ 0.90 simultaneously. That gate has not been run. Final seed family remains
-sealed.
+Bandwidth ratios remain ~0.70 on the validation partition. The 1M gate
+requires ≤ 0.40 **and** quality LCB ≥ 0.90 simultaneously. That gate is
+recorded in [`../../results/final-test-v0.1/`](../../results/final-test-v0.1/)
+(GOVERNANCE steps 5–6). This freeze document is not that record.
+
 
 ## Freeze rule (locked before selection)
 
@@ -63,8 +65,9 @@ No new compute. Numbers are copied from the validation record.
 On the validation partition, B’s sweep_rank_2 outranked sweep_rank_1. Sweep
 rank is not the freeze; the rule above is.
 
-## What happens next
+## What happened next
 
 GOVERNANCE step 5: immutable final test, 32k → 1M, **only** these two configs
-plus the dense reference. Not ordered. Final seed family stays sealed until
-that order.
+plus the dense reference — recorded 2026-08-23. Dual-gate **fail** (quality
+LCB pass, analytical BW/ref fail). See [`../../results/final-test-v0.1/`](../../results/final-test-v0.1/).
+

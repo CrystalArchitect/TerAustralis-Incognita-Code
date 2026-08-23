@@ -39,6 +39,18 @@ One config per candidate, selected from the validation record by the
 rule in `docs/H2/FROZEN-CONFIGS-V0.1.md`. Machine copy:
 `benchmarks/frozen_configs.py`. Record: `results/config-freeze-v0.1/`.
 
-**No performance claims. No 1M dual-gate decision.** Final seed family
-remains sealed until step 5 is ordered. Every report includes an
-Interpretation Boundary.
+## 5. Immutable final test (32k → 1M)
+
+```
+python3 experiments/run_final_test.py --selftest
+python3 experiments/run_final_test.py
+```
+
+Final seed family is unsealed **only** by this runner. Frozen configs only
+(`benchmarks/frozen_configs.py`) + dense reference. Dual-gate evaluated at
+1M tokens. Development and validation seeds are not reused.
+
+Record: `results/final-test-v0.1/`. Dual-gate at 1M: **fail** for both
+frozen configs (quality LCB ≥ 0.90; analytical BW/ref ≰ 0.40). Not a
+language-model result. Not a CrystalCore product claim.
+

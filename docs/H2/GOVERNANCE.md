@@ -15,7 +15,10 @@
 2. Development sweep — recorded (not a freeze)
 3. Validation — recorded (not a freeze)
 4. Configuration freeze — recorded 2026-08-23; [`FROZEN-CONFIGS-V0.1.md`](FROZEN-CONFIGS-V0.1.md)
-5. Immutable final test (32k → 1M) — **not run**
-6. Decision against dual gates — **not taken**
+5. Immutable final test (32k → 1M) — recorded 2026-08-23; [`../../results/final-test-v0.1/`](../../results/final-test-v0.1/)
+6. Decision against dual gates — **fail** for both frozen configs (quality LCB pass, bandwidth fail; simultaneous gate not met). See the final-test SCOPE.
 
-No performance claims until step 5 is complete.
+No performance claims beyond this locked record. The fail is on the synthetic
+associative-memory encoder under the V0.1 analytical bandwidth model. It is
+not a language-model result and not a CrystalCore product claim.
+
