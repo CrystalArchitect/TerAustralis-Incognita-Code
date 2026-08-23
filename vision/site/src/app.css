@@ -593,8 +593,8 @@ pre code{position:relative;z-index:1}
 
 html { background: var(--observatory-bg); }
 body { background: var(--observatory-bg); color: var(--observatory-ink); font-family: var(--observatory-font-body); }
-body::before { background: radial-gradient(70% 55% at 72% 8%, rgba(93, 125, 116, .13), transparent 70%), radial-gradient(65% 50% at 12% 42%, rgba(150, 103, 62, .08), transparent 70%), var(--observatory-bg); }
-body::after { background: radial-gradient(50% 50% at 50% 50%, rgba(199, 144, 96, .08), transparent 70%); }
+body::before { background: radial-gradient(70% 55% at 72% 8%, rgba(93, 125, 116, .13), transparent 70%), radial-gradient(65% 50% at 12% 42%, rgba(101, 119, 157, .10), transparent 70%), var(--observatory-bg); }
+body::after { background: radial-gradient(50% 50% at 50% 50%, rgba(145, 169, 194, .08), transparent 70%); }
 .stars { opacity: .34; background-image: radial-gradient(1px 1px at 14% 18%, rgba(232,224,207,.8) 50%, transparent 51%), radial-gradient(1px 1px at 74% 12%, rgba(232,224,207,.7) 50%, transparent 51%), radial-gradient(1px 1px at 88% 52%, rgba(232,224,207,.7) 50%, transparent 51%), radial-gradient(1px 1px at 34% 68%, rgba(232,224,207,.6) 50%, transparent 51%), radial-gradient(1px 1px at 58% 84%, rgba(232,224,207,.55) 50%, transparent 51%); }
 .wrap { max-width: 1180px; padding: 0 34px; }
 .starline { left: 12px; opacity: .45; background-image: linear-gradient(to bottom, var(--observatory-violet), var(--observatory-copper) 50%, var(--observatory-green)); }
