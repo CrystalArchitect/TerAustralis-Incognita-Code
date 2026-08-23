@@ -46,3 +46,31 @@
   /* Glow — consumed by the motion utilities */
   --glow-color: var(--silver);
 }
+
+/* Southern Observatory layer: restrained mineral, archival, and night-sky roles. */
+:root {
+  --observatory-ink: #f0eadb;
+  --observatory-ivory: #e8e0cf;
+  --observatory-muted: #a8aaa0;
+  --observatory-bg: #080b0b;
+  --observatory-surface: #111817;
+  --observatory-surface-deep: #0b1010;
+  --observatory-line: rgba(232, 224, 207, .16);
+  --observatory-line-strong: rgba(232, 224, 207, .34);
+  --observatory-copper: #c79060;
+  --observatory-sand: #d9b77b;
+  --observatory-green: #88b6a6;
+  --observatory-violet: #a89bc5;
+  --observatory-warning: #d6a46f;
+  --observatory-contested: #bd8a83;
+  --observatory-built: var(--observatory-green);
+  --observatory-vision: var(--observatory-violet);
+  --observatory-proposed: var(--observatory-copper);
+  --observatory-experiment: var(--observatory-sand);
+  --observatory-font-display: 'Cormorant Garamond', 'Iowan Old Style', 'Baskerville', Georgia, serif;
+  --observatory-font-body: 'DM Sans', Inter, system-ui, sans-serif;
+  --observatory-font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: var(--observatory-font-display);
+  --font-body: var(--observatory-font-body);
+  --font-mono: var(--observatory-font-mono);
+}
