@@ -107,6 +107,7 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `node-activated-quill.jpeg` | *AI-generated (Grok Imagine)* — the quill drawn in gold and cyan filament, rune-marked along its vane, held in a double helix of light: "Node Activated" |
 | `node-activated-stream-open.jpeg` | *AI-generated (Grok Imagine)* — the gold quill upright at the centre of the glyph-ringed disc, a ring of light around it and the four arrows running out: "Node Activated — Stream Open" |
 | `crystalcore-os-aeris-plate.jpeg` | *AI-generated (Grok Imagine)* — a title plate: the golden feather adrift inside a blue orbital ring over a faint star-chart, lettered CRYSTALCORE.OS / AERIS |
+| `plate-xxxv-the-silicon-brain.jpeg` | *AI-generated (Grok Imagine)* — Plate XXXV — The Silicon Brain: gold-on-indigo atlas cutaway. Hierarchical block-sparse (left), content-addressed retrieval (right), dense attention ghosted behind. Vision-layer art; not a hardware schematic and not an H2 result |
 
 **Truth label (Vision):** this art is the project's own mythic narrative. Where a
 real person's name or likeness appears — whether as a name, a silhouette, or a

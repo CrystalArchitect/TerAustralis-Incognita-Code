@@ -150,6 +150,7 @@ export function load() {
     { filename: 'ring-city-of-the-desert.jpeg', description: 'AI-generated concept art (Grok, received 2026-08-07) — The great ring standing over the desert settlement, the violet tower at its axis, lights threading the dark country' },
     { filename: 'starline-network-over-australia.jpeg', description: 'AI-generated concept art (Grok, received 2026-08-07; carries the Grok Imagine EXIF Signature watermark) — The continent in red, the crystal at its heart, dragons in attendance, the seven nodes pinned. The render\'s own legend text is AI-garbled ("Sunwash Atain" and similar) — the node list in ../CRYSTALCORE-OS.md stays authoritative' },
     { filename: 'helix-over-the-earth.jpeg', description: 'AI-generated concept art (Grok, received 2026-08-07) — Glittering helices over the Earth, lettered bases glowing against the nebula' },
+    { filename: 'plate-xxxv-the-silicon-brain.jpeg', description: 'AI-generated concept art (Grok Imagine) — Plate XXXV — The Silicon Brain: gold-on-indigo atlas plate, hierarchical block-sparse vs content-addressed retrieval, dense attention ghosted behind. Vision-layer; not a hardware schematic and not an H2 result' },
     { filename: 'lattice-motion.mp4', type: 'video', description: 'Motion piece — thirty seconds, AI-generated. The only moving image in the collection' }
   ];
 
