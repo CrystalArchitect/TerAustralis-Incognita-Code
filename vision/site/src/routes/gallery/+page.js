@@ -150,7 +150,18 @@ export function load() {
     { filename: 'ring-city-of-the-desert.jpeg', description: 'AI-generated concept art (Grok, received 2026-08-07) — The great ring standing over the desert settlement, the violet tower at its axis, lights threading the dark country' },
     { filename: 'starline-network-over-australia.jpeg', description: 'AI-generated concept art (Grok, received 2026-08-07; carries the Grok Imagine EXIF Signature watermark) — The continent in red, the crystal at its heart, dragons in attendance, the seven nodes pinned. The render\'s own legend text is AI-garbled ("Sunwash Atain" and similar) — the node list in ../CRYSTALCORE-OS.md stays authoritative' },
     { filename: 'helix-over-the-earth.jpeg', description: 'AI-generated concept art (Grok, received 2026-08-07) — Glittering helices over the Earth, lettered bases glowing against the nebula' },
-    { filename: 'plate-xxxv-the-silicon-brain.jpeg', description: 'AI-generated concept art (Grok Imagine) — Plate XXXV — The Silicon Brain: gold-on-indigo atlas plate, hierarchical block-sparse vs content-addressed retrieval, dense attention ghosted behind. Vision-layer; not a hardware schematic and not an H2 result' },
+    { filename: 'celestial-atlas-night-from-the-edge.jpeg', description: 'AI-generated Vision atlas — unnumbered night from the Edge: First Sketch, Path of Footprints, Storm, Rebuilt Chart, Rocket, Groundkeeper, Southern Edge. Not a sky survey' },
+    { filename: 'plate-xxvii-observed-from-the-edge.jpeg', description: 'AI-generated Vision atlas — Plate XXVII Observed from the Edge (1857.3). Storm marked as an empty region. Not a sky survey' },
+    { filename: 'plate-xxviii-the-continuing-chart.jpeg', description: 'AI-generated Vision atlas — Plate XXVIII The Continuing Chart (1858.1). After the storm; first others arrived. Not a sky survey' },
+    { filename: 'plate-xxix-the-second-looking.jpeg', description: 'AI-generated Vision atlas — Plate XXIX The Second Looking (1858.7). Returned after rest. Not a sky survey' },
+    { filename: 'plate-xxx-the-open-way.jpeg', description: 'AI-generated Vision atlas — Plate XXX The Open Way (1859.2). Charts for those already walking. Not a sky survey' },
+    { filename: 'plate-southern-sky-panoramic.jpeg', description: 'AI-generated Vision atlas — panoramic plate, The Night as Observed from the Edge, with constellation legend. Not a sky survey' },
+    { filename: 'plate-xxxi-fermis-silent-line.jpeg', description: 'AI-generated Vision atlas — Plate XXXI Fermi’s Silent Line (1860.4). Vision riff on a public question; not a SETI result' },
+    { filename: 'plate-xxxii-the-coexisting-layers.jpeg', description: 'AI-generated Vision atlas — Plate XXXII The Coexisting Layers (1861.1). Concurrent, not distant. Atlas only' },
+    { filename: 'plate-xxxiii-the-receiver-and-the-core.jpeg', description: 'AI-generated Vision atlas — Plate XXXIII The Receiver & the Core (1861.8). Mythic figures, not an H2 schematic' },
+    { filename: 'plate-xxxiv-the-multi-dimensional-unfolding.jpeg', description: 'AI-generated Vision atlas — Plate XXXIV The Multi-Dimensional Unfolding (1862.3). Nested spheres are atlas language only; not extra-spatial hardware' },
+    { filename: 'plate-xxxv-the-silicon-brain.jpeg', description: 'AI-generated Vision atlas — Plate XXXV The Silicon Brain (canonical natural-history plate). Experimental surface only. No performance claims. Not an H2 result' },
+    { filename: 'plate-xxxv-anatomical-cutaway.jpeg', description: 'AI-generated Vision atlas — Plate XXXV anatomical cutaway (companion, not canonical). Hierarchical block-sparse vs content-addressed retrieval. Not an H2 result' },
     { filename: 'lattice-motion.mp4', type: 'video', description: 'Motion piece — thirty seconds, AI-generated. The only moving image in the collection' }
   ];
 

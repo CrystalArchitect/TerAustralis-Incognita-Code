@@ -107,7 +107,18 @@ CC BY-NC-ND 4.0 — see `../content/LICENSE-CONTENT.md`.
 | `node-activated-quill.jpeg` | *AI-generated (Grok Imagine)* — the quill drawn in gold and cyan filament, rune-marked along its vane, held in a double helix of light: "Node Activated" |
 | `node-activated-stream-open.jpeg` | *AI-generated (Grok Imagine)* — the gold quill upright at the centre of the glyph-ringed disc, a ring of light around it and the four arrows running out: "Node Activated — Stream Open" |
 | `crystalcore-os-aeris-plate.jpeg` | *AI-generated (Grok Imagine)* — a title plate: the golden feather adrift inside a blue orbital ring over a faint star-chart, lettered CRYSTALCORE.OS / AERIS |
-| `plate-xxxv-the-silicon-brain.jpeg` | *AI-generated (Grok Imagine)* — Plate XXXV — The Silicon Brain: gold-on-indigo atlas cutaway. Hierarchical block-sparse (left), content-addressed retrieval (right), dense attention ghosted behind. Vision-layer art; not a hardware schematic and not an H2 result |
+| `plate-xxxv-the-silicon-brain.jpeg` | *AI-generated atlas plate* — **canonical Plate XXXV — The Silicon Brain**, natural-history form: feedstock → crystal → lattice → named H2 primitives. Footer: Experimental Surface Only · No Performance Claims. Vision-layer; not a hardware schematic and not an H2 result |
+| `plate-xxxv-anatomical-cutaway.jpeg` | *AI-generated (Grok Imagine)* — Plate XXXV companion cutaway (not canonical). Hierarchical block-sparse (left), content-addressed retrieval (right), dense attention ghosted behind |
+| `celestial-atlas-night-from-the-edge.jpeg` | *AI-generated atlas plate* — unnumbered night from the Edge (First Sketch, Storm, Rebuilt Chart, Rocket, Groundkeeper). Vision only |
+| `plate-xxvii-observed-from-the-edge.jpeg` | *AI-generated atlas plate* — Plate XXVII, Observed from the Edge, epoch 1857.3. Storm as empty region |
+| `plate-xxviii-the-continuing-chart.jpeg` | *AI-generated atlas plate* — Plate XXVIII, The Continuing Chart, epoch 1858.1 |
+| `plate-xxix-the-second-looking.jpeg` | *AI-generated atlas plate* — Plate XXIX, The Second Looking, epoch 1858.7 |
+| `plate-xxx-the-open-way.jpeg` | *AI-generated atlas plate* — Plate XXX, The Open Way, epoch 1859.2 |
+| `plate-southern-sky-panoramic.jpeg` | *AI-generated atlas plate* — panoramic Night as Observed from the Edge, with constellation legend |
+| `plate-xxxi-fermis-silent-line.jpeg` | *AI-generated atlas plate* — Plate XXXI, Fermi’s Silent Line. Vision riff; not a SETI result |
+| `plate-xxxii-the-coexisting-layers.jpeg` | *AI-generated atlas plate* — Plate XXXII, The Coexisting Layers. Atlas only |
+| `plate-xxxiii-the-receiver-and-the-core.jpeg` | *AI-generated atlas plate* — Plate XXXIII, The Receiver & the Core. Mythic figures, not an H2 schematic |
+| `plate-xxxiv-the-multi-dimensional-unfolding.jpeg` | *AI-generated atlas plate* — Plate XXXIV, The Multi-Dimensional Unfolding. Nested spheres are atlas language only |
 
 **Truth label (Vision):** this art is the project's own mythic narrative. Where a
 real person's name or likeness appears — whether as a name, a silhouette, or a
