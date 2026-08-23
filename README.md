@@ -12,10 +12,10 @@ Locked methodology:
 * [`docs/H2/DATASET-PROTOCOL-V0.1.md`](docs/H2/DATASET-PROTOCOL-V0.1.md)
 * [`docs/H2/GOVERNANCE.md`](docs/H2/GOVERNANCE.md)
 
-Execution (step 1 of 6): 32k/64k reference-fidelity measurements on the
-development partition are recorded under
-[`results/reference-fidelity-32k-64k/`](results/reference-fidelity-32k-64k/).
-They are not a 1M dual-gate decision.
+Execution:
+
+1. 32k/64k reference-fidelity — recorded under [`results/reference-fidelity-32k-64k/`](results/reference-fidelity-32k-64k/)
+2. Development sweep — recorded under [`results/dev-sweep-v0.1/`](results/dev-sweep-v0.1/). **Not a configuration freeze.** Not a 1M dual-gate decision.
 
 ---
 

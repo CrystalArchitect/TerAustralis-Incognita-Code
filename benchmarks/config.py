@@ -59,3 +59,8 @@ CANDIDATE_B_DEV = {
     "refinement_stages": 2,
     "group_size": 4,
 }
+
+# Development-sweep subsample of the development partition.
+# Not the 1000-item primary set. Not validation. Not final.
+SWEEP_QUESTIONS_PER_LENGTH = 100
+SWEEP_LENGTHS = FIDELITY_LENGTHS
