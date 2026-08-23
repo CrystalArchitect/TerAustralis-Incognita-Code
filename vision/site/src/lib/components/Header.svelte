@@ -4,7 +4,7 @@
     { label: 'Built', href: '/clementine' },
     { label: 'Proposal', href: 'https://proposal.teraustralis.com.au/' },
     { label: 'Codex', href: '/codex' },
-    { label: 'Atlas', href: '/docs/celestial-atlas-southern-sky' },
+    { label: 'Atlas', href: '/atlas' },
     { label: 'Archive', href: '/docs' },
     { label: 'Governance', href: '/docs/governance' }
   ];
