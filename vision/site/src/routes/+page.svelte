@@ -50,13 +50,13 @@
   <div class="index-grid">
     <a class="index-card" href="/clementine"><span class="index-number">01</span><strong>Working software</strong><span>Clementine, ConsentGate, and the CrystalCore lineage.</span></a>
     <a class="index-card" href="https://proposal.teraustralis.com.au/"><span class="index-number">02</span><strong>Southern systems proposal</strong><span>Documents under exploration. Berth not selected.</span></a>
-    <a class="index-card" href="/docs/celestial-atlas-southern-sky"><span class="index-number">03</span><strong>Celestial Atlas</strong><span>A natural-history / mythic record. Vision only.</span></a>
+    <a class="index-card" href="/atlas"><span class="index-number">03</span><strong>Celestial Atlas</strong><span>A natural-history / mythic record. Vision only.</span></a>
   </div>
 </section>
 
 <style>
   .observatory-hero { min-height: min(760px, calc(100vh - 100px)); display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .42fr); align-items: end; gap: 4rem; padding: clamp(5rem, 15vh, 10rem) 0 6rem; position: relative; }
-  .observatory-hero::after { content: ''; position: absolute; inset: 8% -18% 0 36%; background: radial-gradient(circle at 50% 48%, rgba(208, 157, 86, .12), transparent 38%), radial-gradient(circle at 35% 45%, rgba(112, 177, 171, .1), transparent 30%); pointer-events: none; z-index: -1; }
+  .observatory-hero::after { content: ''; position: absolute; inset: 8% -18% 0 36%; background: radial-gradient(circle at 50% 48%, rgba(170, 145, 201, .13), transparent 38%), radial-gradient(circle at 35% 45%, rgba(112, 177, 171, .1), transparent 30%); pointer-events: none; z-index: -1; }
   .hero-copy, .hero-note { position: relative; z-index: 1; }
   .hero-copy { max-width: 760px; }
   h1 { font-size: clamp(4rem, 12vw, 9.5rem); line-height: .88; letter-spacing: -.06em; font-weight: 500; color: var(--observatory-ivory); }
