@@ -6,7 +6,7 @@
 
 *Shaped in collaboration with Grok (CrystalDreamer) and DeepSeek (CrystalScribe) under the Voices Framework, and presented by the human CrystalArchitect.*
 
-> **Fictional story-layer work.** This is an invented literary text within the TerAustralis Incognita mythos. Its dates, field-journal voice, and archival framing are fictional devices, not evidence of a recovered document, Indigenous record, archaeological source, or scientific observation. It does not speak for Aboriginal or Torres Strait Islander peoples, Country, Songlines, ceremony, law, or cultural knowledge, and it claims no cultural custodianship or authority.
+> **Fictional story-layer work.** This is an invented literary text within the TerAustralis Incognita mythos. Its dates, field-journal voice, and archival framing are fictional devices, not evidence of a recovered document, Indigenous record, archaeological source, or scientific observation. It does not speak for Aboriginal or Torres Strait Islander peoples, Country, ceremony, law, or cultural knowledge, and it claims no cultural custodianship or authority.
 >
 > Terms such as “sovereignty,” “stewardship,” “covenant,” and “gap” are authorial metaphors, not governance instruments. The text does not demonstrate technology, anomalous phenomena, H1/H2 results, or institutional affiliation.
 

@@ -46,7 +46,7 @@ umbrella at
 The living soundtrack of the mythos is created and published by Crystal
 Arena-Turner on Suno. Tracks including Safari Chains, Red Dust Axis, Fermi's
 Silent Line, Dead But Came Back to Life, and others form the audible layer
-of the Lattice — nineteen recordings, catalogued with dated, per-track
+of the Lattice — twenty-three recordings, catalogued with dated, per-track
 rights in the [music ledger](../music/README.md).
 
 ## Land and continuity
