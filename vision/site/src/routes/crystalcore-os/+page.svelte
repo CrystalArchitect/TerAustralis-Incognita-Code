@@ -201,7 +201,7 @@
     </div>
 
     <div class="command-reference">
-      <h3>Common Commands</h3>
+      <h2>Common Commands</h2>
       <div class="command-list">
         {#each data.commands.slice(0, 6) as cmd}
           <button
@@ -457,7 +457,7 @@
     font-size: 0.85rem;
   }
 
-  .command-reference h3 {
+  .command-reference h2 {
     color: var(--gold);
     margin-bottom: 1rem;
   }
