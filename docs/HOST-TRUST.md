@@ -1,9 +1,9 @@
 # Host Trust — Design Spec
 
 Status: **wired for `consent_transport` persist, CrystalBridge grants,
-companion `memory.json`, audit/ask/revocation append, and StarlineAgent
-home mkdir.** Fragments stay RAM. Job-scoped temp only on GitHub-hosted
-shared jobs. 2026-08-25.
+companion `memory.json` (atomic replace), audit/ask/revocation append,
+and StarlineAgent home mkdir.** Fragments stay RAM. Job-scoped temp only
+on GitHub-hosted shared jobs. 2026-08-25.
 
 This document adds a missing trust boundary: **where code is running**.
 ConsentGate already fail-closes on *who* is asking and *what* they may
@@ -102,7 +102,8 @@ Called from:
 - `crystalcore.config.write_json_atomic` — `token-mint`
   (covers `--mint-token` / grants file)
 - `crystalcore.mind.companion.CrystalCore.save` — `memory-private-write`
-  (`memory.json`; `config.json` is the same directory)
+  (`memory.json` then `config.json`; fsync + `os.replace`, 0600. A crash
+  mid-write no longer destroys the previous store.)
 - `crystalcore.audit._append_private` — `audit-append` (guest pending +
   audit jsonl). Guest gate already treats `OSError` as ask-record refuse.
 - `crystalcore.revocation.append_revocation` — `audit-append`
