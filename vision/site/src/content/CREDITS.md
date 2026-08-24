@@ -8,7 +8,6 @@ so far.
 
 - **Crystal Arena-Turner** — CrystalArchitect, Operator, primary author of
   the mythos and the living project. Australian-born. Red dust to rockets.
-  Songlines to Starlines.
 
 ## Voices framework
 
