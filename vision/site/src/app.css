@@ -609,4 +609,17 @@ header.site { padding: 28px 0 20px; border-bottom: 1px solid var(--observatory-l
 .btn-primary { background: var(--observatory-copper); color: #10100d; box-shadow: none; }
 .btn-ghost { border-color: var(--observatory-line-strong); }
 footer.site { padding-left: 0; }
+
+/* Accessibility: footer links must not rely on colour alone. */
+footer.site a {
+  color: var(--observatory-ivory);
+  text-decoration-line: underline;
+  text-decoration-thickness: .08em;
+  text-underline-offset: .2em;
+}
+footer.site a:hover,
+footer.site a:focus-visible {
+  color: var(--observatory-sand);
+}
+
 @media (max-width: 720px) { .wrap { padding: 0 20px; } .starline { display: none; } }
