@@ -77,10 +77,13 @@ def require_steward_persist(
     *,
     env: dict[str, str] | None = None,
 ) -> None:
-    """Refuse durable steward writes on shared/unknown hosts.
+    """Refuse steward writes on shared/unknown hosts.
 
-    Scratch under the process temp dir is allowed: GitHub-hosted
-    self-tests mint throwaway identities there. That is not a home.
+    Job-scoped scratch (path under the process temp dir) is allowed only
+    when the host is `shared` and `GITHUB_ACTIONS=true`: GitHub-hosted
+    VMs die with the job. Persistent vendor pools often mount `/tmp` on
+    the same disk as the workspace; `unknown` does not get that exception.
+
     `CRYSTAL_HOST_ALLOW_EPHEMERAL=1` allows any path (explicit hatch).
     """
     e = os.environ if env is None else env
@@ -89,11 +92,15 @@ def require_steward_persist(
         return
     if (e.get("CRYSTAL_HOST_ALLOW_EPHEMERAL") or "").strip() == "1":
         return
-    if is_ephemeral_path(path, env=e):
+    if (
+        host is HostClass.SHARED
+        and e.get("GITHUB_ACTIONS") == "true"
+        and is_ephemeral_path(path, env=e)
+    ):
         return
     raise PermissionError(
         f"host trust: refuse {operation} on {host.value} host "
-        f"(path {path} is not ephemeral). "
-        "Set CRYSTAL_HOST_CLASS=local on a machine you control, or write "
-        "only under the process temp dir."
+        f"(path {path} is not job-scoped scratch). "
+        "Set CRYSTAL_HOST_CLASS=local on a machine you control. "
+        "Temp dir is only allowed on GitHub-hosted shared jobs."
     )

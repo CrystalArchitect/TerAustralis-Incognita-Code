@@ -1,8 +1,8 @@
 # Host Trust — Design Spec
 
-Status: **wired for `consent_transport` persist.** CrystalBridge
-(`write_json_atomic` / mint-token / private memory) is still open.
-2026-08-25.
+Status: **wired for `consent_transport` persist and CrystalBridge
+`write_json_atomic`.** Job-scoped temp only on GitHub-hosted shared
+jobs. 2026-08-25.
 
 This document adds a missing trust boundary: **where code is running**.
 ConsentGate already fail-closes on *who* is asking and *what* they may
@@ -52,9 +52,14 @@ Durable steward material:
 - private memory write
 - peer-save
 
-**Exception — ephemeral scratch.** Writes whose resolved path is under
-`tempfile.gettempdir()` (or `$TMPDIR` / `$TEMP`) are allowed. GitHub-hosted
-self-tests mint throwaway identities there. That is not a home.
+**Exception — job-scoped scratch only.** Writes under
+`tempfile.gettempdir()` (or `$TMPDIR` / `$TEMP`) are allowed **only**
+when the host is `shared` **and** `GITHUB_ACTIONS=true`. GitHub-hosted
+VMs die with the job. That is not a home.
+
+`unknown` refuses even `/tmp`. Persistent vendor pools (HADES-class)
+often mount `/tmp` on the same disk as the workspace. A path named tmp
+is not a different lifetime there.
 
 **Hatch.** `CRYSTAL_HOST_ALLOW_EPHEMERAL=1` allows any path. It is an
 explicit override, not a default, and it does not reclassify the host.
@@ -80,8 +85,11 @@ Prove: `cd core/crystal-core && python3 -m host_trust.selftest`
 ## Wired (2026-08-25)
 
 `require_steward_persist(operation, path)` is the choke. On
-`shared` / `unknown` it raises `PermissionError` unless the path is
-ephemeral or the hatch is set.
+`shared` / `unknown` it raises `PermissionError` unless:
+
+- the host is `shared` and `GITHUB_ACTIONS=true` and the path is under
+  the process temp dir (job-scoped scratch), or
+- the hatch is set.
 
 Called from:
 
@@ -89,26 +97,30 @@ Called from:
 - `consent_transport.consent._write_json_atomic` — `consent-save`
   (covers `ConsentEngine.save` and `TokenStore.save`)
 - `consent_transport.peers.PeerStore.save` — `peer-save`
+- `crystalcore.config.write_json_atomic` — `token-mint`
+  (covers `--mint-token` / grants file)
 
 GitHub-hosted CI stays green because those suites write under the
-process temp dir. A durable path (`/usr/...`, cwd, `$HOME`) on a pooled
-box is the thing that must fail.
+process temp dir **and** set `GITHUB_ACTIONS`. A durable path
+(`/usr/...`, cwd, `$HOME`) on a pooled box is the thing that must fail.
+An `unknown` host (this class of vendor sandbox, a desk that has not
+declared itself) refuses `/tmp` too.
 
 This is not a sixth ConsentGate door. Provenance is still *who*. Host
 trust is *where*. The five guest doors do not move.
 
 ## Still open
 
-- CrystalBridge `crystalcore.config.write_json_atomic` (mint-token,
-  grants file, private memory). Import path is `core/`, not
-  `crystal-core/`. Not this commit.
-- Fragment persist and private memory write are named in
-  `STEWARD_PERSIST` and not yet called from those writers.
+- Companion `memory.json` `write_text` (`crystalcore.mind.companion`) —
+  `memory-private-write` is named in `STEWARD_PERSIST` and not yet
+  called from that writer.
+- Fragment persist is named and not yet called from those writers.
+- Audit / revocation append paths are not this choke.
 - A self-hosted runner is a **path**, not a plug. Default CI stays
   GitHub-hosted. See [`docs/deployment/STEWARD-RUNNER.md`](deployment/STEWARD-RUNNER.md).
 
-Until CrystalBridge is wired, that write path can still land durable
-grants on a pool. The hole is named.
+Do not detect a vendor hostname as a `HostClass`. That couples the
+framework to one allocator. Unknown already refuses.
 
 ## Mapping
 

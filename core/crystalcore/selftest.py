@@ -637,7 +637,10 @@ def test_layers_beyond_semantic_never_reach_guests():
 
 def test_write_json_atomic_replaces_only_after_the_bytes_are_complete():
     """`--mint-token` used to write_text the grants file in place.
-    A crash mid-write destroyed the previous consent document."""
+    A crash mid-write destroyed the previous consent document.
+
+    Declares local so this test is the atomic write, not host trust.
+    """
     import json
     import os
     import stat
@@ -645,34 +648,134 @@ def test_write_json_atomic_replaces_only_after_the_bytes_are_complete():
 
     from crystalcore.config import write_json_atomic
 
-    with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / "bridge_config.json"
-        path.write_text('{"keep": true}\n', encoding="utf-8")
-        write_json_atomic(path, {"guests": {"claude": {"token_hash": "abc"}}})
-        data = json.loads(path.read_text(encoding="utf-8"))
-        assert data["guests"]["claude"]["token_hash"] == "abc"
-        assert not path.with_name(path.name + ".tmp").exists()
-        mode = stat.S_IMODE(path.stat().st_mode)
-        assert mode & 0o077 == 0, f"grants file is {oct(mode)}"
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "local"
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bridge_config.json"
+            path.write_text('{"keep": true}\n', encoding="utf-8")
+            write_json_atomic(path, {"guests": {"claude": {"token_hash": "abc"}}})
+            data = json.loads(path.read_text(encoding="utf-8"))
+            assert data["guests"]["claude"]["token_hash"] == "abc"
+            assert not path.with_name(path.name + ".tmp").exists()
+            mode = stat.S_IMODE(path.stat().st_mode)
+            assert mode & 0o077 == 0, f"grants file is {oct(mode)}"
 
-        original = path.read_text(encoding="utf-8")
+            original = path.read_text(encoding="utf-8")
 
-        def boom(*_a, **_k):
-            raise OSError("disk full")
+            def boom(*_a, **_k):
+                raise OSError("disk full")
 
-        real_fsync = os.fsync
-        os.fsync = boom  # type: ignore[assignment]
-        try:
+            real_fsync = os.fsync
+            os.fsync = boom  # type: ignore[assignment]
             try:
-                write_json_atomic(path, {"destroyed": True})
-            except OSError:
-                pass
-            else:
-                raise AssertionError("fsync was supposed to raise")
-        finally:
-            os.fsync = real_fsync
-        assert path.read_text(encoding="utf-8") == original
-        assert "destroyed" not in path.read_text(encoding="utf-8")
+                try:
+                    write_json_atomic(path, {"destroyed": True})
+                except OSError:
+                    pass
+                else:
+                    raise AssertionError("fsync was supposed to raise")
+            finally:
+                os.fsync = real_fsync
+            assert path.read_text(encoding="utf-8") == original
+            assert "destroyed" not in path.read_text(encoding="utf-8")
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+
+
+def test_write_json_atomic_refuses_durable_on_pool():
+    """Grants file must not land on shared/unknown durable paths."""
+    import os
+
+    from crystalcore.config import write_json_atomic
+
+    path = Path("/usr/bridge_config_host_trust_test.json")
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            write_json_atomic(path, {"nope": True})
+            assert False, "durable grants on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_write_json_atomic_refuses_temp_on_unknown():
+    import os
+    import tempfile
+
+    from crystalcore.config import write_json_atomic
+
+    d = Path(tempfile.mkdtemp(prefix="bridge_unknown_tmp_"))
+    path = d / "bridge_config.json"
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ.pop("CRYSTAL_HOST_CLASS", None)
+    os.environ.pop("GITHUB_ACTIONS", None)
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            write_json_atomic(path, {"nope": True})
+            assert False, "temp grants on unknown must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+            assert "unknown" in str(exc)
+        assert not path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_write_json_atomic_allows_temp_on_github_hosted():
+    import os
+    import tempfile
+
+    from crystalcore.config import write_json_atomic
+
+    d = Path(tempfile.mkdtemp(prefix="bridge_gh_tmp_"))
+    path = d / "bridge_config.json"
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ["GITHUB_ACTIONS"] = "true"
+    try:
+        write_json_atomic(path, {"ok": True})
+        assert path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
 
 
 def main() -> int:
@@ -709,6 +812,9 @@ def main() -> int:
         test_guest_may_never_be_configured_to_write_private,
         test_layers_beyond_semantic_never_reach_guests,
         test_write_json_atomic_replaces_only_after_the_bytes_are_complete,
+        test_write_json_atomic_refuses_durable_on_pool,
+        test_write_json_atomic_refuses_temp_on_unknown,
+        test_write_json_atomic_allows_temp_on_github_hosted,
     ]
     for t in tests:
         t()

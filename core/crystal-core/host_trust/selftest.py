@@ -72,10 +72,30 @@ def test_override_beats_github_heuristic():
     assert classify(env) is HostClass.LOCAL
 
 
-def test_ephemeral_tmp_is_allowed_on_shared():
-    env = {"CRYSTAL_HOST_CLASS": "shared"}
+def test_ephemeral_tmp_is_allowed_on_github_hosted():
+    env = {"CRYSTAL_HOST_CLASS": "shared", "GITHUB_ACTIONS": "true"}
     d = Path(tempfile.mkdtemp(prefix="host_trust_eph_"))
     require_steward_persist("identity-mint", d / "identity.json", env=env)
+
+
+def test_ephemeral_tmp_refuses_on_unknown():
+    env = {}
+    d = Path(tempfile.mkdtemp(prefix="host_trust_unk_"))
+    try:
+        require_steward_persist("identity-mint", d / "identity.json", env=env)
+        assert False, "tmp on unknown must refuse"
+    except PermissionError as exc:
+        assert "unknown" in str(exc)
+
+
+def test_ephemeral_tmp_refuses_on_shared_without_github_actions():
+    env = {"CRYSTAL_HOST_CLASS": "shared"}
+    d = Path(tempfile.mkdtemp(prefix="host_trust_shared_no_ga_"))
+    try:
+        require_steward_persist("identity-mint", d / "identity.json", env=env)
+        assert False, "tmp on shared without GITHUB_ACTIONS must refuse"
+    except PermissionError as exc:
+        assert "shared" in str(exc)
 
 
 def test_durable_path_refuses_on_shared():
@@ -121,7 +141,9 @@ def main() -> int:
         test_github_actions_without_runner_env_is_shared,
         test_self_hosted_runner_is_delegated,
         test_override_beats_github_heuristic,
-        test_ephemeral_tmp_is_allowed_on_shared,
+        test_ephemeral_tmp_is_allowed_on_github_hosted,
+        test_ephemeral_tmp_refuses_on_unknown,
+        test_ephemeral_tmp_refuses_on_shared_without_github_actions,
         test_durable_path_refuses_on_shared,
         test_durable_path_refuses_on_unknown,
         test_hatch_allows_durable_on_shared,

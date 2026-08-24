@@ -1,10 +1,27 @@
 # STATUS
 
-Last updated: 2026-08-25 — Host trust persist wired on consent_transport.
-Older paragraphs below are a 2026-08-20 Start Ya Bastard ignition, a
-2026-08-20 atomic-save pass, a 2026-08-12 pass at `fe90e63`, plus a
-2026-08-08 full pass at `4358ede`; **suite counts in those paragraphs
-are stale.** Use this header for current numbers.
+Last updated: 2026-08-25 — Host trust: job-scoped tmp + CrystalBridge grants.
+Older paragraphs below are a 2026-08-25 persist-wire pass, a 2026-08-20
+Start Ya Bastard ignition, a 2026-08-20 atomic-save pass, a 2026-08-12
+pass at `fe90e63`, plus a 2026-08-08 full pass at `4358ede`; **suite
+counts in those paragraphs are stale.** Use this header for current
+numbers.
+
+## 2026-08-25 (tmp tighten + CrystalBridge)
+
+- Job-scoped scratch only when host is `shared` **and**
+  `GITHUB_ACTIONS=true`. `unknown` refuses `/tmp`. Persistent vendor
+  pools mount `/tmp` on the workspace disk; that is not scratch.
+- CrystalBridge `write_json_atomic` now calls `require_steward_persist`
+  (`token-mint`) before mkdir. Import path: `core/crystal-core` inserted
+  at runtime. Not a sixth ConsentGate door.
+- `host_trust.selftest` — **16/16**. `consent_transport.selftest` —
+  **78/78** (needs GitHub-hosted or `CRYSTAL_HOST_CLASS=local` to mint
+  throwaway identities). CrystalBridge self-test **35/35** (32 + 3
+  host-trust pins on `write_json_atomic`).
+- Still open: companion `memory.json` write_text, fragment persist,
+  audit append. Default CI stays GitHub-hosted. This does not unshare
+  HADES. This session is not local.
 
 ## 2026-08-25 (host trust wire)
 
