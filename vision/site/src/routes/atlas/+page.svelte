@@ -58,7 +58,7 @@
       </figure>
       <figure>
         <img src="/assets/art/atlas-ten-folio.webp" alt="The Ten Atlas summary plate showing ten Southern Edge constellations" loading="lazy" />
-        <figcaption><span>CHAPTER III</span><strong>The Ten</strong><small>A ceiling print that gathers the full myth of the Southern Edge.</small></figcaption>
+        <figcaption><span>CHAPTER III</span><strong>The Ten</strong><small>A ceiling print that gathers the full myth of the Southern Edge.</small><a class="summary-route" href="/atlas-ten">Open the single-chart reading ↗</a></figcaption>
       </figure>
     </div>
   </section>
@@ -171,6 +171,8 @@
   .summary-grid figcaption span { color: var(--observatory-copper); font: .62rem/1 var(--font-mono); letter-spacing: .14em; }
   .summary-grid figcaption strong { color: var(--observatory-ivory); font: italic 1.8rem/1 var(--font-display); }
   .summary-grid figcaption small { color: var(--observatory-muted); font-size: .8rem; line-height: 1.45; }
+  .summary-route { color: var(--observatory-copper); font: .62rem/1.3 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+  .summary-route:hover, .summary-route:focus-visible { text-decoration: underline; text-underline-offset: .25rem; }
   .atlas-companions { padding-top: 5.5rem; }
   .companion-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .9rem; margin-top: 2.5rem; }
   .companion-grid figure { margin: 0; }
