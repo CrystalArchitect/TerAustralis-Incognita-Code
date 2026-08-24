@@ -73,12 +73,15 @@ def test_identity_save_refuses_durable_path_on_shared_host():
             os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
 
 
-def test_identity_save_allows_temp_on_shared_host():
+def test_identity_save_allows_temp_on_github_hosted_shared():
+    """GitHub-hosted VMs die with the job. Temp there is scratch."""
     import os
 
     d = Path(tempfile.mkdtemp(prefix="starline_test_shared_tmp_"))
     old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
     os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ["GITHUB_ACTIONS"] = "true"
     try:
         Identity.generate().save(d / "identity.json")
         assert (d / "identity.json").exists()
@@ -87,6 +90,45 @@ def test_identity_save_allows_temp_on_shared_host():
             os.environ.pop("CRYSTAL_HOST_CLASS", None)
         else:
             os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+
+
+def test_identity_save_refuses_temp_on_unknown_host():
+    """Persistent pools mount /tmp on the workspace disk. Unknown is not scratch."""
+    import os
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_unknown_tmp_"))
+    path = d / "identity.json"
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ.pop("CRYSTAL_HOST_CLASS", None)
+    os.environ.pop("GITHUB_ACTIONS", None)
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            Identity.generate().save(path)
+            assert False, "temp save on unknown must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+            assert "unknown" in str(exc)
+        assert not path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
 
 
 def test_identity_roundtrip():
@@ -1631,7 +1673,8 @@ def main() -> int:
     tests = [
         test_identity_roundtrip,
         test_identity_save_refuses_durable_path_on_shared_host,
-        test_identity_save_allows_temp_on_shared_host,
+        test_identity_save_allows_temp_on_github_hosted_shared,
+        test_identity_save_refuses_temp_on_unknown_host,
         test_identity_file_is_never_group_or_world_readable,
         test_failed_save_leaves_the_old_identity_intact,
         test_oversized_handshake_frame_is_refused,

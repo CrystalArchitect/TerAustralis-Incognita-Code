@@ -36,6 +36,19 @@ MEMORY_TYPES = ("episodic", "semantic", "reflective")
 VISIBILITY_CLASSES = ("private", "shared")
 
 
+def _require_steward_persist(operation: str, path: Path) -> None:
+    """Host trust lives under crystal-core/; this package runs from core/."""
+    import sys
+
+    sibling = Path(__file__).resolve().parent.parent / "crystal-core"
+    s = str(sibling)
+    if s not in sys.path:
+        sys.path.insert(0, s)
+    from host_trust.classify import require_steward_persist
+
+    require_steward_persist(operation, path)
+
+
 def write_json_atomic(path: Path, obj: object) -> None:
     """Replace `path` with JSON only after the new bytes are complete.
 
@@ -43,8 +56,13 @@ def write_json_atomic(path: Path, obj: object) -> None:
     — the grants file — and lose the previous one. Write beside it,
     fsync, then `os.replace`. New files are 0600 (hashes of guest
     secrets live here).
+
+    Host trust refuses this write on shared/unknown hosts unless the
+    path is job-scoped GitHub scratch. Grants are durable steward
+    material.
     """
     path = Path(path)
+    _require_steward_persist("token-mint", path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
