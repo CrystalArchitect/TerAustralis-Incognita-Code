@@ -1,8 +1,9 @@
 # Host Trust — Design Spec
 
 Status: **wired for `consent_transport` persist, CrystalBridge grants,
-companion `memory.json`, and audit/ask/revocation append.** Job-scoped
-temp only on GitHub-hosted shared jobs. 2026-08-25.
+companion `memory.json`, audit/ask/revocation append, and StarlineAgent
+home mkdir.** Fragments stay RAM. Job-scoped temp only on GitHub-hosted
+shared jobs. 2026-08-25.
 
 This document adds a missing trust boundary: **where code is running**.
 ConsentGate already fail-closes on *who* is asking and *what* they may
@@ -108,6 +109,13 @@ Called from:
 - `consent_transport.asklog._append_private` — `audit-append`. Peer
   knock log still proceeds on `OSError` (including this refuse):
   telemetry, not consent.
+- `consent_transport.agent.StarlineAgent.__init__` — `identity-mint`
+  on `starline_identity.json` **before** `state_dir.mkdir`. An empty
+  directory on a pooled box is still a home.
+
+`add_local_fragment` does not call the choke and does not write. Fragments
+are RAM. There is no `starline_fragments.json`. Durable backing, if any,
+is companion `memory.json` (`memory-private-write`).
 
 GitHub-hosted CI stays green because those suites write under the
 process temp dir **and** set `GITHUB_ACTIONS`. A durable path
@@ -120,8 +128,9 @@ trust is *where*. The five guest doors do not move.
 
 ## Still open
 
-- Fragment persist is named and not yet called from those writers.
-  Fragments are RAM; do not invent a disk file so the name has a body.
+- `fragment-persist` stays named in `STEWARD_PERSIST`. There is still no
+  writer. RAM is pinned: `add_local_fragment` creates no disk file. Do
+  not invent `starline_fragments.json` so the name has a body.
 - A self-hosted runner is a **path**, not a plug. Default CI stays
   GitHub-hosted. See [`docs/deployment/STEWARD-RUNNER.md`](deployment/STEWARD-RUNNER.md).
 

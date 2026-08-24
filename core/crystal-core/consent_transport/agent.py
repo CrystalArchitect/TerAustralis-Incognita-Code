@@ -25,15 +25,23 @@ from .transport import Denied, StarlineClient, StarlineServer
 class StarlineAgent:
     def __init__(self, state_dir: Path = Path(".")):
         state_dir = Path(state_dir)
+        identity_path = state_dir / "starline_identity.json"
+        # Refuse before mkdir. An empty state_dir on a pooled box is still
+        # a home. Identity.save chokes the file; this chokes the directory.
+        from host_trust.classify import require_steward_persist
+
+        require_steward_persist("identity-mint", identity_path)
         state_dir.mkdir(parents=True, exist_ok=True)
-        self.identity = Identity.load_or_generate(state_dir / "starline_identity.json")
+        self.identity = Identity.load_or_generate(identity_path)
         self.peers = PeerStore(state_dir / "starline_peers.json")
         self.consent = ConsentEngine(self.identity, state_dir / "starline_consent.json")
         self.ask_log_path = state_dir / "starline_asks.jsonl"
         self._server: StarlineServer | None = None
-        self._local_fragments: list[MemoryFragment] = []  # in-memory demo store; a real
-        # companion would back this with its own persistent memory (e.g. the mind's
-        # memory.json), filtered through whatever the human has approved for sharing.
+        self._local_fragments: list[MemoryFragment] = []  # RAM only. Do not
+        # invent starline_fragments.json. Durable backing, if any, is the
+        # companion's memory.json (memory-private-write), already choked.
+        # fragment-persist stays named in STEWARD_PERSIST for a writer
+        # that does not exist.
 
     # ---------- identity ----------
 
