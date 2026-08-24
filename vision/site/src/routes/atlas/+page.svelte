@@ -39,6 +39,62 @@
     </div>
   </section>
 
+  <section class="atlas-summaries" aria-labelledby="summary-heading">
+    <div class="summary-head">
+      <div>
+        <p class="eyebrow">Chapter plates · collection summaries</p>
+        <h2 id="summary-heading">The map gathers itself</h2>
+      </div>
+      <p class="summary-note">Three visual index plates compress the journey into thematic constellations. They are companion works in the same vision layer.</p>
+    </div>
+    <div class="summary-grid">
+      <figure>
+        <img src="/assets/art/atlas-seven-folio.webp" alt="The Seven Atlas summary plate showing seven Southern Edge constellations" loading="lazy" />
+        <figcaption><span>CHAPTER I</span><strong>The Seven</strong><small>First lines, first figures, and the original Southern Edge constellation set.</small></figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/art/atlas-nine-folio.webp" alt="The Nine Atlas summary plate showing nine Southern Edge constellations" loading="lazy" />
+        <figcaption><span>CHAPTER II</span><strong>The Nine</strong><small>A widened field where the early signs become a shared chart.</small></figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/art/atlas-ten-folio.webp" alt="The Ten Atlas summary plate showing ten Southern Edge constellations" loading="lazy" />
+        <figcaption><span>CHAPTER III</span><strong>The Ten</strong><small>A ceiling print that gathers the full myth of the Southern Edge.</small></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="atlas-companions" aria-labelledby="companions-heading">
+    <div class="summary-head">
+      <div>
+        <p class="eyebrow">Companion plates · supplied folio</p>
+        <h2 id="companions-heading">The trail in close focus</h2>
+      </div>
+      <p class="summary-note">Alternate views of the same mythic trail: continuous, gilded, and gathered into the Southern Edge folio.</p>
+    </div>
+    <div class="companion-grid">
+      <figure>
+        <img src="/assets/art/atlas-ten-trail-square.webp" alt="The Ten continuous luminous trail connecting the Atlas figures" loading="lazy" />
+        <figcaption><span>CONTINUOUS TRAIL</span><strong>The Ten · night study</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/art/atlas-ten-trail-gilded.webp" alt="The Ten continuous trail rendered as a gilded Atlas print" loading="lazy" />
+        <figcaption><span>GILDED VARIANT</span><strong>The Ten · illuminated plate</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/art/atlas-ten-constellation-square.webp" alt="The Ten constellation map with the Southern Edge trail and ten figures" loading="lazy" />
+        <figcaption><span>CONSTELLATION INDEX</span><strong>The Ten · field map</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/art/atlas-ten-ceiling-square.webp" alt="The Ten ceiling-print variant of the Southern Edge Atlas" loading="lazy" />
+        <figcaption><span>CEILING PRINT</span><strong>The Ten · skyward view</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/art/atlas-ten-scroll-pair.webp" alt="The Ten parchment scroll pair listing the continuous trail from the First Sketch to the Far Horizon" loading="lazy" />
+        <figcaption><span>ARCHIVAL SCROLL</span><strong>The Ten · parchment record</strong></figcaption>
+      </figure>
+    </div>
+  </section>
+
   <section class="atlas-boundary" aria-label="Interpretation boundary">
     <span class="boundary-seal">VISION</span>
     <p>This series does not demonstrate extra-spatial compute, a silicon mind, non-local coupling, an H1 or H2 proof, hardware, or affiliation with any observatory or company named in the mythos.</p>
@@ -102,6 +158,26 @@
   .dream-circle img { width: 86%; height: 86%; object-fit: cover; border-radius: 50%; opacity: .84; filter: saturate(.72) contrast(1.06); clip-path: circle(47% at 50% 50%); }
   .circle-caption { position: absolute; right: 1%; bottom: 6%; display: grid; gap: .35rem; color: var(--observatory-ivory); font: .63rem/1.3 var(--font-mono); letter-spacing: .15em; text-align: right; text-transform: uppercase; }
   .circle-caption small { color: var(--observatory-muted); font: .7rem/1.2 var(--font-display); letter-spacing: .02em; text-transform: none; }
+  .atlas-summaries { padding-top: 5.5rem; }
+  .summary-head { display: flex; justify-content: space-between; gap: 3rem; align-items: end; }
+  .summary-note { max-width: 24rem; margin: 0 0 .35rem; color: var(--observatory-muted); font-size: .88rem; line-height: 1.5; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem; margin-top: 2.5rem; }
+  .summary-grid figure { margin: 0; }
+  .summary-grid img { display: block; width: 100%; height: 23rem; object-fit: cover; border: 1px solid var(--observatory-line-strong); background: #071019; }
+  .summary-grid figure:nth-child(1) img { object-position: center 30%; }
+  .summary-grid figure:nth-child(2) img { object-position: center 35%; }
+  .summary-grid figure:nth-child(3) img { object-position: center top; }
+  .summary-grid figcaption { display: grid; gap: .35rem; padding-top: .8rem; }
+  .summary-grid figcaption span { color: var(--observatory-copper); font: .62rem/1 var(--font-mono); letter-spacing: .14em; }
+  .summary-grid figcaption strong { color: var(--observatory-ivory); font: italic 1.8rem/1 var(--font-display); }
+  .summary-grid figcaption small { color: var(--observatory-muted); font-size: .8rem; line-height: 1.45; }
+  .atlas-companions { padding-top: 5.5rem; }
+  .companion-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .9rem; margin-top: 2.5rem; }
+  .companion-grid figure { margin: 0; }
+  .companion-grid img { display: block; width: 100%; height: 16rem; object-fit: cover; border: 1px solid var(--observatory-line-strong); background: #071019; }
+  .companion-grid figcaption { display: grid; gap: .3rem; padding-top: .65rem; }
+  .companion-grid figcaption span { color: var(--observatory-copper); font: .56rem/1.2 var(--font-mono); letter-spacing: .12em; }
+  .companion-grid figcaption strong { color: var(--observatory-ivory); font: italic 1.15rem/1.05 var(--font-display); }
   .atlas-boundary { display: grid; grid-template-columns: auto 1fr auto; gap: 1.25rem; align-items: center; padding: 1.4rem 0; border-top: 1px solid var(--observatory-line); border-bottom: 1px solid var(--observatory-line); }
   .boundary-seal,.vision-seal { color: var(--observatory-copper); font: .62rem/1 var(--font-mono); letter-spacing: .18em; }
   .boundary-seal { padding: .42rem .56rem; border: 1px solid var(--observatory-copper); }
@@ -135,8 +211,9 @@
   .plate-actions button:disabled { color: var(--observatory-muted); opacity: .4; cursor: not-allowed; }
   .plate-actions button:focus-visible { outline: 2px solid var(--observatory-copper); outline-offset: 5px; }
   .atlas-footer { margin-top: 5rem; padding-top: 1.2rem; border-top: 1px solid var(--observatory-line); color: var(--observatory-muted); font: italic 1rem/1.4 var(--font-display); text-align: center; }
-  @media (max-width: 820px) { .atlas-opening { grid-template-columns: 1fr; gap: 2rem; padding-top: 3rem; } .dream-circle { margin: 0 auto; } .atlas-boundary { grid-template-columns: auto 1fr; } .atlas-boundary a { grid-column: 2; } .plate-detail { grid-template-columns: 1fr; gap: 2.2rem; } .explorer-head { display: block; } .explorer-note { margin-top: 1rem; } }
-  @media (max-width: 520px) { .atlas-page { padding-top: 1rem; } h1 { font-size: 3.7rem; } .opening-boundary { align-items: flex-start; flex-direction: column; } .atlas-boundary { grid-template-columns: 1fr; } .atlas-boundary a { grid-column: auto; } .plate-nav button { min-width: 92px; } .plate-detail { padding-top: 2rem; } .circle-caption { right: 0; bottom: 0; } }
+  @media (max-width: 980px) { .companion-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 820px) { .summary-head { display: block; } .summary-note { margin-top: 1rem; } .summary-grid { grid-template-columns: 1fr; } .summary-grid img { height: 20rem; } .companion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .atlas-opening { grid-template-columns: 1fr; gap: 2rem; padding-top: 3rem; } .dream-circle { margin: 0 auto; } .atlas-boundary { grid-template-columns: auto 1fr; } .atlas-boundary a { grid-column: 2; } .plate-detail { grid-template-columns: 1fr; gap: 2.2rem; } .explorer-head { display: block; } .explorer-note { margin-top: 1rem; } }
+  @media (max-width: 520px) { .companion-grid { grid-template-columns: 1fr; } .companion-grid img { height: 20rem; } .atlas-page { padding-top: 1rem; } h1 { font-size: 3.7rem; } .opening-boundary { align-items: flex-start; flex-direction: column; } .atlas-boundary { grid-template-columns: 1fr; } .atlas-boundary a { grid-column: auto; } .plate-nav button { min-width: 92px; } .plate-detail { padding-top: 2rem; } .circle-caption { right: 0; bottom: 0; } }
   @media (prefers-reduced-motion: reduce) { .plate-nav button { scroll-behavior: auto; } }
 </style>
 
