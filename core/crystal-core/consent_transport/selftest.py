@@ -399,6 +399,106 @@ def test_ask_log_file_is_never_group_or_world_readable():
     assert stat.S_IMODE(loose.stat().st_mode) & 0o077 == 0
 
 
+def _append_ask(path):
+    from . import asklog
+
+    asklog.append_ask(
+        path,
+        dh_public_hex="00",
+        peer_fingerprint=None,
+        peer_label="",
+        kinds_requested=["mythic"],
+        since=0.0,
+        kinds_granted=[],
+        stage="unpaired",
+        decision="denied",
+        reason="x",
+    )
+
+
+def test_ask_log_refuses_durable_path_on_shared_host():
+    import os
+
+    path = Path("/usr/starline_asks_host_trust_test.jsonl")
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            _append_ask(path)
+            assert False, "durable ask log on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_ask_log_allows_temp_on_github_hosted_shared():
+    import os
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_ask_gh_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ["GITHUB_ACTIONS"] = "true"
+    try:
+        path = d / "asks.jsonl"
+        _append_ask(path)
+        assert path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+
+
+def test_ask_log_refuses_temp_on_unknown_host():
+    import os
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_ask_unknown_"))
+    path = d / "asks.jsonl"
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ.pop("CRYSTAL_HOST_CLASS", None)
+    os.environ.pop("GITHUB_ACTIONS", None)
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            _append_ask(path)
+            assert False, "temp ask log on unknown must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+            assert "unknown" in str(exc)
+        assert not path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
 def test_ask_log_ordering_and_timestamps_are_sane():
     """The owner reads this newest-first, and a strictly increasing clock
     is what makes 'who asked most recently' a meaningful question."""
@@ -1717,6 +1817,9 @@ def main() -> int:
         test_ask_is_logged_with_partial_grant_when_token_filters_some_kinds,
         test_ask_log_survives_a_reload,
         test_ask_log_file_is_never_group_or_world_readable,
+        test_ask_log_refuses_durable_path_on_shared_host,
+        test_ask_log_allows_temp_on_github_hosted_shared,
+        test_ask_log_refuses_temp_on_unknown_host,
         test_ask_log_ordering_and_timestamps_are_sane,
         test_ask_log_does_not_change_the_wire_reply,
         test_concurrent_asks_produce_clean_log_lines,

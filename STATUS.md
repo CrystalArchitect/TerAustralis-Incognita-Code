@@ -1,10 +1,22 @@
 # STATUS
 
-Last updated: 2026-08-25 — Host trust: companion memory.json persist refuse.
-Older paragraphs below are a 2026-08-25 tmp+grants pass, a persist-wire
-pass, a 2026-08-20 Start Ya Bastard ignition, and earlier; **suite
-counts in those paragraphs are stale.** Use this header for current
-numbers.
+Last updated: 2026-08-25 — Host trust: audit / ask / revocation append refuse.
+Older paragraphs below are a 2026-08-25 companion-memory pass, a tmp+grants
+pass, and earlier; **suite counts in those paragraphs are stale.** Use this
+header for current numbers.
+
+## 2026-08-25 (audit append)
+
+- Guest `audit.jsonl` / `pending.jsonl`, `revocations.jsonl`, and Starline
+  `starline_asks.jsonl` call `require_steward_persist("audit-append")`
+  before mkdir/write. Same job-scoped tmp rule.
+- Guest gate: `PermissionError` is `OSError` → ask-record refuse.
+  Ask log: `PermissionError` is `OSError` → proceed without the line
+  (knock telemetry law, 2026-08-12).
+- `host_trust.selftest` — **16/16**. `consent_transport.selftest` —
+  **81/81**. CrystalBridge self-test **41/41**.
+- Fragment persist still named, still RAM. Default CI stays GitHub-hosted.
+  This does not unshare HADES. This session is not local.
 
 ## 2026-08-25 (companion memory persist)
 

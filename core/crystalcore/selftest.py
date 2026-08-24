@@ -900,6 +900,118 @@ def test_companion_save_allows_temp_on_github_hosted():
             os.environ["GITHUB_ACTIONS"] = old_ga
 
 
+def test_audit_append_refuses_durable_on_pool():
+    import os
+
+    from crystalcore.audit import append_audit
+    from crystalcore.revocation import append_revocation
+
+    audit = Path("/usr/crystal_audit_host_trust_test.jsonl")
+    rev = Path("/usr/crystal_revocations_host_trust_test.jsonl")
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            append_audit(audit, guest="claude", tool="recall",
+                         arguments={}, decision="received")
+            assert False, "durable audit on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        try:
+            append_revocation(rev, guest="claude", action="revoke")
+            assert False, "durable revocation on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not audit.exists()
+        assert not rev.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_audit_append_refuses_temp_on_unknown():
+    import os
+    import tempfile
+
+    from crystalcore.audit import append_audit
+    from crystalcore.revocation import append_revocation
+
+    d = Path(tempfile.mkdtemp(prefix="audit_unknown_tmp_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ.pop("CRYSTAL_HOST_CLASS", None)
+    os.environ.pop("GITHUB_ACTIONS", None)
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            append_audit(d / "audit.jsonl", guest="claude", tool="recall",
+                         arguments={}, decision="received")
+            assert False, "temp audit on unknown must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+            assert "unknown" in str(exc)
+        try:
+            append_revocation(d / "revocations.jsonl", guest="claude",
+                              action="revoke")
+            assert False, "temp revocation on unknown must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not (d / "audit.jsonl").exists()
+        assert not (d / "revocations.jsonl").exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_audit_append_allows_temp_on_github_hosted():
+    import os
+    import tempfile
+
+    from crystalcore.audit import append_audit
+    from crystalcore.revocation import append_revocation
+
+    d = Path(tempfile.mkdtemp(prefix="audit_gh_tmp_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ["GITHUB_ACTIONS"] = "true"
+    try:
+        append_audit(d / "audit.jsonl", guest="claude", tool="recall",
+                     arguments={}, decision="received")
+        append_revocation(d / "revocations.jsonl", guest="claude",
+                          action="revoke")
+        assert (d / "audit.jsonl").exists()
+        assert (d / "revocations.jsonl").exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+
+
 def main() -> int:
     tests = [
         test_bridge_refuses_to_run_without_a_nominated_memory_folder,
@@ -940,6 +1052,9 @@ def main() -> int:
         test_companion_save_refuses_durable_on_pool,
         test_companion_save_refuses_temp_on_unknown,
         test_companion_save_allows_temp_on_github_hosted,
+        test_audit_append_refuses_durable_on_pool,
+        test_audit_append_refuses_temp_on_unknown,
+        test_audit_append_allows_temp_on_github_hosted,
     ]
     for t in tests:
         t()

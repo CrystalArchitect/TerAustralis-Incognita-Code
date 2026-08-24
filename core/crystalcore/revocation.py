@@ -49,6 +49,9 @@ def append_revocation(
 ) -> None:
     if action not in ACTIONS:
         raise ValueError(f"action must be one of {ACTIONS}, not {action!r}")
+    from crystalcore.config import _require_steward_persist
+
+    _require_steward_persist("audit-append", path)
     path.parent.mkdir(parents=True, exist_ok=True)
     record = {
         "timestamp": datetime.now(timezone.utc).isoformat(),

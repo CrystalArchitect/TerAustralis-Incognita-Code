@@ -1,8 +1,8 @@
 # Host Trust — Design Spec
 
-Status: **wired for `consent_transport` persist, CrystalBridge
-grants, and companion `memory.json`.** Job-scoped temp only on
-GitHub-hosted shared jobs. 2026-08-25.
+Status: **wired for `consent_transport` persist, CrystalBridge grants,
+companion `memory.json`, and audit/ask/revocation append.** Job-scoped
+temp only on GitHub-hosted shared jobs. 2026-08-25.
 
 This document adds a missing trust boundary: **where code is running**.
 ConsentGate already fail-closes on *who* is asking and *what* they may
@@ -51,6 +51,7 @@ Durable steward material:
 - fragment-persist
 - private memory write
 - peer-save
+- audit-append
 
 **Exception — job-scoped scratch only.** Writes under
 `tempfile.gettempdir()` (or `$TMPDIR` / `$TEMP`) are allowed **only**
@@ -101,6 +102,12 @@ Called from:
   (covers `--mint-token` / grants file)
 - `crystalcore.mind.companion.CrystalCore.save` — `memory-private-write`
   (`memory.json`; `config.json` is the same directory)
+- `crystalcore.audit._append_private` — `audit-append` (guest pending +
+  audit jsonl). Guest gate already treats `OSError` as ask-record refuse.
+- `crystalcore.revocation.append_revocation` — `audit-append`
+- `consent_transport.asklog._append_private` — `audit-append`. Peer
+  knock log still proceeds on `OSError` (including this refuse):
+  telemetry, not consent.
 
 GitHub-hosted CI stays green because those suites write under the
 process temp dir **and** set `GITHUB_ACTIONS`. A durable path
@@ -114,7 +121,7 @@ trust is *where*. The five guest doors do not move.
 ## Still open
 
 - Fragment persist is named and not yet called from those writers.
-- Audit / revocation append paths are not this choke.
+  Fragments are RAM; do not invent a disk file so the name has a body.
 - A self-hosted runner is a **path**, not a plug. Default CI stays
   GitHub-hosted. See [`docs/deployment/STEWARD-RUNNER.md`](deployment/STEWARD-RUNNER.md).
 

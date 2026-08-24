@@ -32,6 +32,7 @@ STEWARD_PERSIST = frozenset(
         "fragment-persist",
         "memory-private-write",
         "peer-save",
+        "audit-append",
     }
 )
 
