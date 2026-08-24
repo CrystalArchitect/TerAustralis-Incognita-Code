@@ -778,6 +778,128 @@ def test_write_json_atomic_allows_temp_on_github_hosted():
             os.environ["GITHUB_ACTIONS"] = old_ga
 
 
+def _companion_cls():
+    """Load CrystalCore even when `requests` is not installed.
+
+    save() does not use the network. CI installs mcp, not requests.
+    The mind-backed filter tests skip; these pins must still run.
+    """
+    import sys
+
+    try:
+        from crystalcore.mind.companion import CrystalCore
+        return CrystalCore
+    except (ModuleNotFoundError, AttributeError):
+        pass
+    from types import ModuleType
+
+    req = ModuleType("requests")
+    exc = ModuleType("requests.exceptions")
+
+    class RequestException(Exception):
+        pass
+
+    exc.RequestException = RequestException
+    req.exceptions = exc
+    sys.modules["requests"] = req
+    sys.modules["requests.exceptions"] = exc
+    for key in [k for k in sys.modules if k.startswith("crystalcore.mind")]:
+        del sys.modules[key]
+    from crystalcore.mind.companion import CrystalCore
+    return CrystalCore
+
+
+def test_companion_save_refuses_durable_on_pool():
+    import os
+
+    CrystalCore = _companion_cls()
+    path = Path("/usr/crystal_memory_host_trust_test")
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        companion = CrystalCore(memory_dir=str(path))
+        try:
+            companion.save()
+            assert False, "durable memory.json on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not (path / "memory.json").exists()
+        assert not (path / "config.json").exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_companion_save_refuses_temp_on_unknown():
+    import os
+    import tempfile
+
+    CrystalCore = _companion_cls()
+    d = Path(tempfile.mkdtemp(prefix="companion_unknown_tmp_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ.pop("CRYSTAL_HOST_CLASS", None)
+    os.environ.pop("GITHUB_ACTIONS", None)
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        companion = CrystalCore(memory_dir=str(d))
+        try:
+            companion.save()
+            assert False, "temp memory.json on unknown must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+            assert "unknown" in str(exc)
+        assert not (d / "memory.json").exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_companion_save_allows_temp_on_github_hosted():
+    import os
+    import tempfile
+
+    CrystalCore = _companion_cls()
+    d = Path(tempfile.mkdtemp(prefix="companion_gh_tmp_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ["GITHUB_ACTIONS"] = "true"
+    try:
+        companion = CrystalCore(memory_dir=str(d))
+        companion.save()
+        assert (d / "memory.json").exists()
+        assert (d / "config.json").exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+
+
 def main() -> int:
     tests = [
         test_bridge_refuses_to_run_without_a_nominated_memory_folder,
@@ -815,6 +937,9 @@ def main() -> int:
         test_write_json_atomic_refuses_durable_on_pool,
         test_write_json_atomic_refuses_temp_on_unknown,
         test_write_json_atomic_allows_temp_on_github_hosted,
+        test_companion_save_refuses_durable_on_pool,
+        test_companion_save_refuses_temp_on_unknown,
+        test_companion_save_allows_temp_on_github_hosted,
     ]
     for t in tests:
         t()

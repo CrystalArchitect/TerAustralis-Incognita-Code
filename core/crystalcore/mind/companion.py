@@ -792,6 +792,10 @@ class CrystalCore:
     # ---------- persistence (all local, plain files you own) ----------
 
     def save(self):
+        from ..config import _require_steward_persist
+
+        _require_steward_persist(
+            "memory-private-write", self.memory_dir / "memory.json")
         self.memory_dir.mkdir(parents=True, exist_ok=True)
         (self.memory_dir / "config.json").write_text(
             json.dumps(asdict(self.personality), indent=2))

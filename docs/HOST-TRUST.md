@@ -1,8 +1,8 @@
 # Host Trust — Design Spec
 
-Status: **wired for `consent_transport` persist and CrystalBridge
-`write_json_atomic`.** Job-scoped temp only on GitHub-hosted shared
-jobs. 2026-08-25.
+Status: **wired for `consent_transport` persist, CrystalBridge
+grants, and companion `memory.json`.** Job-scoped temp only on
+GitHub-hosted shared jobs. 2026-08-25.
 
 This document adds a missing trust boundary: **where code is running**.
 ConsentGate already fail-closes on *who* is asking and *what* they may
@@ -99,6 +99,8 @@ Called from:
 - `consent_transport.peers.PeerStore.save` — `peer-save`
 - `crystalcore.config.write_json_atomic` — `token-mint`
   (covers `--mint-token` / grants file)
+- `crystalcore.mind.companion.CrystalCore.save` — `memory-private-write`
+  (`memory.json`; `config.json` is the same directory)
 
 GitHub-hosted CI stays green because those suites write under the
 process temp dir **and** set `GITHUB_ACTIONS`. A durable path
@@ -111,9 +113,6 @@ trust is *where*. The five guest doors do not move.
 
 ## Still open
 
-- Companion `memory.json` `write_text` (`crystalcore.mind.companion`) —
-  `memory-private-write` is named in `STEWARD_PERSIST` and not yet
-  called from that writer.
 - Fragment persist is named and not yet called from those writers.
 - Audit / revocation append paths are not this choke.
 - A self-hosted runner is a **path**, not a plug. Default CI stays

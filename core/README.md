@@ -9,7 +9,7 @@ live here.
 
 | Path | Component |
 |---|---|
-| `crystal-core/` | The protocol pack — Starline Weaver on the **CrystalBus**, the AI-comms channel (`bus/`) · Decode→Ingest→Twin pipeline (`services/`) · Consent Transport / Starline (`consent_transport/`; `starline/` is a deprecated backward-compatibility alias, not a second component) · RDP record kernel (`rdp/`) · Host trust (`host_trust/`; persist refuse wired on `consent_transport` and CrystalBridge grants) |
+| `crystal-core/` | The protocol pack — Starline Weaver on the **CrystalBus**, the AI-comms channel (`bus/`) · Decode→Ingest→Twin pipeline (`services/`) · Consent Transport / Starline (`consent_transport/`; `starline/` is a deprecated backward-compatibility alias, not a second component) · RDP record kernel (`rdp/`) · Host trust (`host_trust/`; persist refuse wired on `consent_transport`, CrystalBridge grants, and companion `memory.json`) |
 | `crystalcore/` | CrystalBridge — the fail-closed MCP consent gate |
 | `profiles/` | CrystalBridge profile configs (runtime data such as audit logs is gitignored) |
 | `node/mesh/` | In-process mesh stub (libp2p-shaped; no real networking yet) |
