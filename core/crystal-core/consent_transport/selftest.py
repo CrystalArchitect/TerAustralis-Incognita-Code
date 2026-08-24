@@ -499,6 +499,121 @@ def test_ask_log_refuses_temp_on_unknown_host():
             os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
 
 
+def test_agent_constructor_refuses_durable_home_on_shared_host():
+    """Pooled box must not get an empty Starline state_dir. Choke is
+    before mkdir; Identity.save is not the first write."""
+    import os
+
+    home = Path("/usr/starline_agent_host_trust_test")
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            StarlineAgent(home)
+            assert False, "durable StarlineAgent on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not home.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_agent_constructor_allows_temp_on_github_hosted_shared():
+    import os
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_agent_gh_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ["GITHUB_ACTIONS"] = "true"
+    try:
+        a = StarlineAgent(d)
+        assert (d / "starline_identity.json").exists()
+        assert a.fingerprint
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+
+
+def test_agent_constructor_refuses_temp_on_unknown_host():
+    import os
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_agent_unknown_"))
+    home = d / "home"
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ.pop("CRYSTAL_HOST_CLASS", None)
+    os.environ.pop("GITHUB_ACTIONS", None)
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            StarlineAgent(home)
+            assert False, "temp StarlineAgent on unknown must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+            assert "unknown" in str(exc)
+        assert not home.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_add_local_fragment_writes_nothing_to_disk():
+    """Fragments are RAM. Do not invent starline_fragments.json so the
+    STEWARD_PERSIST name has a body. Durable backing is memory.json."""
+    import os
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_frag_ram_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_ga = os.environ.get("GITHUB_ACTIONS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ["GITHUB_ACTIONS"] = "true"
+    try:
+        a = StarlineAgent(d)
+        before = {p.name for p in d.iterdir()}
+        frag = a.add_local_fragment("episodic", "a spark not a broadcast")
+        after = {p.name for p in d.iterdir()}
+        assert after == before
+        assert "starline_fragments.json" not in after
+        assert frag.content == "a spark not a broadcast"
+        assert a._local_fragments[0] is frag
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_ga is None:
+            os.environ.pop("GITHUB_ACTIONS", None)
+        else:
+            os.environ["GITHUB_ACTIONS"] = old_ga
+
+
 def test_ask_log_ordering_and_timestamps_are_sane():
     """The owner reads this newest-first, and a strictly increasing clock
     is what makes 'who asked most recently' a meaningful question."""
@@ -1820,6 +1935,10 @@ def main() -> int:
         test_ask_log_refuses_durable_path_on_shared_host,
         test_ask_log_allows_temp_on_github_hosted_shared,
         test_ask_log_refuses_temp_on_unknown_host,
+        test_agent_constructor_refuses_durable_home_on_shared_host,
+        test_agent_constructor_allows_temp_on_github_hosted_shared,
+        test_agent_constructor_refuses_temp_on_unknown_host,
+        test_add_local_fragment_writes_nothing_to_disk,
         test_ask_log_ordering_and_timestamps_are_sane,
         test_ask_log_does_not_change_the_wire_reply,
         test_concurrent_asks_produce_clean_log_lines,

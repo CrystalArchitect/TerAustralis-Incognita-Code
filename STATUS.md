@@ -1,9 +1,23 @@
 # STATUS
 
-Last updated: 2026-08-25 — Host trust: audit / ask / revocation append refuse.
-Older paragraphs below are a 2026-08-25 companion-memory pass, a tmp+grants
-pass, and earlier; **suite counts in those paragraphs are stale.** Use this
-header for current numbers.
+Last updated: 2026-08-25 — Host trust: StarlineAgent durable home refuse;
+fragments stay RAM.
+Older paragraphs below are a 2026-08-25 audit-append pass, a companion-memory
+pass, a tmp+grants pass, and earlier; **suite counts in those paragraphs are
+stale.** Use this header for current numbers.
+
+## 2026-08-25 (fragment RAM + agent home)
+
+- `StarlineAgent.__init__` calls `require_steward_persist("identity-mint")`
+  on `starline_identity.json` **before** `state_dir.mkdir`. A pooled box
+  does not get an empty home after a refused mint.
+- `add_local_fragment` writes nothing. No `starline_fragments.json`.
+  `fragment-persist` stays named, still has no writer. Durable backing
+  remains companion `memory.json`.
+- `consent_transport.selftest` — **85/85**. `host_trust.selftest` — **16/16**.
+  CrystalBridge self-test **41/41**.
+- Default CI stays GitHub-hosted. This does not unshare HADES. This
+  session is not local.
 
 ## 2026-08-25 (audit append)
 
