@@ -1,10 +1,21 @@
 # STATUS
 
-Last updated: 2026-08-25 — Host trust: StarlineAgent durable home refuse;
-fragments stay RAM.
-Older paragraphs below are a 2026-08-25 audit-append pass, a companion-memory
-pass, a tmp+grants pass, and earlier; **suite counts in those paragraphs are
-stale.** Use this header for current numbers.
+Last updated: 2026-08-25 — Host trust: companion `memory.json` atomic replace.
+Older paragraphs below are a 2026-08-25 fragment-RAM pass, an audit-append
+pass, a companion-memory persist pass, a tmp+grants pass, and earlier;
+**suite counts in those paragraphs are stale.** Use this header for current
+numbers.
+
+## 2026-08-25 (memory.json atomic)
+
+- `CrystalCore.save` writes `memory.json` then `config.json` beside the
+  live file, fsyncs, then `os.replace`. 0600. Same defect grants used
+  to have with in-place `write_text`. Host-trust choke still runs first.
+- CrystalBridge self-test **42/42** (41 + 1 atomic pin). `host_trust` —
+  **16/16**. `consent_transport` — **85/85** (from agent-home). Does not
+  unpause MemoryCore. Fragment persist still named, still RAM. Default
+  CI stays GitHub-hosted. This does not unshare HADES. This session is
+  not local.
 
 ## 2026-08-25 (fragment RAM + agent home)
 

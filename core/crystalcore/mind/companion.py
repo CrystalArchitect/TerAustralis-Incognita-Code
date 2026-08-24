@@ -797,10 +797,35 @@ class CrystalCore:
         _require_steward_persist(
             "memory-private-write", self.memory_dir / "memory.json")
         self.memory_dir.mkdir(parents=True, exist_ok=True)
-        (self.memory_dir / "config.json").write_text(
-            json.dumps(asdict(self.personality), indent=2))
-        (self.memory_dir / "memory.json").write_text(
-            json.dumps(asdict(self.memory), indent=2))
+        # memory.json first: that is the steward payload. config.json is
+        # personality in the same folder. Both replace only after fsync,
+        # same defect grants used to have with in-place write_text.
+        self._write_json_atomic_file(
+            self.memory_dir / "memory.json", asdict(self.memory))
+        self._write_json_atomic_file(
+            self.memory_dir / "config.json", asdict(self.personality))
+
+    @staticmethod
+    def _write_json_atomic_file(path, obj):
+        """Replace `path` only after the new bytes are complete. 0600 —
+        conversation and notes are private."""
+        path = Path(path)
+        tmp = path.with_name(path.name + ".tmp")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(obj, fh, indent=2)
+                fh.write("\n")
+                fh.flush()
+                os.fsync(fh.fileno())
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            raise
+        try:
+            os.chmod(tmp, 0o600)
+        except OSError:
+            pass
+        os.replace(tmp, path)
 
     def load(self):
         self.personality = self._load_json(

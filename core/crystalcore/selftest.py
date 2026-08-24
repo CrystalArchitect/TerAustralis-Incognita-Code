@@ -889,6 +889,11 @@ def test_companion_save_allows_temp_on_github_hosted():
         companion.save()
         assert (d / "memory.json").exists()
         assert (d / "config.json").exists()
+        import stat
+        for name in ("memory.json", "config.json"):
+            mode = stat.S_IMODE((d / name).stat().st_mode)
+            assert mode & 0o077 == 0, f"{name} is {oct(mode)}"
+            assert not (d / f"{name}.tmp").exists()
     finally:
         if old is None:
             os.environ.pop("CRYSTAL_HOST_CLASS", None)
@@ -898,6 +903,69 @@ def test_companion_save_allows_temp_on_github_hosted():
             os.environ.pop("GITHUB_ACTIONS", None)
         else:
             os.environ["GITHUB_ACTIONS"] = old_ga
+
+
+def test_companion_save_replaces_only_after_the_bytes_are_complete():
+    """CrystalCore.save used to write_text memory.json in place.
+    A crash mid-write destroyed the previous companion store.
+
+    Declares local so this test is the atomic write, not host trust.
+    """
+    import json
+    import os
+    import tempfile
+
+    CrystalCore = _companion_cls()
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "local"
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            companion = CrystalCore(memory_dir=tmp)
+            companion.memory.notes.append({
+                "text": "keep me",
+                "tags": [],
+                "visibility": "private",
+            })
+            companion.save()
+            path = Path(tmp) / "memory.json"
+            original = path.read_text(encoding="utf-8")
+            assert "keep me" in original
+            assert not path.with_name(path.name + ".tmp").exists()
+
+            companion.memory.notes.append({
+                "text": "destroyed",
+                "tags": [],
+                "visibility": "private",
+            })
+
+            def boom(*_a, **_k):
+                raise OSError("disk full")
+
+            real_fsync = os.fsync
+            os.fsync = boom  # type: ignore[assignment]
+            try:
+                try:
+                    companion.save()
+                except OSError:
+                    pass
+                else:
+                    raise AssertionError("fsync was supposed to raise")
+            finally:
+                os.fsync = real_fsync
+            assert path.read_text(encoding="utf-8") == original
+            assert "destroyed" not in path.read_text(encoding="utf-8")
+            assert "keep me" in path.read_text(encoding="utf-8")
+            assert not path.with_name(path.name + ".tmp").exists()
+            # Personality file must also survive a failed memory write
+            # (memory.json is written first).
+            config = json.loads((Path(tmp) / "config.json").read_text(
+                encoding="utf-8"))
+            assert "name" in config
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
 
 
 def test_audit_append_refuses_durable_on_pool():
@@ -1052,6 +1120,7 @@ def main() -> int:
         test_companion_save_refuses_durable_on_pool,
         test_companion_save_refuses_temp_on_unknown,
         test_companion_save_allows_temp_on_github_hosted,
+        test_companion_save_replaces_only_after_the_bytes_are_complete,
         test_audit_append_refuses_durable_on_pool,
         test_audit_append_refuses_temp_on_unknown,
         test_audit_append_allows_temp_on_github_hosted,
