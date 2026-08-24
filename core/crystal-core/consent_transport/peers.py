@@ -12,6 +12,7 @@ itself.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -42,10 +43,37 @@ class PeerStore:
             self.peers = {fp: Peer(**p) for fp, p in raw.items()}
 
     def save(self) -> None:
+        """Replace the address book only after the new bytes are complete.
+
+        Host trust refuses this write on shared/unknown hosts unless the
+        path is job-scoped GitHub scratch. A crash mid-write used to
+        destroy the previous peer list — same defect TokenStore and
+        identity already closed. 0600: private in the social sense.
+        """
         from host_trust.classify import require_steward_persist
 
-        require_steward_persist("peer-save", self.path)
-        self.path.write_text(json.dumps({fp: asdict(p) for fp, p in self.peers.items()}, indent=2))
+        path = Path(self.path)
+        require_steward_persist("peer-save", path)
+        tmp = path.with_name(path.name + ".tmp")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(
+                    {fp: asdict(p) for fp, p in self.peers.items()},
+                    fh,
+                    indent=2,
+                )
+                fh.write("\n")
+                fh.flush()
+                os.fsync(fh.fileno())
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            raise
+        try:
+            os.chmod(tmp, 0o600)
+        except OSError:
+            pass
+        os.replace(tmp, path)
 
     def add(self, sign_public_hex: str, dh_public_hex: str, label: str = "") -> Peer:
         # Must be the same derivation Identity.fingerprint uses — hence the
