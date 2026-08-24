@@ -43,7 +43,7 @@
   </p>
 
   <p>
-    Evidence-first route health: the <a href="/footer-audit/">shared footer audit</a>.
+    Evidence-first route health: the <a href="/footer-audit">shared footer audit</a>.
   </p>
 
   <p class="nonsolus">Non Solus — Not Alone</p>
