@@ -9,7 +9,7 @@ live here.
 
 | Path | Component |
 |---|---|
-| `crystal-core/` | The protocol pack — Starline Weaver on the **CrystalBus**, the AI-comms channel (`bus/`) · Decode→Ingest→Twin pipeline (`services/`) · Consent Transport / Starline (`consent_transport/`; `starline/` is a deprecated backward-compatibility alias, not a second component) · RDP record kernel (`rdp/`) |
+| `crystal-core/` | The protocol pack — Starline Weaver on the **CrystalBus**, the AI-comms channel (`bus/`) · Decode→Ingest→Twin pipeline (`services/`) · Consent Transport / Starline (`consent_transport/`; `starline/` is a deprecated backward-compatibility alias, not a second component) · RDP record kernel (`rdp/`) · Host trust classifier (`host_trust/`; designed, not a gate door) |
 | `crystalcore/` | CrystalBridge — the fail-closed MCP consent gate |
 | `profiles/` | CrystalBridge profile configs (runtime data such as audit logs is gitignored) |
 | `node/mesh/` | In-process mesh stub (libp2p-shaped; no real networking yet) |
@@ -23,6 +23,7 @@ cd core/crystal-core
 python3 -m bus.selftest
 python3 -m services.selftest
 python3 -m rdp.selftest
+python3 -m host_trust.selftest
 pip install -r requirements-consenttransport.txt && python3 -m consent_transport.selftest
 
 cd .. && PYTHONPATH=. python3 -m pytest tests -q   # mesh stub
