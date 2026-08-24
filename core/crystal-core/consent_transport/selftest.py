@@ -1443,6 +1443,89 @@ def test_failed_consent_engine_save_leaves_the_old_file_intact():
     assert not path.with_name(path.name + ".tmp").exists()
 
 
+def test_peer_store_save_refuses_durable_path_on_shared_host():
+    """Address book must not land on a pooled durable path."""
+    from .peers import PeerStore
+
+    path = Path("/usr/starline_peers_host_trust_test.json")
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        store = PeerStore(path)
+        try:
+            store.save()
+            assert False, "durable peer-save on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_peer_store_file_is_never_group_or_world_readable():
+    from .peers import PeerStore
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_peerperm_"))
+    path = d / "peers.json"
+    ident = Identity.generate()
+    store = PeerStore(path)
+    store.add(ident.sign_public_bytes.hex(), ident.dh_public_bytes.hex(), "them")
+    mode = stat.S_IMODE(path.stat().st_mode)
+    assert mode & 0o077 == 0, f"peers file is {oct(mode)}"
+    assert not (d / "peers.json.tmp").exists()
+
+
+def test_failed_peer_store_save_leaves_the_old_file_intact():
+    """A crash mid-write must not take the address book with it.
+
+    PeerStore.save() still used write_text — same defect TokenStore
+    and identity already closed.
+    """
+    from .peers import PeerStore
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_peeratomic_"))
+    path = d / "peers.json"
+    keep = Identity.generate()
+    store = PeerStore(path)
+    store.add(keep.sign_public_bytes.hex(), keep.dh_public_bytes.hex(), "keep")
+    before = path.read_bytes()
+
+    def explode(*_a, **_k):
+        raise OSError("disk full")
+
+    real_dump = json.dump
+    json.dump = explode
+    try:
+        try:
+            other = Identity.generate()
+            store.add(
+                other.sign_public_bytes.hex(),
+                other.dh_public_bytes.hex(),
+                "must not land",
+            )
+        except OSError:
+            pass
+        else:
+            raise AssertionError("save() should have propagated the write failure")
+    finally:
+        json.dump = real_dump
+
+    assert path.read_bytes() == before, "a failed save overwrote the live peer store"
+    reloaded = PeerStore(path)
+    assert keep.fingerprint in reloaded.peers
+    assert len(reloaded.peers) == 1
+    assert not path.with_name(path.name + ".tmp").exists()
+
+
 # --- hybrid post-quantum identity ------------------------------------------
 #
 # Same discipline as the handshake tests: prove the ML-DSA half is
@@ -1918,6 +2001,9 @@ def main() -> int:
         test_unrecordable_token_use_denies_rather_than_serving,
         test_failed_token_store_save_leaves_the_old_file_intact,
         test_failed_consent_engine_save_leaves_the_old_file_intact,
+        test_peer_store_save_refuses_durable_path_on_shared_host,
+        test_peer_store_file_is_never_group_or_world_readable,
+        test_failed_peer_store_save_leaves_the_old_file_intact,
         test_token_scope_is_enforced_over_a_real_connection,
         test_expired_token_stops_the_exchange_that_a_live_one_allowed,
         test_fragment_sign_and_verify,

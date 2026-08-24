@@ -1,10 +1,20 @@
 # STATUS
 
-Last updated: 2026-08-25 — Host trust: companion `memory.json` atomic replace.
-Older paragraphs below are a 2026-08-25 fragment-RAM pass, an audit-append
-pass, a companion-memory persist pass, a tmp+grants pass, and earlier;
-**suite counts in those paragraphs are stale.** Use this header for current
-numbers.
+Last updated: 2026-08-25 — Host trust: PeerStore `starline_peers.json` atomic replace.
+Older paragraphs below are a 2026-08-25 memory.json atomic pass, a
+fragment-RAM pass, an audit-append pass, a companion-memory persist
+pass, a tmp+grants pass, and earlier; **suite counts in those
+paragraphs are stale.** Use this header for current numbers.
+
+## 2026-08-25 (peer-store atomic)
+
+- `PeerStore.save` writes beside the live file, fsyncs, then `os.replace`.
+  0600. Same defect identity / TokenStore / grants already closed.
+  Host-trust choke still runs first (`peer-save`).
+- `consent_transport.selftest` — **88/88** (85 + 3). `host_trust` —
+  **16/16**. CrystalBridge self-test **42/42** (from memory.json atomic).
+  Does not unpause MemoryCore. Fragments stay RAM. Default CI stays
+  GitHub-hosted. This does not unshare HADES. This session is not local.
 
 ## 2026-08-25 (memory.json atomic)
 

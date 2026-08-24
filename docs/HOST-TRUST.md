@@ -2,8 +2,8 @@
 
 Status: **wired for `consent_transport` persist, CrystalBridge grants,
 companion `memory.json` (atomic replace), audit/ask/revocation append,
-and StarlineAgent home mkdir.** Fragments stay RAM. Job-scoped temp only
-on GitHub-hosted shared jobs. 2026-08-25.
+StarlineAgent home mkdir, and PeerStore atomic replace.** Fragments
+stay RAM. Job-scoped temp only on GitHub-hosted shared jobs. 2026-08-25.
 
 This document adds a missing trust boundary: **where code is running**.
 ConsentGate already fail-closes on *who* is asking and *what* they may
@@ -99,6 +99,8 @@ Called from:
 - `consent_transport.consent._write_json_atomic` — `consent-save`
   (covers `ConsentEngine.save` and `TokenStore.save`)
 - `consent_transport.peers.PeerStore.save` — `peer-save`
+  (`starline_peers.json`; fsync + `os.replace`, 0600. A crash mid-write
+  no longer destroys the address book.)
 - `crystalcore.config.write_json_atomic` — `token-mint`
   (covers `--mint-token` / grants file)
 - `crystalcore.mind.companion.CrystalCore.save` — `memory-private-write`
