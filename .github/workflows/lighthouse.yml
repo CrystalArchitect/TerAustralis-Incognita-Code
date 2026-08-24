@@ -1,6 +1,6 @@
 # Accessibility-only Lighthouse CI against the local SvelteKit build.
 # Does not hit production. Does not publish a site-wide score.
-# Does not replace vision/site/A11Y.md (VoiceOver) or the HTTP route checker.
+# Does not replace vision/site/ACCESSIBILITY.md (VoiceOver) or the HTTP route checker.
 
 name: Lighthouse accessibility
 
