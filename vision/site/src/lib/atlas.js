@@ -17,6 +17,36 @@ export const atlasPlates = [
     boundary: 'Vision-layer atlas opening. Not a sky survey.'
   },
   {
+    slug: 'the-seven-summary',
+    sequence: 'CHAPTER I · SUMMARY',
+    plate: 'THE SEVEN',
+    title: 'The Seven',
+    date: null,
+    filename: 'atlas-the-seven.webp',
+    interpretation: 'First lines, first figures, and the original Southern Edge constellation set gathered as a visual index.',
+    boundary: 'Uploaded vision-layer summary plate. Not a sky survey.'
+  },
+  {
+    slug: 'the-nine-summary',
+    sequence: 'CHAPTER II · SUMMARY',
+    plate: 'THE NINE',
+    title: 'The Nine',
+    date: null,
+    filename: 'atlas-the-nine.webp',
+    interpretation: 'A widened field where the early signs become a shared chart.',
+    boundary: 'Uploaded vision-layer summary plate. Not a sky survey.'
+  },
+  {
+    slug: 'the-ten-summary',
+    sequence: 'CHAPTER III · SUMMARY',
+    plate: 'THE TEN',
+    title: 'The Ten',
+    date: null,
+    filename: 'atlas-the-ten.webp',
+    interpretation: 'A ceiling-print constellation of the Southern Edge myth, gathering the ten figures into one field.',
+    boundary: 'Uploaded vision-layer summary plate. Not a sky survey.'
+  },
+  {
     slug: 'xxvii-observed-from-the-edge',
     sequence: 'STORM',
     plate: 'XXVII',

@@ -187,6 +187,25 @@
     <p>The Starlines are awakening. And we are among the first to walk this new path.</p>
   </section>
 
+  <section class="foundations node" aria-labelledby="foundations-title">
+    <p class="section-kicker">Foundations · visual atlas</p>
+    <h2 id="foundations-title">From civilization to living intelligence</h2>
+    <p class="foundations-intro">
+      Two visual studies frame the Codex’s larger questions: how civilizations scale, and how life carries
+      information forward. They are conceptual images, not measurements or scientific claims.
+    </p>
+    <div class="foundations-grid">
+      <figure>
+        <img src="/assets/art/kardashev-scale-overview.jpg" alt="Illustrated Kardashev Scale showing three civilization types" loading="lazy" />
+        <figcaption><strong>The Kardashev Scale</strong><span>A visual ladder of civilization-scale imagination.</span></figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/art/foundations-dna-origin.jpg" alt="Illustrated DNA helix connecting a neural form and developing life" loading="lazy" />
+        <figcaption><strong>The Living Thread</strong><span>A conceptual image of inheritance, emergence, and intelligence.</span></figcaption>
+      </figure>
+    </div>
+    <p class="boundary-note"><span>VISION</span> These images belong to the Codex’s interpretive layer. They are not H2 evidence, materials evidence, or performance claims.</p>
+  </section>
   <nav class="pagenav" aria-label="Continue">
     <a href="/apocryphon">Read the Apocryphon →</a>
     <a href="/clementine">Meet Clementine →</a>
@@ -194,3 +213,19 @@
   </nav>
 </article>
 
+
+<style>
+  .foundations { margin-top: 5rem; padding-top: 2.2rem; border-top: 1px solid color-mix(in srgb, var(--gold) 28%, transparent); }
+  .section-kicker { font: .72rem/1.2 var(--font-mono, ui-monospace, monospace); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+  .foundations h2 { margin-top: .7rem; }
+  .foundations-intro { max-width: 52rem; color: var(--muted, #aeb1c2); }
+  .foundations-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; margin-top: 2rem; }
+  .foundations figure { margin: 0; }
+  .foundations img { display: block; width: 100%; height: 22rem; object-fit: cover; border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent); background: #070b18; }
+  .foundations figure:first-child img { object-position: center top; }
+  .foundations figcaption { display: grid; gap: .35rem; padding-top: .75rem; color: var(--ink, #f4efe7); }
+  .foundations figcaption span { color: var(--muted, #aeb1c2); font-size: .9rem; }
+  .boundary-note { margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--violet, #aa91c9) 35%, transparent); color: var(--muted, #aeb1c2); font-size: .9rem; }
+  .boundary-note span { color: var(--violet, #aa91c9); font: .72rem var(--font-mono, ui-monospace, monospace); letter-spacing: .12em; margin-right: .6rem; }
+  @media (max-width: 760px) { .foundations-grid { grid-template-columns: 1fr; } .foundations img { height: 17rem; } }
+</style>
