@@ -112,7 +112,7 @@
 
     <nav class="plate-nav" aria-label="Atlas plates">
       {#each data.plates as plate, index}
-        <button class:active={index === activeIndex} type="button" aria-current={index === activeIndex ? 'page' : undefined} aria-label={`Open ${plate.plate} ${plate.title}`} onclick={() => selectPlate(index)}>
+        <button class:active={index === activeIndex} type="button" aria-current={index === activeIndex ? 'page' : undefined} aria-label={`Open ${plate.plate} ${plate.sequence}`} onclick={() => selectPlate(index)}>
           <span>{plate.plate}</span><small>{plate.sequence}</small>
         </button>
       {/each}
@@ -130,9 +130,9 @@
         <p class="interpretation">{activePlate.interpretation}</p>
         <p class="plate-boundary">{activePlate.boundary}</p>
         <div class="plate-actions">
-          <button type="button" onclick={previousPlate} disabled={firstPlate} aria-label="Previous Atlas plate">← Previous</button>
+          <button type="button" onclick={previousPlate} disabled={firstPlate}>← Previous</button>
           <span>{String(activeIndex + 1).padStart(2, '0')} / {String(data.plates.length).padStart(2, '0')}</span>
-          <button type="button" onclick={nextPlate} disabled={lastPlate} aria-label="Next Atlas plate">Next →</button>
+          <button type="button" onclick={nextPlate} disabled={lastPlate}>Next →</button>
         </div>
       </div>
     </article>
