@@ -54,6 +54,16 @@ jobs:
           cp -r vision/apps/vision-web vision/site/build/vision-web
           cp -r vision/apps/clementine-voice vision/site/build/clementine-voice
 
+      # GitHub Pages 404s `/footer-audit/` unless a directory index exists.
+      # SvelteKit emits footer-audit.html (trailingSlash false). Copy that
+      # file so the slash form serves the same page. Footer href stays
+      # `/footer-audit`. Not a second route and not a product claim.
+      - name: Add GitHub Pages directory index for footer-audit
+        run: |
+          test -f vision/site/build/footer-audit.html
+          mkdir -p vision/site/build/footer-audit
+          cp vision/site/build/footer-audit.html vision/site/build/footer-audit/index.html
+
       # vision/site/static/CNAME is copied into the build by SvelteKit, so the
       # custom domain travels with the artifact as well as living in settings.
       - name: Confirm the custom domain travelled with the build
