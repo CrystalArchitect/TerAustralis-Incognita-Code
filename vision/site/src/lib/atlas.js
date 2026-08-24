@@ -22,7 +22,7 @@ export const atlasPlates = [
     plate: 'THE SEVEN',
     title: 'The Seven',
     date: null,
-    filename: 'atlas-the-seven.webp',
+    filename: 'atlas-seven-folio.webp',
     interpretation: 'First lines, first figures, and the original Southern Edge constellation set gathered as a visual index.',
     boundary: 'Uploaded vision-layer summary plate. Not a sky survey.'
   },
@@ -32,7 +32,7 @@ export const atlasPlates = [
     plate: 'THE NINE',
     title: 'The Nine',
     date: null,
-    filename: 'atlas-the-nine.webp',
+    filename: 'atlas-nine-folio.webp',
     interpretation: 'A widened field where the early signs become a shared chart.',
     boundary: 'Uploaded vision-layer summary plate. Not a sky survey.'
   },
@@ -42,7 +42,7 @@ export const atlasPlates = [
     plate: 'THE TEN',
     title: 'The Ten',
     date: null,
-    filename: 'atlas-the-ten.webp',
+    filename: 'atlas-ten-folio.webp',
     interpretation: 'A ceiling-print constellation of the Southern Edge myth, gathering the ten figures into one field.',
     boundary: 'Uploaded vision-layer summary plate. Not a sky survey.'
   },
