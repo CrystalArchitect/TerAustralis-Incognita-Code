@@ -88,6 +88,10 @@
         <img src="/assets/art/atlas-ten-ceiling-square.webp" alt="The Ten ceiling-print variant of the Southern Edge Atlas" loading="lazy" />
         <figcaption><span>CEILING PRINT</span><strong>The Ten · skyward view</strong></figcaption>
       </figure>
+      <figure>
+        <img src="/assets/art/atlas-ten-scroll-pair.webp" alt="The Ten parchment scroll pair listing the continuous trail from the First Sketch to the Far Horizon" loading="lazy" />
+        <figcaption><span>ARCHIVAL SCROLL</span><strong>The Ten · parchment record</strong></figcaption>
+      </figure>
     </div>
   </section>
 
@@ -168,7 +172,7 @@
   .summary-grid figcaption strong { color: var(--observatory-ivory); font: italic 1.8rem/1 var(--font-display); }
   .summary-grid figcaption small { color: var(--observatory-muted); font-size: .8rem; line-height: 1.45; }
   .atlas-companions { padding-top: 5.5rem; }
-  .companion-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .9rem; margin-top: 2.5rem; }
+  .companion-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .9rem; margin-top: 2.5rem; }
   .companion-grid figure { margin: 0; }
   .companion-grid img { display: block; width: 100%; height: 16rem; object-fit: cover; border: 1px solid var(--observatory-line-strong); background: #071019; }
   .companion-grid figcaption { display: grid; gap: .3rem; padding-top: .65rem; }
@@ -207,6 +211,7 @@
   .plate-actions button:disabled { color: var(--observatory-muted); opacity: .4; cursor: not-allowed; }
   .plate-actions button:focus-visible { outline: 2px solid var(--observatory-copper); outline-offset: 5px; }
   .atlas-footer { margin-top: 5rem; padding-top: 1.2rem; border-top: 1px solid var(--observatory-line); color: var(--observatory-muted); font: italic 1rem/1.4 var(--font-display); text-align: center; }
+  @media (max-width: 980px) { .companion-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 820px) { .summary-head { display: block; } .summary-note { margin-top: 1rem; } .summary-grid { grid-template-columns: 1fr; } .summary-grid img { height: 20rem; } .companion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .atlas-opening { grid-template-columns: 1fr; gap: 2rem; padding-top: 3rem; } .dream-circle { margin: 0 auto; } .atlas-boundary { grid-template-columns: auto 1fr; } .atlas-boundary a { grid-column: 2; } .plate-detail { grid-template-columns: 1fr; gap: 2.2rem; } .explorer-head { display: block; } .explorer-note { margin-top: 1rem; } }
   @media (max-width: 520px) { .companion-grid { grid-template-columns: 1fr; } .companion-grid img { height: 20rem; } .atlas-page { padding-top: 1rem; } h1 { font-size: 3.7rem; } .opening-boundary { align-items: flex-start; flex-direction: column; } .atlas-boundary { grid-template-columns: 1fr; } .atlas-boundary a { grid-column: auto; } .plate-nav button { min-width: 92px; } .plate-detail { padding-top: 2rem; } .circle-caption { right: 0; bottom: 0; } }
   @media (prefers-reduced-motion: reduce) { .plate-nav button { scroll-behavior: auto; } }

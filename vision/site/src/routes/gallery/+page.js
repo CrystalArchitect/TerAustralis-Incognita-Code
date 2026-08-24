@@ -159,6 +159,7 @@ export function load() {
     { filename: 'atlas-nine-folio.webp', description: 'User-supplied Vision atlas folio — The Nine, the expanded constellation summary. Interpretive atlas work; not a sky survey.' },
     { filename: 'atlas-ten-folio.webp', description: 'User-supplied Vision atlas folio — The Ten, the complete constellation summary. Interpretive atlas work; not a sky survey.' },
     { filename: 'atlas-ten-ceiling-square.webp', description: 'User-supplied Vision atlas variant — The Ten as a ceiling-print constellation map. Interpretive atlas work; not a sky survey.' },
+    { filename: 'atlas-ten-scroll-pair.webp', description: 'User-supplied Vision atlas companion — The Ten parchment scroll pair recording the continuous trail from the First Sketch to the Far Horizon. Interpretive archive work; not a sky survey.' },
     { filename: 'celestial-atlas-night-from-the-edge.jpeg', description: 'AI-generated Vision atlas — unnumbered night from the Edge: First Sketch, Path of Footprints, Storm, Rebuilt Chart, Rocket, Groundkeeper, Southern Edge. Not a sky survey' },
     { filename: 'plate-xxvii-observed-from-the-edge.jpeg', description: 'AI-generated Vision atlas — Plate XXVII Observed from the Edge (1857.3). Storm marked as an empty region. Not a sky survey' },
     { filename: 'plate-xxviii-the-continuing-chart.jpeg', description: 'AI-generated Vision atlas — Plate XXVIII The Continuing Chart (1858.1). After the storm; first others arrived. Not a sky survey' },
