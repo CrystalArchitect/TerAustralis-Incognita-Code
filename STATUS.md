@@ -1,11 +1,20 @@
 # STATUS
 
-Last updated: 2026-08-25 — Host trust: job-scoped tmp + CrystalBridge grants.
-Older paragraphs below are a 2026-08-25 persist-wire pass, a 2026-08-20
-Start Ya Bastard ignition, a 2026-08-20 atomic-save pass, a 2026-08-12
-pass at `fe90e63`, plus a 2026-08-08 full pass at `4358ede`; **suite
+Last updated: 2026-08-25 — Host trust: companion memory.json persist refuse.
+Older paragraphs below are a 2026-08-25 tmp+grants pass, a persist-wire
+pass, a 2026-08-20 Start Ya Bastard ignition, and earlier; **suite
 counts in those paragraphs are stale.** Use this header for current
 numbers.
+
+## 2026-08-25 (companion memory persist)
+
+- `CrystalCore.save` calls `require_steward_persist("memory-private-write")`
+  on `memory.json` before mkdir/`write_text`. Same job-scoped tmp rule.
+  Personality `config.json` is the same directory.
+- CrystalBridge self-test **38/38** (35 + 3 save pins). Does not unpause
+  MemoryCore. Fragment persist and audit append still open. Default CI
+  stays GitHub-hosted. This does not unshare HADES. This session is not
+  local.
 
 ## 2026-08-25 (tmp tighten + CrystalBridge)
 
