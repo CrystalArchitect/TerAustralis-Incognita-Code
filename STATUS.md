@@ -1,10 +1,29 @@
 # STATUS
 
-Last updated: 2026-08-20 — Start Ya Bastard ignition, rebased onto the
-ADR-0016 foreign-invitation gate (#84). Older paragraphs below are a
+Last updated: 2026-08-25 — Host trust persist wired on consent_transport.
+Older paragraphs below are a 2026-08-20 Start Ya Bastard ignition, a
 2026-08-20 atomic-save pass, a 2026-08-12 pass at `fe90e63`, plus a
 2026-08-08 full pass at `4358ede`; **suite counts in those paragraphs
 are stale.** Use this header for current numbers.
+
+## 2026-08-25 (host trust wire)
+
+- `host_trust.selftest` — **14/14**. Classifier from #112 plus ephemeral
+  tmp allow, durable refuse on shared/unknown, hatch, tmp detection.
+- `consent_transport` persist choke: `Identity.save`,
+  `_write_json_atomic` (ConsentEngine + TokenStore), `PeerStore.save`.
+  Durable path on `shared`/`unknown` raises `PermissionError`. Scratch
+  under the process temp dir is allowed so GitHub-hosted throwaway
+  identity tests stay green. `consent_transport.selftest` **77/77**
+  locally (75 from ignition + 2 persist refuse/allow).
+- CrystalBridge `write_json_atomic` still unwired (import path is
+  `core/`, not `crystal-core/`).
+- Self-hosted runner is an **opt-in path**
+  (`docs/deployment/STEWARD-RUNNER.md`, `.github/workflows/steward-runner.yml`
+  gated on `vars.CRYSTAL_SELF_HOSTED`). Default CI stays GitHub-hosted.
+  This does not unshare HADES. This session is not local.
+- Public `/starline` copy: Songline → Starline. Canon
+  `STARLINE-TRANSMISSIONS.md` / `THE-FULL-NARRATIVE.md` untouched.
 
 ## 2026-08-20 (ignition)
 

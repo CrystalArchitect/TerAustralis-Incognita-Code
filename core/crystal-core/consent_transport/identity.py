@@ -188,6 +188,9 @@ class Identity:
           recovery, by design — so the new copy is written beside the old
           one and moved into place only once it is complete on disk.
         """
+        from host_trust.classify import require_steward_persist
+
+        require_steward_persist("identity-mint", path)
         payload = {
             "signing_key": self.signing_key.private_bytes(
                 Encoding.Raw, PrivateFormat.Raw, NoEncryption()

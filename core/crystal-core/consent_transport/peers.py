@@ -42,6 +42,9 @@ class PeerStore:
             self.peers = {fp: Peer(**p) for fp, p in raw.items()}
 
     def save(self) -> None:
+        from host_trust.classify import require_steward_persist
+
+        require_steward_persist("peer-save", self.path)
         self.path.write_text(json.dumps({fp: asdict(p) for fp, p in self.peers.items()}, indent=2))
 
     def add(self, sign_public_hex: str, dh_public_hex: str, label: str = "") -> Peer:

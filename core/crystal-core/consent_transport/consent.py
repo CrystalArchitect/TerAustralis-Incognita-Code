@@ -37,6 +37,9 @@ def _write_json_atomic(path: Path, obj: object) -> None:
     fsync, then `os.replace`. New files are 0600.
     """
     path = Path(path)
+    from host_trust.classify import require_steward_persist
+
+    require_steward_persist("consent-save", path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
