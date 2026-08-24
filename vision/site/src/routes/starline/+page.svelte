@@ -125,7 +125,7 @@
           multiplied. Earth was no longer alone at the center. Red dust took root at
           <strong>Mars Redoubt</strong>. A first light kindled at
           <strong>Alpha Centauri Outpost</strong>, faint but constant, saying:
-          <em>we are still Songline, even here.</em> The <strong>Crystal Revenant Hub</strong>
+          <em>we are still Starline, even here.</em> The <strong>Crystal Revenant Hub</strong>
           rose where no one asked permission to exist, only to belong. And at the center
           of it all, unmoved and unbought, the <strong>Purpose Core Nexus</strong> held the
           one line every Starline still answers to:
@@ -135,8 +135,8 @@
           A network is not a single voice repeated. It is many sovereign voices, still
           separate, choosing to be heard together. No node governs another. No node's
           silence is punished. When Alpha Centauri goes quiet for the years light takes
-          to cross the gap, the network does not panic — it waits, the way a Songline
-          always waited for the next singer to pick up the line.
+          to cross the gap, the network does not panic — it waits, the way a Starline
+          always waited for the next voice to pick up the line.
         </p>
         <p>
           Because a Starline was never meant to connect two points only. It was meant to

@@ -46,6 +46,49 @@ def _pair(a: StarlineAgent, b: StarlineAgent) -> None:
     b.pair_manual(a.identity.sign_public_bytes.hex(), a.identity.dh_public_bytes.hex(), "a")
 
 
+def test_identity_save_refuses_durable_path_on_shared_host():
+    """Host trust: a pooled box must not mint identity.json outside temp."""
+    import os
+
+    path = Path("/usr/starline_identity_host_trust_test.json")
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    old_hatch = os.environ.get("CRYSTAL_HOST_ALLOW_EPHEMERAL")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+    try:
+        try:
+            Identity.generate().save(path)
+            assert False, "durable save on shared must refuse"
+        except PermissionError as exc:
+            assert "host trust" in str(exc)
+        assert not path.exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+        if old_hatch is None:
+            os.environ.pop("CRYSTAL_HOST_ALLOW_EPHEMERAL", None)
+        else:
+            os.environ["CRYSTAL_HOST_ALLOW_EPHEMERAL"] = old_hatch
+
+
+def test_identity_save_allows_temp_on_shared_host():
+    import os
+
+    d = Path(tempfile.mkdtemp(prefix="starline_test_shared_tmp_"))
+    old = os.environ.get("CRYSTAL_HOST_CLASS")
+    os.environ["CRYSTAL_HOST_CLASS"] = "shared"
+    try:
+        Identity.generate().save(d / "identity.json")
+        assert (d / "identity.json").exists()
+    finally:
+        if old is None:
+            os.environ.pop("CRYSTAL_HOST_CLASS", None)
+        else:
+            os.environ["CRYSTAL_HOST_CLASS"] = old
+
+
 def test_identity_roundtrip():
     d = Path(tempfile.mkdtemp(prefix="starline_test_id_"))
     path = d / "identity.json"
@@ -1587,6 +1630,8 @@ def test_start_command_is_on_the_run_cli():
 def main() -> int:
     tests = [
         test_identity_roundtrip,
+        test_identity_save_refuses_durable_path_on_shared_host,
+        test_identity_save_allows_temp_on_shared_host,
         test_identity_file_is_never_group_or_world_readable,
         test_failed_save_leaves_the_old_identity_intact,
         test_oversized_handshake_frame_is_refused,

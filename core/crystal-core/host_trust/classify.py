@@ -9,7 +9,9 @@ Heuristics only run when that variable is unset.
 from __future__ import annotations
 
 import os
+import tempfile
 from enum import Enum
+from pathlib import Path
 
 
 class HostClass(str, Enum):
@@ -29,6 +31,7 @@ STEWARD_PERSIST = frozenset(
         "token-mint",
         "fragment-persist",
         "memory-private-write",
+        "peer-save",
     }
 )
 
@@ -55,3 +58,42 @@ def refuse_steward_persist(
     if host is None:
         host = classify(env)
     return host in (HostClass.SHARED, HostClass.UNKNOWN)
+
+
+def is_ephemeral_path(path: Path | str, *, env: dict[str, str] | None = None) -> bool:
+    """True when `path` is under the process temp dir (scratch, not a home)."""
+    e = os.environ if env is None else env
+    tmp = Path(e.get("TMPDIR") or e.get("TEMP") or tempfile.gettempdir()).resolve()
+    try:
+        resolved = Path(path).resolve()
+    except OSError:
+        return False
+    return resolved == tmp or tmp in resolved.parents
+
+
+def require_steward_persist(
+    operation: str,
+    path: Path | str,
+    *,
+    env: dict[str, str] | None = None,
+) -> None:
+    """Refuse durable steward writes on shared/unknown hosts.
+
+    Scratch under the process temp dir is allowed: GitHub-hosted
+    self-tests mint throwaway identities there. That is not a home.
+    `CRYSTAL_HOST_ALLOW_EPHEMERAL=1` allows any path (explicit hatch).
+    """
+    e = os.environ if env is None else env
+    host = classify(e)
+    if not refuse_steward_persist(host, env=e):
+        return
+    if (e.get("CRYSTAL_HOST_ALLOW_EPHEMERAL") or "").strip() == "1":
+        return
+    if is_ephemeral_path(path, env=e):
+        return
+    raise PermissionError(
+        f"host trust: refuse {operation} on {host.value} host "
+        f"(path {path} is not ephemeral). "
+        "Set CRYSTAL_HOST_CLASS=local on a machine you control, or write "
+        "only under the process temp dir."
+    )

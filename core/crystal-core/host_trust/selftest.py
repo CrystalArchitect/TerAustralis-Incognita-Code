@@ -10,7 +10,16 @@ a vendor pool. HADES is not a HostClass.
 
 from __future__ import annotations
 
-from .classify import HostClass, classify, refuse_steward_persist
+import tempfile
+from pathlib import Path
+
+from .classify import (
+    HostClass,
+    classify,
+    is_ephemeral_path,
+    refuse_steward_persist,
+    require_steward_persist,
+)
 
 
 def test_override_local():
@@ -63,6 +72,44 @@ def test_override_beats_github_heuristic():
     assert classify(env) is HostClass.LOCAL
 
 
+def test_ephemeral_tmp_is_allowed_on_shared():
+    env = {"CRYSTAL_HOST_CLASS": "shared"}
+    d = Path(tempfile.mkdtemp(prefix="host_trust_eph_"))
+    require_steward_persist("identity-mint", d / "identity.json", env=env)
+
+
+def test_durable_path_refuses_on_shared():
+    env = {"CRYSTAL_HOST_CLASS": "shared"}
+    path = Path("/usr/starline_identity_host_trust_test.json")
+    try:
+        require_steward_persist("identity-mint", path, env=env)
+        assert False, "durable path on shared must refuse"
+    except PermissionError as exc:
+        assert "host trust" in str(exc)
+        assert "shared" in str(exc)
+
+
+def test_durable_path_refuses_on_unknown():
+    env = {}
+    path = Path("/var/crystal/identity.json")
+    try:
+        require_steward_persist("consent-save", path, env=env)
+        assert False, "durable path on unknown must refuse"
+    except PermissionError as exc:
+        assert "unknown" in str(exc)
+
+
+def test_hatch_allows_durable_on_shared():
+    env = {"CRYSTAL_HOST_CLASS": "shared", "CRYSTAL_HOST_ALLOW_EPHEMERAL": "1"}
+    require_steward_persist("identity-mint", Path("/usr/not-a-home.json"), env=env)
+
+
+def test_tmp_detection():
+    d = Path(tempfile.mkdtemp(prefix="host_trust_tmp_"))
+    assert is_ephemeral_path(d / "x.json")
+    assert not is_ephemeral_path(Path("/usr/bin"))
+
+
 def main() -> int:
     tests = [
         test_override_local,
@@ -74,6 +121,11 @@ def main() -> int:
         test_github_actions_without_runner_env_is_shared,
         test_self_hosted_runner_is_delegated,
         test_override_beats_github_heuristic,
+        test_ephemeral_tmp_is_allowed_on_shared,
+        test_durable_path_refuses_on_shared,
+        test_durable_path_refuses_on_unknown,
+        test_hatch_allows_durable_on_shared,
+        test_tmp_detection,
     ]
     failed = 0
     for t in tests:
