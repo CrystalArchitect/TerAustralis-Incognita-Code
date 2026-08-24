@@ -22,6 +22,9 @@ def _append_private(path: Path, text: str) -> None:
     Same discipline as identity.json — these lines name guests, tools, and
     request ids. Default umask left them group/world readable.
     """
+    from crystalcore.config import _require_steward_persist
+
+    _require_steward_persist("audit-append", path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     try:
@@ -41,7 +44,6 @@ def append_audit(
     reason: str = "",
     detail: dict[str, Any] | None = None,
 ) -> None:
-    audit_path.parent.mkdir(parents=True, exist_ok=True)
     record = {
         "timestamp": _now(),
         "guest": guest,

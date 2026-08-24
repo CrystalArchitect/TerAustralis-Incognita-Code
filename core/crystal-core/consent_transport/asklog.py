@@ -40,6 +40,9 @@ DEFAULT_ASK_LOG_PATH = Path("starline_asks.jsonl")
 
 
 def _append_private(path: Path, text: str) -> None:
+    from host_trust.classify import require_steward_persist
+
+    require_steward_persist("audit-append", path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     try:
@@ -62,7 +65,6 @@ def append_ask(
     decision: str,
     reason: str,
 ) -> None:
-    log_path.parent.mkdir(parents=True, exist_ok=True)
     record = {
         "timestamp": time.time(),
         "stage": stage,
