@@ -28,7 +28,7 @@
   <div class="section-intro">
     <p class="eyebrow">The first looking</p>
     <h2 id="map-heading">Choose a field of view.</h2>
-    <p>Three doors, one map. The labels are part of the evidence architecture: <strong>Built</strong> is not Vision, and Vision is not proof.</p>
+    <p>Three doors, one map. The labels are part of the evidence architecture: <strong>Built</strong> is not Vision, and Vision is not proof. The quiet index also holds a ground claim: processing, not just ore.</p>
   </div>
   <ObservatoryMap />
 </section>
@@ -51,6 +51,7 @@
     <a class="index-card" href="/clementine"><span class="index-number">01</span><strong>Working software</strong><span>Clementine, ConsentGate, and the CrystalCore lineage.</span></a>
     <a class="index-card" href="https://proposal.teraustralis.com.au/"><span class="index-number">02</span><strong>Southern systems proposal</strong><span>Documents under exploration. Berth not selected.</span></a>
     <a class="index-card" href="/atlas"><span class="index-number">03</span><strong>Celestial Atlas</strong><span>A natural-history / mythic record. Vision only.</span></a>
+    <a class="index-card" href="/minerals"><span class="index-number">04</span><strong>Processing, not just ore</strong><span>Mine-to-magnet is a plant, not a shipping schedule. Built claim, not Vision.</span></a>
   </div>
 </section>
 
@@ -78,12 +79,15 @@
   .boundary-band h2 { font-size: clamp(1.8rem, 3vw, 3rem); }
   .boundary-band > p { max-width: 34rem; color: var(--observatory-muted); font-size: .96rem; }
   .boundary-band > a { white-space: nowrap; color: var(--observatory-copper); font: .7rem/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
-  .index-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--observatory-line); margin-top: 2.5rem; border: 1px solid var(--observatory-line); }
+  .index-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--observatory-line); margin-top: 2.5rem; border: 1px solid var(--observatory-line); }
   .index-card { display: flex; flex-direction: column; min-height: 210px; padding: 1.6rem; background: rgba(14, 20, 21, .74); color: var(--observatory-ivory); }
   .index-card:hover { background: rgba(32, 43, 41, .86); text-decoration: none; }
   .index-number { color: var(--observatory-copper); font: .7rem/1 var(--font-mono); letter-spacing: .1em; }
   .index-card strong { margin-top: 3.5rem; font: 500 1.45rem/1.1 var(--font-display); }
   .index-card span:last-child { color: var(--observatory-muted); font-size: .86rem; line-height: 1.5; margin-top: .7rem; }
+  @media (min-width: 1100px) {
+    .index-grid { grid-template-columns: repeat(4, 1fr); }
+  }
   @media (max-width: 760px) {
     .observatory-hero { min-height: auto; grid-template-columns: 1fr; gap: 3rem; padding-top: 5rem; }
     .hero-note { align-self: auto; max-width: 20rem; }
