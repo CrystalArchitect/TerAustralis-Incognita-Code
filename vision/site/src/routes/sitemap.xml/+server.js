@@ -27,6 +27,7 @@ const PAGES = [
   '/gallery',
   '/join',
   '/ledger',
+  '/minerals',
   '/music',
   '/ordinals',
   '/provenance',
