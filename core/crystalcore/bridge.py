@@ -5,11 +5,11 @@
 
 Reconstructed spec: the original `docs/CRYSTALBRIDGE.md` design doc was lost
 along with the machine this project was first built on. This file's shape is
-inferred from `src/crystalcore/gate.py` (the consent gate it must call before
+inferred from `core/crystalcore/gate.py` (the consent gate it must call before
 doing anything), `docs/guides/MCP-Guest.md` / `docs/guides/Access.md` (the CLI and env var
 contract guests already assume: `python -m crystalcore.bridge --profile
 <name>`, guest identity via the CRYSTALBRIDGE_GUEST env var), and
-`src/profiles/default/bridge_config.json` (the config shape). `recall` and
+`core/profiles/default/bridge_config.json` (the config shape). `recall` and
 `teach` are deliberately thin, obvious wrappers around the mind's existing
 memory methods rather than new memory logic of their own — this file grants
 *access* to the mind, it doesn't reimplement it.

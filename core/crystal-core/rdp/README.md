@@ -174,8 +174,8 @@ RDP is a **record + decision** layer — it reaches a verdict deterministically 
 proves *what was decided, why, and in what order*. It does **not** replace the
 pack's consent machinery, and shouldn't be read as doing so:
 
-- **Consent** still lives in Starline's `consent.py` (`src/crystal-core/consent_transport/`)
-  and CrystalBridge's fail-closed ConsentGate (`src/crystalcore/`) — nothing moves
+- **Consent** still lives in Starline's `consent.py` (`core/crystal-core/consent_transport/`)
+  and CrystalBridge's fail-closed ConsentGate (`core/crystalcore/`) — nothing moves
   without a grant.
 - **The Covenant** (`mythos/COVENANT.md`) is still the law those gates enforce.
 
