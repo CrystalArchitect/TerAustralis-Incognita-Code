@@ -2,6 +2,7 @@
   let open = false;
   const links = [
     { label: 'Built', href: '/clementine' },
+    { label: 'Minerals', href: '/minerals' },
     { label: 'Proposal', href: 'https://proposal.teraustralis.com.au/' },
     { label: 'Codex', href: '/codex' },
     { label: 'Atlas', href: '/atlas' },
