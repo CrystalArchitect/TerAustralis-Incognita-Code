@@ -7,7 +7,8 @@
     { label: 'Codex', href: '/codex' },
     { label: 'Atlas', href: '/atlas' },
     { label: 'Archive', href: '/docs' },
-    { label: 'Governance', href: '/docs/governance' }
+    { label: 'Governance', href: '/docs/governance' },
+    { label: 'Crystal', href: '/bio' }
   ];
 </script>
 
