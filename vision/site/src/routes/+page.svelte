@@ -53,6 +53,7 @@
     <a class="index-card" href="/atlas"><span class="index-number">03</span><strong>Celestial Atlas</strong><span>A natural-history / mythic record. Vision only.</span></a>
     <a class="index-card" href="/minerals"><span class="index-number">04</span><strong>Processing, not just ore</strong><span>Mine-to-magnet is a plant, not a shipping schedule. Built claim, not Vision.</span></a>
     <a class="index-card" href="/bio"><span class="index-number">05</span><strong>Crystal Arena Turner</strong><span>Steward of this archive. A person, not the map.</span></a>
+    <a class="index-card" href="/brief"><span class="index-number">06</span><strong>Named Pathway Brief</strong><span>One page, one named Australian mineral, one path to launch. Built product, not Vision.</span></a>
   </div>
 </section>
 
@@ -87,7 +88,7 @@
   .index-card strong { margin-top: 3.5rem; font: 500 1.45rem/1.1 var(--font-display); }
   .index-card span:last-child { color: var(--observatory-muted); font-size: .86rem; line-height: 1.5; margin-top: .7rem; }
   @media (min-width: 1100px) {
-    .index-grid { grid-template-columns: repeat(5, 1fr); }
+    .index-grid { grid-template-columns: repeat(3, 1fr); }
   }
   @media (max-width: 760px) {
     .observatory-hero { min-height: auto; grid-template-columns: 1fr; gap: 3rem; padding-top: 5rem; }
