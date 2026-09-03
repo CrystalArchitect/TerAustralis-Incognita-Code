@@ -35,6 +35,12 @@
       It is for Australian and AUKUS desks that already read ASPI, USSC, and allied minerals or
       space papers, and have to act before the next long report cycle.
     </p>
+    <p>
+      The hole, stated once: "ASPI and allied shops publish AUKUS space (including launch) and
+      critical minerals as two separate free long-form tracks; none of the catalogues we can see
+      offers a fast one-pager that joins a named Australian mineral pathway to launch capability
+      for a desk that has to act before the next report cycle."
+    </p>
   </section>
 
   <section class="chapter node" style="--node:var(--gold)">
@@ -113,7 +119,6 @@
       <li>Ian Satchwell, "Disruption and opportunity: Australia and critical minerals in a changing global order," ASPI.</li>
       <li>Hayley Channer and Sahara Hoff, "Building supply chain resilience in critical minerals: the path ahead," United States Studies Centre, 30 March 2026.</li>
       <li>United States Studies Centre, "Harnessing Australia's space strengths for the Alliance."</li>
-      <li>Alexander Korolev and Fengshi Wu, "Australia's Critical Minerals Strategy amid US–China Geopolitical Rivalry," RUSI.</li>
       <li>PwC Australia, "Accelerating Australia's critical minerals opportunity."</li>
       <li>Norton Rose Fulbright, "Critical minerals: Ripple effects from the US to Australia to Asia."</li>
     </ul>
