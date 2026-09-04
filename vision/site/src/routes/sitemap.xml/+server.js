@@ -27,6 +27,7 @@ const PAGES = [
   '/brief',
   '/docs',
   '/earth-twin',
+  '/the-licence',
   '/gallery',
   '/join',
   '/ledger',
