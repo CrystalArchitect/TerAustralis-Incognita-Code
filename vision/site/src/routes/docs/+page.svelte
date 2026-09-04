@@ -13,7 +13,16 @@
       label: 'Partial / in development',
       note: 'Technical and strategic work still being developed or evaluated.',
       tone: 'var(--observatory-experiment)',
-      slugs: ['architecture', 'blueprint-v0.3', 'milestones', 'quantum-lattice-case-study', 'strategy', 'silicon-brain-brief']
+      slugs: [
+        'architecture',
+        'blueprint-v0.3',
+        'milestones',
+        'quantum-lattice-case-study',
+        'strategy',
+        'silicon-brain-brief',
+        'after-the-radar',
+        'named-pathway-brief-bci-robotics-aerotropolis'
+      ]
     },
     {
       label: 'Vision / design',
@@ -65,7 +74,7 @@
 
 <style>
   .archive-hero { padding: 7rem 0 5rem; max-width: 52rem; }
-  h1, h2 { color: var(--observatory-ivory); font-family: var(--font-display); font-weight: 500; letter-spacing: -.04em; }
+  h1, h2 { color: #f5f0e6; font-family: var(--font-display); font-weight: 500; letter-spacing: -.04em; }
   h1 { font-size: clamp(3.5rem, 9vw, 7rem); line-height: .9; }
   h2 { font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1; }
   .lede { max-width: 48ch; margin-top: 1.4rem; color: var(--observatory-muted); font-size: 1.05rem; }
@@ -75,10 +84,10 @@
   .group-heading .eyebrow { color: var(--group-tone); margin-bottom: .65rem; }
   .group-heading > p:last-child { margin-top: .7rem; color: var(--observatory-muted); }
   .archive-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 2rem; background: var(--observatory-line); border: 1px solid var(--observatory-line); }
-  .archive-card { display: flex; flex-direction: column; min-height: 190px; padding: 1.35rem; background: var(--observatory-surface-deep); color: var(--observatory-ivory); }
+  .archive-card { display: flex; flex-direction: column; min-height: 190px; padding: 1.35rem; background: var(--observatory-surface-deep); color: #f5f0e6; }
   .archive-card:hover { background: var(--observatory-surface); text-decoration: none; }
   .archive-status { color: var(--group-tone); font: .64rem/1 var(--font-mono); letter-spacing: .13em; }
-  .archive-card strong { margin-top: 2.8rem; font: 500 1.4rem/1.1 var(--font-display); }
+  .archive-card strong { margin-top: 2.8rem; font: 500 1.4rem/1.15 var(--font-display); color: #f7f3ea; }
   .archive-card > span:nth-child(3) { color: var(--observatory-muted); font-size: .84rem; line-height: 1.45; margin-top: .65rem; }
   .archive-cta { color: var(--group-tone); font: .68rem/1 var(--font-mono); letter-spacing: .1em; margin-top: auto; padding-top: 1.2rem; text-transform: uppercase; }
   @media (max-width: 700px) { .archive-hero { padding: 5rem 0 3.5rem; } .archive-grid { grid-template-columns: 1fr; } }
