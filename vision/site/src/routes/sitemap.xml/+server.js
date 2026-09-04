@@ -28,6 +28,7 @@ const PAGES = [
   '/docs',
   '/earth-twin',
   '/the-licence',
+  '/wavelength',
   '/gallery',
   '/join',
   '/ledger',
