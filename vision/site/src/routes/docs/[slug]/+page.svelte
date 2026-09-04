@@ -45,6 +45,9 @@
     line-height: 1.25;
     margin: 2rem 0 0.75rem;
     color: var(--ink);
+    -webkit-text-fill-color: var(--ink);
+    background: none;
+    text-shadow: none;
     text-wrap: balance;
   }
 

@@ -259,9 +259,9 @@
   .section h2{
     font-family:var(--font-display);font-weight:600;
     font-size:clamp(1.6rem, 3.4vw, 2.2rem);margin-bottom:20px;letter-spacing:.005em;
-    background:var(--title-gradient);
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-    color:var(--gold);
+    background:none;
+    -webkit-text-fill-color:var(--ink);
+    color:var(--ink);
   }
   .section p{max-width:62ch;color:var(--muted)}
   .section p + p{margin-top:14px}
@@ -321,9 +321,9 @@ a.wordmark:hover{color:var(--ink);text-decoration:none}
 .page .eyebrow{margin-bottom:18px}
 .page h1{font-family:var(--font-display);font-weight:600;
   font-size:clamp(2rem,5vw,3rem);line-height:1.15;margin-bottom:10px;
-  background:var(--title-gradient);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  color:var(--gold)}
+  background:none;
+  -webkit-text-fill-color:var(--ink);
+  color:var(--ink)}
 .page .attribution{color:var(--muted);font-style:italic;font-size:.95rem;
   max-width:62ch;margin-top:14px}
 .cover{display:block;max-width:min(400px,100%);border-radius:16px;
@@ -331,9 +331,9 @@ a.wordmark:hover{color:var(--ink);text-decoration:none}
 .chapter{margin-top:64px}
 .chapter h2{font-family:var(--font-display);font-weight:600;
   font-size:clamp(1.4rem,3vw,1.9rem);margin-bottom:18px;
-  background:var(--title-gradient);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  color:var(--gold)}
+  background:none;
+  -webkit-text-fill-color:var(--ink);
+  color:var(--ink)}
 .chapter p{color:var(--muted);max-width:62ch;margin-top:14px}
 .chapter p strong{color:var(--ink);font-weight:500}
 .chapter h3{font-family:var(--font-display);font-weight:600;
@@ -362,7 +362,7 @@ pre{background:var(--card);border:1px solid var(--line);border-radius:12px;
 
 /* the multi-colour gradient headings flow slowly, like light moving through crystal */
 @media (prefers-reduced-motion: no-preference){
-  .title-mix,.section h2,.page h1,.chapter h2{
+  .title-mix{
     background-size:220% auto;
     animation:shimmer 9s linear infinite;
   }
@@ -386,8 +386,8 @@ a.wordmark{color:var(--purple)}
    (the same hue as its gutter dot), instead of the multi-colour gradient. */
 .section h2{
   background:none;
-  -webkit-text-fill-color:var(--node,var(--gold));
-  color:var(--node,var(--gold));
+  -webkit-text-fill-color:var(--ink);
+  color:var(--ink);
 }
 
 /* richer cards: each carries a whisper of its own accent, and the hover glow
@@ -483,7 +483,7 @@ nav a:hover{color:var(--gold-hi);text-shadow:0 0 14px rgba(245,200,111,.5)}
 /* ---- Display type carries light ---- */
 .hero h1{text-shadow:0 0 42px rgba(184,161,255,.28)}
 .hero h1 .early{text-shadow:0 0 38px rgba(245,200,111,.45)}
-.section h2,.page h1,.chapter h2{text-shadow:0 0 30px rgba(245,200,111,.20)}
+.section h2,.page h1,.chapter h2{text-shadow:none}
 .eyebrow{color:var(--cyan);text-shadow:0 0 18px rgba(127,228,245,.35)}
 
 /* the hero sits in its own pool of light */

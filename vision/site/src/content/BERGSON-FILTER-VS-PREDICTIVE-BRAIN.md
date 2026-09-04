@@ -2,7 +2,7 @@
 
 # Bergson’s filter vs the predictive brain (and the reducing valve)
 
-*Working note for Crystal — science spine before any further SpaceNews edit*  
+*Working note · TerAustralis Incognita · 2026-09-04*  
 
 ---
 
