@@ -55,6 +55,7 @@
     <a class="index-card" href="/bio"><span class="index-number">05</span><strong>Crystal Arena Turner</strong><span>Steward of this archive. A person, not the map.</span></a>
     <a class="index-card" href="/brief"><span class="index-number">06</span><strong>Named Pathway Brief</strong><span>One page, one named Australian mineral, one path to launch. Built product, not Vision.</span></a>
     <a class="index-card" href="/earth-twin"><span class="index-number">07</span><strong>Earth twin</strong><span>Return fuel is CO₂ and ice. The rust is the factory floor — already here. Built claim, not Vision.</span></a>
+    <a class="index-card" href="/the-licence"><span class="index-number">08</span><strong>The licence</strong><span>Australian talent hit criticality in the US. Civil nuclear power plants are still banned here.</span></a>
   </div>
 </section>
 
