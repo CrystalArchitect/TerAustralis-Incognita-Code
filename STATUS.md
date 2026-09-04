@@ -360,6 +360,22 @@ Executes, or can be opened and used by someone other than me.
   passes is geometry. Fit, strength and airflow are dreamed until
   someone prints the parts — the STLs are surveyed solids, not yet a
   surveyed object.
+- Deterministic draft checker — `tools/contextgate/` (added 2026-09-04,
+  v0.1.0). `gate.py` runs stdlib-only, no model call, no network:
+  `python3 tools/contextgate/tests/test_gate.py` — **5/5**, verified
+  this session. `python3 tools/contextgate/gate.py
+  examples/bad-magellan.txt` returns RED on all three of its checks
+  (unsourced positioning claim, unsourced attributed quote, unsourced
+  hard figure); the same command against `examples/good-sourced-brief.txt`
+  returns GREEN. Rules and non-goals: `tools/contextgate/SURFACE.md`.
+  Honest scope: the three rules cover exactly the fabrication shapes
+  already caught once in `TerAustralis-Incognita`'s PR #146 (see that
+  repo's `memory/projects/90-Day-Roadmap/CURRENT.md`) — not dates, not
+  spelling, not whether a cited source is real. Run against that
+  repo's `specs/pathway-log-entry-week-7-9.md` as a dogfood check this
+  session, it returned RED on six lines reusing the same unsourced
+  positioning phrasing the PR #146 reconciliation already removed once
+  — flagged there for Crystal, not resolved here.
 
 ## Built, not currently running
 Code exists and is complete enough to run. No runtime here exercises it.
