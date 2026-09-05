@@ -38,6 +38,13 @@ export const groups = [
         href: 'https://spacenews.com/author/crystal-elle-arena-turner/',
         cta: '→ Read',
         st: 'var(--gold)'
+      },
+      {
+        title: 'After the radar',
+        body: 'Sequel opinion · AUKUS industrial bargain · live on TerAustralis (submitted to SpaceNews Opinion 3 Sep 2026).',
+        href: '/after-the-radar',
+        cta: '→ Read',
+        st: 'var(--blue)'
       }
     ]
   },
@@ -58,6 +65,13 @@ export const groups = [
         body: 'Working software. Local-first companion. Memory stays on device.',
         href: '/clementine',
         cta: '→ Built',
+        st: 'var(--green)'
+      },
+      {
+        title: 'BCI + robotics pathway',
+        body: 'Named Pathway Brief · Aerotropolis dual-rail. Proposal beside Built neighbours.',
+        href: '/bci-aerotropolis',
+        cta: '→ Pathway',
         st: 'var(--green)'
       },
       {
