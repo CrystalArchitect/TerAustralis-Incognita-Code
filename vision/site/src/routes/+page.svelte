@@ -59,6 +59,12 @@
     <a class="index-card" href="/wavelength"><span class="index-number">09</span><strong>Wavelength</strong><span>Wavelength is an address. Telecom shares a strand; spectral combining shares an aperture. Built claim, not Vision.</span></a>
     <a class="index-card" href="/after-the-radar"><span class="index-number">10</span><strong>After the radar</strong><span>Australia’s industrial bargain with AUKUS — DARC to Aerotropolis hands. Strategic opinion, available surface.</span></a>
     <a class="index-card" href="/bci-aerotropolis"><span class="index-number">11</span><strong>BCI + robotics pathway</strong><span>Named Pathway Brief for Aerotropolis dual-rail BCI/robotics. Proposal beside Built neighbours.</span></a>
+    <a
+      class="index-card"
+      href="https://crystalarchitect.github.io/teraustralis-incognita-canon-gallery/"
+      target="_blank"
+      rel="noopener noreferrer"
+    ><span class="index-number">12</span><strong>Mythic Canon</strong><span>16-card set reveal — Origin, Ancients, Oathbearers. Vision only. Separate gallery.</span></a>
   </div>
 </section>
 
