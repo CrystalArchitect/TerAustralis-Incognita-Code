@@ -111,6 +111,17 @@
     </p>
   </section>
 
+  <section class="chapter node" style="--node:var(--purple)">
+    <h2>Sister pathway</h2>
+    <p>
+      Same format, different path: brain–computer interface and robotics at Western Sydney’s
+      Aerotropolis — dual-rail, Proposal beside Built neighbours (AMRF, packaging, airport).
+    </p>
+    <p>
+      <a href="/bci-aerotropolis">BCI + robotics @ Aerotropolis →</a>
+    </p>
+  </section>
+
   <section class="chapter node" style="--node:var(--green)">
     <h2>Record</h2>
     <ul>
@@ -125,6 +136,8 @@
   </section>
 
   <nav class="pagenav" aria-label="Continue">
+    <a href="/bci-aerotropolis">BCI + robotics pathway</a>
+    <a href="/after-the-radar">After the radar</a>
     <a href="/minerals">Processing, not just ore</a>
     <a href="/">← Home</a>
   </nav>
