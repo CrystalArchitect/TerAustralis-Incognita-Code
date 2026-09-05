@@ -341,14 +341,14 @@ Executes, or can be opened and used by someone other than me.
   `vision/apps/crystal-interface/`, `vision/apps/vision-web/`, and the
   engine's own `core/crystal-core/index.html`. Simulated data,
   Authority held — demos, not production, per their READMEs.
-- The published site — `https://www.teraustralis.com.au` serves the
-  SvelteKit build from this repo's Pages deploy, verified from outside
-  2026-07-29: the build-only probe path `/crystalcore-os` returns 200
-  (per `.github/scripts/probe-site.sh`) and the homepage carries the
-  build's `_app/immutable/*` assets — not the rendered-README failure
-  mode `deploy.yml` guards against. Verified by external probe, not by
-  reading the repo setting (the checking token could not read
-  Settings → Pages); content evidence only.
+- **DISPUTED (2026-09-05)**: The domain `www.teraustralis.com.au` was
+  never owned or registered by Crystal. This entry refers to a false
+  claim. The actual published site lives on Vercel at
+  `ter-australis-incognita.vercel.app` (deployed 2026-09-05, PR #166).
+  The historical references below to `teraustralis.com.au` are
+  inaccurate. See
+  [`memory/OPEN-QUESTIONS.md`](https://github.com/CrystalArchitect/TerAustralis-Incognita/blob/main/memory/OPEN-QUESTIONS.md)
+  in the umbrella repo for full dispute record.
 - Fabrication tooling — `tools/fab/` (added 2026-08-08). The Node One
   Vessel generator runs headless (`pip install bpy`) and emits printable
   geometry: a parametric enclosure for the single-board machine the
@@ -403,21 +403,13 @@ Code exists and is complete enough to run. No runtime here exercises it.
   on a machine the maintainer controls — which is now the whole of the
   distance between built and running.
 - voicebox (`vision/apps/voicebox/server.py`) — TTS/STT HTTP layer.
-- `vision/site/` — the SvelteKit source of teraustralis.com.au. It
-  builds to static output, and since Stage 2 (PR #4) this repo carries
-  the Pages deploy itself (`.github/workflows/deploy.yml` builds
-  `vision/site/` and bundles the two demo shells; `CNAME` moved here
-  too). ~~One gap remains between "built" and "running": the one-time
-  repo setting (Settings → Pages → Source: "GitHub Actions") hasn't
-  been confirmed flipped, so no publish has been verified yet.~~
-  **Resolved 2026-07-29:** the publish is verified live from outside.
-  `https://www.teraustralis.com.au/crystalcore-os` — a path that exists
-  only in the SvelteKit build, per `.github/scripts/probe-site.sh` —
-  returned 200 on the first attempt, and the homepage serves the real
-  build (`_app/immutable/*` assets, site title), not a rendered README,
-  with a fresh `last-modified` (2026-07-28 20:13 GMT). Either the
-  Settings flip was done, or the workflow's own `build_type=workflow`
-  PUT took effect on a prior run. The entry below moves to Running.
+- `vision/site/` — the SvelteKit source code for the Crystal Vision
+  public interface. It builds to static output, and since Stage 2 (PR #4)
+  this repo carried a Pages deploy itself (`.github/workflows/deploy.yml`
+  builds `vision/site/` and bundles the two demo shells). Note: prior
+  references to deployment under `teraustralis.com.au` were made in error;
+  that domain was never owned by Crystal. The actual live deployment is
+  on Vercel: `ter-australis-incognita.vercel.app` (live 2026-09-05).
 
 ## Exists as a document
 - The site content set under `vision/site/src/content/` (VISION,
@@ -508,9 +500,7 @@ Not renamed, deliberately:
   own branch ("Python syntax + self-tests" — success). The "passes"
   above are machine-checked now. (PR #8 adds a fifth self-test,
   CrystalBridge's — see the Running section.)
-- What www.teraustralis.com.au serves today — unverifiable from the
-  session container (egress blocked). The deploy gap above is fact
-  regardless of the answer.
+- **DISPUTED:** Domain reference removed (see dispute note above, 2026-09-05).
 - Does a full session hold up against a *real* local model — latency on
   ordinary hardware, condensation timing, reflection quality, and
   whether semantic recall surfaces the right memory for a related
