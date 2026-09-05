@@ -29,6 +29,8 @@ const PAGES = [
   '/earth-twin',
   '/the-licence',
   '/wavelength',
+  '/after-the-radar',
+  '/bci-aerotropolis',
   '/gallery',
   '/join',
   '/ledger',
